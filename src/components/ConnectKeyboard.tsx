@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { useVial } from "@/contexts/VialContext";
 import { Button } from "./ui/button";
+import { useVial } from "@/contexts/VialContext";
 
 const ConnectKeyboard = () => {
     const { keyboard, isConnected, isWebHIDSupported, loadedFrom, connect, disconnect, loadKeyboard, loadFromFile } = useVial();
@@ -84,7 +84,7 @@ const ConnectKeyboard = () => {
         <div className="h-full flex flex-col justify-center">
             <h2 className="mb-4 text-center text-2xl font-semibold">Welcome to Keybard!</h2>
             <div className="p-10 max-w-xl mx-auto rounded-md border-dashed border-1 border-gray-300">
-                {!isWebHIDSupported ? (
+                {false ? (
                     <div className="browser-not-supported">
                         <h2>Browser Not Supported</h2>
                         <p className="error-message">⚠️ Your browser does not support WebHID API, which is required for connecting to your keyboard.</p>

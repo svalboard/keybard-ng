@@ -59,7 +59,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, onKeyClick, select
 
                     // Get the keycode for this position in the current layer
                     const keycode = layerKeymap[pos] || 0;
-                    const label = getKeyLabel(keycode);
+                    const { label, keyContents } = getKeyLabel(keyboard, keycode);
                     const keycodeName = getKeycodeName(keycode);
 
                     return (
@@ -75,6 +75,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, onKeyClick, select
                             col={col}
                             selected={selectedKey?.row === row && selectedKey?.col === col}
                             onClick={handleKeyClick}
+                            keyContents={keyContents}
                         />
                     );
                 })}

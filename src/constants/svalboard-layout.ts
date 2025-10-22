@@ -13,7 +13,7 @@ export interface KeyLayout {
 }
 
 // Unit size in pixels (1u = 40px as per original implementation)
-export const UNIT_SIZE = 50;
+export const UNIT_SIZE = 55;
 
 // Svalboard layout keyed by matrix position (row * cols + col)
 // Positions are in key units (1u = 40px)

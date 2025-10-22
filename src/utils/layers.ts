@@ -1,5 +1,6 @@
 import { KEYMAP } from "../constants/keygen";
 import type { KeyboardInfo } from "../types/vial.types";
+import { getKeyContents } from "./keys";
 import { keyService } from "../services/key.service";
 // Convert HSV to RGB for CSS color
 export const hsvToRgb = (h: number, s: number, v: number): string => {
@@ -59,33 +60,37 @@ export const getLayerColor = (keyboard: KeyboardInfo, layerIndex: number): strin
 };
 
 // Get label for a keycode
-export const getKeyLabel = (keycode: number): string => {
+export const getKeyLabel = (
+    kbInfo: KeyboardInfo,
+    keycode: number
+): {
+    label: string;
+    keyContents: ReturnType<typeof getKeyContents>;
+} => {
     // First get the string representation (e.g., "KC_C" or "LCA(KC_NO)")
     const keyString = keyService.stringify(keycode);
+    const keyContents = getKeyContents(kbInfo, keyString);
 
     // If it's a simple key (no modifiers), look it up in KEYMAP
     if (KEYMAP[keyString]) {
-        return KEYMAP[keyString].str || keyString;
+        return {
+            label: KEYMAP[keyString].str || keyString,
+            keyContents,
+        };
     }
 
     // For modifier combinations, try to parse and get the base key
     // Check if it's a modifier combination like "LCA(KC_NO)"
-    const modifierMatch = keyString.match(/^([A-Z]+)\((KC_[A-Z0-9_]+)\)$/);
-    if (modifierMatch) {
-        const modifier = modifierMatch[1];
-        const baseKey = modifierMatch[2];
-        if (KEYMAP[baseKey]) {
-            const baseStr = KEYMAP[baseKey].str || baseKey;
-            // If base string is empty (like KC_NO), just show the modifier
-            if (!baseStr) {
-                return modifier;
-            }
-            return `${modifier}(${baseStr})`;
-        }
-    }
 
     // Fallback to the string representation
-    return keyString;
+    const modifierMatch = keyString.match(/^([A-Z]+)\((KC_[A-Z0-9_]+)\)$/);
+    if (modifierMatch) {
+        console.log("Key contents:", keyContents);
+    }
+    return {
+        label: keyString,
+        keyContents,
+    };
 };
 
 // Get keycode name for data attribute
