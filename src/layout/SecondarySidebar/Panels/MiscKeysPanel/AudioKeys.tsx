@@ -16,11 +16,13 @@ const AudioKeys = () => {
         layout: {
             default: [
                 // Row 1 (9)
-                "{AU_ON} {AU_OFF} {AU_TOG} {CLICKY_TOGGLE} {CLICKY_UP} {CLICKY_DOWN} {CLICKY_RESET} {MU_ON} {MU_OFF}",
+                "{AU_ON} {AU_OFF} {AU_TOG} {CLICKY_TOGGLE} {CLICKY_UP}",
+                "{CLICKY_DOWN} {CLICKY_RESET} {MU_ON} {MU_OFF} {MU_TOG}",
                 // Row 2 (9)
-                "{MU_TOG} {MU_MOD} {HPT_ON} {HPT_OFF} {HPT_TOG} {HPT_RST} {HPT_FBK} {HPT_BUZ} {HPT_MODI}",
+                "{MU_MOD} {HPT_ON} {HPT_OFF} {HPT_TOG} {HPT_RST}",
+                "{HPT_FBK} {HPT_BUZ} {HPT_MODI} {HPT_MODD} {HPT_CONT} {HPT_CONI}",
                 // Row 3 (9)
-                "{HPT_MODD} {HPT_CONT} {HPT_CONI} {HPT_COND} {HPT_DWLI} {HPT_DWLD} {KC_ASDN} {KC_ASUP} {KC_ASRP}",
+                "{HPT_COND} {HPT_DWLI} {HPT_DWLD} {KC_ASDN} {KC_ASUP} {KC_ASRP}",
                 // Row 4 (remaining 6)
                 "{KC_ASON} {KC_ASOFF} {KC_ASTG} {CMB_ON} {CMB_OFF} {CMB_TOG}",
             ],

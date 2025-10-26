@@ -8,6 +8,7 @@ import { X } from "lucide-react";
 import { FC } from "react";
 import EditorSidePanel from "../EditorSidePanel";
 import ComboEditor from "./ComboEditor";
+import MacroEditor from "./MacroEditor";
 import OverrideEditor from "./OverrideEditor";
 import TapdanceEditor from "./TapdanceEditor";
 
@@ -31,7 +32,7 @@ const BindingEditorContainer: FC<Props> = ({}) => {
     const { itemToEdit, handleCloseEditor, bindingTypeToEdit } = usePanels();
     const classes = {
         container: cn(
-            "absolute  bg-kb-gray-medium rounded-r-2xl p-5 flex flex-col top-[calc(50vh-300px)]",
+            "absolute top-1/2 -translate-y-1/2 bg-kb-gray-medium rounded-r-2xl p-5 flex flex-col",
             bindingTypeToEdit === "overrides" ? "w-[500px] right-[-500px]" : "w-[400px] right-[-400px]"
         ),
     };
@@ -58,6 +59,7 @@ const BindingEditorContainer: FC<Props> = ({}) => {
             {bindingTypeToEdit === "tapdances" && <TapdanceEditor />}
             {bindingTypeToEdit === "combos" && <ComboEditor />}
             {bindingTypeToEdit === "overrides" && <OverrideEditor />}
+            {bindingTypeToEdit === "macros" && <MacroEditor />}
         </div>
     );
 };

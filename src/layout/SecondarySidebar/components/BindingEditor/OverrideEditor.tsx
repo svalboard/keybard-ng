@@ -29,12 +29,12 @@ const OverrideEditor: FC<Props> = () => {
                 <EditorKey binding={keys["0"]} />
                 <EditorKey binding={keys["1"]} />
             </div>
-            <div className="flex flex-row gap-1 w-full justify-between">
+            <div className="grid grid-cols-3 gap-2 w-full mt-2 mb-2 grid">
                 <HoldableButton label="Trigger" />
                 <HoldableButton label="Negative" />
                 <HoldableButton label="Suspended" />
             </div>
-            <div className="flex flex-row gap-1 w-full justify-between flex-wrap">
+            <div className="grid grid-cols-4 gap-2 w-full mt-2 mb-2 grid">
                 <HoldableButton label="None" />
                 <HoldableButton label="Layer" />
                 <HoldableButton label="Left" />
@@ -44,7 +44,7 @@ const OverrideEditor: FC<Props> = () => {
                 <HoldableButton label="GUI" />
                 <HoldableButton label="Alt" />
             </div>
-            <div className="grid grid-cols-4 gap-2 w-full mt-2 mb-4 grid">
+            <div className="grid grid-cols-4 gap-2 w-full mt-2 mb-2 grid px-10">
                 <HoldableButton label="0" />
                 <HoldableButton label="1" />
                 <HoldableButton label="2" />

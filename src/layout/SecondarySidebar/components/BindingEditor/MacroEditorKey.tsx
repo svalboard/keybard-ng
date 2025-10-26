@@ -1,3 +1,5 @@
+import { useVial } from "@/contexts/VialContext";
+import { getKeyContents } from "@/utils/keys";
 import { FC } from "react";
 
 interface Props {
@@ -11,13 +13,15 @@ const classes = {
         "bg-kb-green text-white w-12 h-12 rounded-md cursor-pointer hover:border-2 border-2 border border-transparent hover:border-red-600 transition-all flex items-center justify-center text-wrap",
 };
 
-const EditorKey: FC<Props> = ({ label, binding }) => {
+const MacroEditorKey: FC<Props> = ({ label, binding }) => {
+    const { keyboard } = useVial();
+    const keyContents = getKeyContents(keyboard!, binding);
     return (
         <div className="flex flex-row justify-start items-center">
-            {binding.str !== "" ? <div className={classes.emptyKey}>{binding.str}</div> : <div className={classes.key} />}
+            {binding !== "" ? <div className={classes.emptyKey}>{keyContents?.str}</div> : <div className={classes.key} />}
             {label && <div className="font-medium text-gray-600 px-5">{label}</div>}
         </div>
     );
 };
 
-export default EditorKey;
+export default MacroEditorKey;

@@ -14,14 +14,15 @@ const MediaKeys = () => {
         layout: {
             default: [
                 // Row 1
-                "{KC_PWR} {KC_SLEP} {KC_WAKE} {KC_EXEC} {KC_HELP} {KC_SLCT} {KC_STOP} {KC_AGIN} {KC_UNDO}",
+                "{KC_PWR} {KC_SLEP} {KC_WAKE} {KC_EXEC} {KC_HELP} {KC_SLCT} {KC_STOP} {KC_AGIN}",
                 // Row 2
-                "{KC_CUT} {KC_COPY} {KC_PSTE} {KC_FIND} {KC_CALC} {KC_MAIL} {KC_MSEL} {KC_MYCM} {KC_WSCH}",
+                "{KC_UNDO} {KC_CUT} {KC_COPY} {KC_PSTE} {KC_FIND} {KC_CALC} {KC_MAIL} {KC_MSEL}",
                 // Row 3
-                "{KC_WHOM} {KC_WBAK} {KC_WFWD} {KC_WSTP} {KC_WREF} {KC_WFAV} {KC_BRIU} {KC_BRID} {KC_MPRV}",
+                "{KC_MYCM} {KC_WSCH} {KC_WHOM} {KC_WBAK} {KC_WFWD} {KC_WSTP} {KC_WREF}",
                 // Row 4
-                "{KC_MNXT} {KC_MUTE} {KC_VOLD} {KC_VOLU} {KC_MSTP} {KC_MPLY} {KC_MRWD} {KC_MFFD} {KC_EJCT}",
-                "{KC_LCAP} {KC_LNUM} {KC_LSCR}",
+                "{KC_WFAV} {KC_BRIU} {KC_BRID} {KC_MPRV} {KC_MNXT} {KC_MUTE} {KC_VOLD}",
+                "{KC_VOLU} {KC_MSTP} {KC_MPLY} {KC_MRWD} {KC_MFFD}",
+                "{KC_EJCT} {KC_LCAP} {KC_LNUM} {KC_LSCR}",
             ],
             shift: [
                 // same layout for shift

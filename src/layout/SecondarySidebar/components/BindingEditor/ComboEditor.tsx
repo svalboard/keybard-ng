@@ -27,8 +27,8 @@ const ComboEditor: FC<Props> = () => {
     }, []);
 
     return (
-        <div className="flex flex-row items-center px-20 gap-10 pt-5">
-            <div className="flex flex-col gap-1 py-8">
+        <div className="flex flex-row items-center px-20 gap-8 pt-5">
+            <div className="flex flex-col gap-0 py-8">
                 <EditorKey binding={keys["0"]} />
                 <div className="text-center text-xl">+</div>
                 <EditorKey binding={keys["1"]} />

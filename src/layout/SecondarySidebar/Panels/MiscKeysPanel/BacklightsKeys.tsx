@@ -13,11 +13,12 @@ const BacklightsKeys = () => {
         layout: {
             default: [
                 // Row 1 (9)
-                "{BL_TOGG} {BL_STEP} {BL_BRTG} {BL_ON} {BL_OFF} {BL_INC} {BL_DEC} {RGB_TOG} {RGB_MOD}",
+                "{BL_TOGG} {BL_STEP} {BL_BRTG} {BL_ON} {BL_OFF} {BL_INC} {BL_DEC}",
                 // Row 2 (9)
-                "{RGB_RMOD} {RGB_HUI} {RGB_HUD} {RGB_SAI} {RGB_SAD} {RGB_VAI} {RGB_VAD} {RGB_SPI} {RGB_SPD}",
+                "{RGB_TOG} {RGB_MOD} {RGB_RMOD} {RGB_HUI} {RGB_HUD} {RGB_SAI}",
+                "{RGB_SAD} {RGB_VAI} {RGB_VAD} {RGB_SPI} {RGB_SPD} {RGB_M_P} {RGB_M_B}",
                 // Row 3 (9)
-                "{RGB_M_P} {RGB_M_B} {RGB_M_R} {RGB_M_SW} {RGB_M_SN} {RGB_M_K} {RGB_M_X} {RGB_M_G} {RGB_M_T}",
+                "{RGB_M_R} {RGB_M_SW} {RGB_M_SN} {RGB_M_K} {RGB_M_X} {RGB_M_G} {RGB_M_T}",
             ],
             shift: [
                 "{BL_TOGG} {BL_STEP} {BL_BRTG} {BL_ON} {BL_OFF} {BL_INC} {BL_DEC} {RGB_TOG} {RGB_MOD}",
