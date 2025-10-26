@@ -12,6 +12,7 @@ interface Props {
     editElement?: React.ReactNode;
     items?: Array<any>;
     bindingType: string;
+    notBindable?: boolean;
 }
 
 interface ItemGroup<T> {
@@ -26,7 +27,16 @@ const suffixByType = {
     macros: "M",
 };
 
-const BindingsList: FC<Props> = ({ editElement, icon, bindingType, items = [] }) => {
+const getKeyCode = (bindingType: string, index: number) => {
+    if (bindingType === "tapdances") {
+        return `TD(${index})`;
+    } else if (bindingType === "macros") {
+        return `M${index}`;
+    }
+    return "";
+};
+
+const BindingsList: FC<Props> = ({ editElement, icon, bindingType, notBindable, items = [] }) => {
     const { itemToEdit, setItemToEdit, setBindingTypeToEdit, setAlternativeHeader, setPanelToGoBack, setActivePanel } = usePanels();
     const itemsCount = items.length;
     const [groups, setGroups] = useState<ItemGroup<any>[]>([]);
@@ -90,10 +100,12 @@ const BindingsList: FC<Props> = ({ editElement, icon, bindingType, items = [] })
                     <span className="text-md text-left w-full border-b border-b-dashed py-2"></span>
                     <div className="flex flex-row flex-shrink-0 items-center gap-1">
                         <div
-                            className="flex flex-col bg-black h-12 w-12 rounded-sm flex-shrink-0 items-center cursor-pointer border-2 hover:border-red-600 border-transparent transition-all"
+                            className={cn(
+                                "flex flex-col bg-black h-12 w-12 rounded-sm flex-shrink-0 items-center cursor-default",
+                                notBindable ? "" : "cursor-pointer border-2 hover:border-red-600 border-transparent transition-all"
+                            )}
                             onClick={() => {
-                                console.log("assigning", `${(suffixByType as any)[bindingType]}(${absoluteIndex})`);
-                                assignKeycode(`${(suffixByType as any)[bindingType]}(${absoluteIndex})`);
+                                if (!notBindable) assignKeycode(getKeyCode(bindingType, absoluteIndex));
                             }}
                         >
                             <div className="h-4 w-4 mt-2 mb-1 text-white">{icon}</div>

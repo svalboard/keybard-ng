@@ -1,6 +1,6 @@
 import { CODEMAP } from "@/constants/keygen";
-import { KeyboardInfo } from "@/types/vial.types";
 import { keyService } from "@/services/key.service";
+import { KeyboardInfo } from "@/types/vial.types";
 
 const describeTapdance = (KBINFO: KeyboardInfo, tdid: number, tapdance?: any): string => {
     if (!tapdance) {
@@ -129,6 +129,16 @@ export function showModMask(modids: any) {
         return allmods.map((m) => m[1]).join("+");
     }
     return allmods.map((m) => m[0]).join("+");
+}
+
+export function getModMasks(modids: any) {
+    const allmods = [];
+    for (const [k, v] of Object.entries(masks)) {
+        if (modids & (k as any)) {
+            allmods.push(v[1]);
+        }
+    }
+    return allmods;
 }
 
 export function getKeyContents(KBINFO: KeyboardInfo, keystr: any) {
