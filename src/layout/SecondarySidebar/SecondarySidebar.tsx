@@ -1,3 +1,5 @@
+import "./SecondarySidebar.css";
+
 import * as React from "react";
 
 import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
@@ -96,7 +98,9 @@ const SecondarySidebar: React.FC<SecondarySidebarProps> = ({}) => {
                 )}
             </SidebarHeader>
             <SidebarContent className="px-4">
-                {renderContent()}
+                <div key={activePanel ?? "panel-placeholder"} className="panel-fade-bounce">
+                    {renderContent()}
+                </div>
                 {itemToEdit !== null ? <BindingEditorContainer /> : null}
             </SidebarContent>
         </Sidebar>

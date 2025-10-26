@@ -120,9 +120,9 @@ const AppSidebar = () => {
                                     <button
                                         type="button"
                                         onClick={() => handleItemSelect(item)}
-                                        className={cn("flex w-full items-center gap-3", isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground")}
+                                        className={cn("flex w-full items-center", isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground")}
                                     >
-                                        <item.icon className="h-5 w-5" />
+                                        <item.icon />
                                         {!isCollapsed && <span>{item.title}</span>}
                                     </button>
                                 </SidebarMenuButton>

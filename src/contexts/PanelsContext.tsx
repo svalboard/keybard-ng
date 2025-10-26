@@ -71,10 +71,10 @@ export const PanelsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, [closeDetails]);
 
     const handleCloseEditor = useCallback(() => {
+        setItemToEdit(null);
         setActivePanel(panelToGoBack);
         setAlternativeHeader(false);
         setPanelToGoBack(null);
-        setItemToEdit(null);
     }, [panelToGoBack]);
 
     return (

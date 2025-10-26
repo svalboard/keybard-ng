@@ -1,3 +1,7 @@
+import "./BindingEditorContainer.css";
+
+import { FC, useCallback, useState } from "react";
+
 import ComboIcon from "@/components/ComboIcon";
 import MacrosIcon from "@/components/icons/MacrosIcon";
 import OverridesIcon from "@/components/icons/Overrides";
@@ -5,7 +9,6 @@ import TapdanceIcon from "@/components/icons/Tapdance";
 import { usePanels } from "@/contexts/PanelsContext";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import { FC } from "react";
 import EditorSidePanel from "../EditorSidePanel";
 import ComboEditor from "./ComboEditor";
 import MacroEditor from "./MacroEditor";
@@ -30,36 +33,50 @@ const labels = {
 
 const BindingEditorContainer: FC<Props> = ({}) => {
     const { itemToEdit, handleCloseEditor, bindingTypeToEdit } = usePanels();
-    const classes = {
-        container: cn(
-            "absolute top-1/2 -translate-y-1/2 bg-kb-gray-medium rounded-r-2xl p-5 flex flex-col",
-            bindingTypeToEdit === "overrides" ? "w-[500px] right-[-500px]" : "w-[400px] right-[-400px]"
-        ),
-    };
+    const [isClosing, setIsClosing] = useState(false);
+
+    const handleAnimatedClose = useCallback(() => {
+        if (isClosing) {
+            return;
+        }
+
+        setIsClosing(true);
+    }, [isClosing]);
+
+    const handleAnimationEnd = useCallback(() => {
+        if (isClosing) {
+            handleCloseEditor();
+        }
+    }, [handleCloseEditor, isClosing]);
+
+    const containerClasses = cn("absolute top-1/2 -translate-y-1/2", bindingTypeToEdit === "overrides" ? "w-[500px] right-[-500px]" : "w-[400px] right-[-400px]");
+    const panelClasses = cn("binding-editor bg-kb-gray-medium rounded-r-2xl p-5 flex flex-col w-full", isClosing ? "binding-editor--exit" : "binding-editor--enter");
 
     return (
-        <div className={classes.container}>
-            <div className="flex flex-row w-full items-center pr-5 pl-10 justify-between pt-2">
-                <EditorSidePanel parentPanel="tapdances" />
-                <div className="flex flex-row items-center">
-                    <div className="flex flex-col bg-black h-14 w-14 rounded-sm flex-shrink-0 items-center ">
-                        <div className="h-5 w-5 mt-3 text-white">{(icons as any)[bindingTypeToEdit!]}</div>
-                        <span className="text-sm text-white">{itemToEdit}</span>
+        <div className={containerClasses}>
+            <div className={panelClasses} onAnimationEnd={handleAnimationEnd}>
+                <div className="flex flex-row w-full items-center pr-5 pl-10 justify-between pt-2">
+                    <EditorSidePanel parentPanel="tapdances" />
+                    <div className="flex flex-row items-center">
+                        <div className="flex flex-col bg-black h-14 w-14 rounded-sm flex-shrink-0 items-center ">
+                            <div className="h-5 w-5 mt-3 text-white">{(icons as any)[bindingTypeToEdit!]}</div>
+                            <span className="text-sm text-white">{itemToEdit}</span>
+                        </div>
+                        <div className="pl-5 text-xl font-normal">{(labels as any)[bindingTypeToEdit!]}</div>
                     </div>
-                    <div className="pl-5 text-xl font-normal">{(labels as any)[bindingTypeToEdit!]}</div>
+                    <button
+                        type="button"
+                        onClick={handleAnimatedClose}
+                        className="rounded-sm p-1 text-kb-gray-border transition-all hover:text-black focus:outline-none focus:text-black cursor-pointer"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    onClick={handleCloseEditor}
-                    className="rounded-sm p-1 text-kb-gray-border transition-all hover:text-black focus:outline-none focus:text-black cursor-pointer"
-                >
-                    <X className="h-5 w-5" />
-                </button>
+                {bindingTypeToEdit === "tapdances" && <TapdanceEditor />}
+                {bindingTypeToEdit === "combos" && <ComboEditor />}
+                {bindingTypeToEdit === "overrides" && <OverrideEditor />}
+                {bindingTypeToEdit === "macros" && <MacroEditor />}
             </div>
-            {bindingTypeToEdit === "tapdances" && <TapdanceEditor />}
-            {bindingTypeToEdit === "combos" && <ComboEditor />}
-            {bindingTypeToEdit === "overrides" && <OverrideEditor />}
-            {bindingTypeToEdit === "macros" && <MacroEditor />}
         </div>
     );
 };
