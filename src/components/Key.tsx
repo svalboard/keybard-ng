@@ -114,17 +114,25 @@ export const Key: React.FC<KeyProps> = ({ x, y, w, h, keycode, label, row, col, 
                 data-col={col}
                 title={keycode}
             >
-                {topStr !== "" && <span className=" text-xs whitespace-nowrap bg-black/40 w-full rounded-t-sm text-center py-0">{topStr}</span>}
+                {topStr !== "" && <span className="text-sm whitespace-nowrap bg-black/30 w-full rounded-t-sm text-center text-white font-semibold py-0">{topStr}</span>}
                 {keyContents?.type === "tapdance" && <TapdanceIcon className=" mt-2 h-8" />}
                 {keyContents?.type === "macro" && <MacrosIcon className=" mt-2 h-8" />}
                 <div
                     className="text-center w-full h-full justify-center items-center flex font-semibold"
                     // @ts-ignore
-                    style={["user", "OSM"].includes(keyContents?.type) ? { whiteSpace: "pre-line", fontSize: "0.5rem", textWrap: "break" } : {}}
+                    style={["user", "OSM"].includes(keyContents?.type) || l.length > 5 ? { whiteSpace: "pre-line", fontSize: "0.6rem", textWrap: "break" } : {}}
                 >
                     {l}
                 </div>
-                {bottomStr !== "" && <span className="font-medium text-xs whitespace-nowrap text-white bg-black/30 w-full rounded-b-sm text-center py-0 fitty">{bottomStr}</span>}
+                {bottomStr !== "" && (
+                    <span
+                        className="font-semibold min-h-5 items-center flex justify-center text-sm whitespace-nowrap text-white bg-black/30 w-full rounded-b-sm text-center py-0"
+                        // @ts-ignore
+                        style={bottomStr.length > 4 ? { whiteSpace: "pre-line", fontSize: "0.6rem", textWrap: "break" } : {}}
+                    >
+                        {bottomStr}
+                    </span>
+                )}
             </div>
         </div>
     );
