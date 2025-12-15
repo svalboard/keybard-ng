@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 
 import { MATRIX_COLS } from "@/constants/svalboard-layout";
+import { useChanges } from "@/contexts/ChangesContext";
 import { keyService } from "@/services/key.service";
 import { useVial } from "./VialContext";
 
@@ -29,7 +30,8 @@ interface KeyBindingContextType {
 const KeyBindingContext = createContext<KeyBindingContextType | undefined>(undefined);
 
 export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { keyboard, setKeyboard } = useVial();
+    const { keyboard, setKeyboard, updateKey } = useVial();
+    const { queue } = useChanges();
     const [selectedTarget, setSelectedTarget] = useState<BindingTarget | null>(null);
     const [isBinding, setIsBinding] = useState(false);
 
@@ -109,7 +111,31 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     if (!updatedKeyboard.keymap) updatedKeyboard.keymap = [];
                     if (!updatedKeyboard.keymap[layer]) updatedKeyboard.keymap[layer] = [];
 
+                    // Store previous value for potential rollback
+                    const previousValue = updatedKeyboard.keymap[layer][matrixPos];
+
                     updatedKeyboard.keymap[layer][matrixPos] = keycodeValue;
+
+                    // Queue the change with callback
+                    const changeDesc = `key_${layer}_${row}_${col}`;
+                    queue(
+                        changeDesc,
+                        async () => {
+                            // This callback will be executed when committing changes
+                            // For now, it's a placeholder for future hardware sync
+                            console.log(`Committing key change: Layer ${layer}, Key [${row},${col}] → ${keycodeValue}`);
+                            updateKey(layer, row, col, keycodeValue);
+                        },
+                        {
+                            type: "key",
+                            layer,
+                            row,
+                            col,
+                            keycode: keycodeValue,
+                            previousValue,
+                        }
+                    );
+
                     break;
                 }
 
@@ -124,9 +150,29 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         combos[comboId] = ["KC_NO", "KC_NO", "KC_NO", "KC_NO", "KC_NO"];
                     }
 
+                    // Store previous value
+                    const previousValue = combos[comboId][comboSlot];
+
                     // Convert keycode to keycode name string
                     const keycodeName = typeof keycode === "string" ? keycode : `KC_${keycode}`;
                     combos[comboId][comboSlot] = keycodeName;
+
+                    // Queue the change with callback
+                    const changeDesc = `combo_${comboId}_${comboSlot}`;
+                    queue(
+                        changeDesc,
+                        async () => {
+                            console.log(`Committing combo change: Combo ${comboId}, Slot ${comboSlot} → ${keycodeName}`);
+                        },
+                        {
+                            type: "combo",
+                            comboId,
+                            comboSlot,
+                            keycode: keycodeValue,
+                            previousValue,
+                        }
+                    );
+
                     break;
                 }
 
@@ -148,8 +194,28 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         };
                     }
 
+                    // Store previous value
+                    const previousValue = tapdances[tapdanceId][tapdanceSlot];
+
                     const keycodeName = typeof keycode === "string" ? keycode : `KC_${keycode}`;
                     tapdances[tapdanceId][tapdanceSlot] = keycodeName;
+
+                    // Queue the change with callback
+                    const changeDesc = `tapdance_${tapdanceId}_${tapdanceSlot}`;
+                    queue(
+                        changeDesc,
+                        async () => {
+                            console.log(`Committing tapdance change: Tapdance ${tapdanceId}, ${tapdanceSlot} → ${keycodeName}`);
+                        },
+                        {
+                            type: "tapdance",
+                            tapdanceId,
+                            tapdanceSlot,
+                            keycode: keycodeValue,
+                            previousValue,
+                        }
+                    );
+
                     break;
                 }
             }
@@ -157,7 +223,7 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             setKeyboard(updatedKeyboard);
             clearSelection();
         },
-        [keyboard, setKeyboard, clearSelection]
+        [keyboard, setKeyboard, clearSelection, queue]
     );
 
     const value: KeyBindingContextType = {
