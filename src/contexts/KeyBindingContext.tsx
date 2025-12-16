@@ -1,8 +1,10 @@
-import React, { createContext, useCallback, useContext, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { MATRIX_COLS } from "@/constants/svalboard-layout";
 import { useChanges } from "@/contexts/ChangesContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { keyService } from "@/services/key.service";
+import { KEYBOARD_EVENT_MAP } from "@/utils/keyboard-mapper";
 import { useVial } from "./VialContext";
 
 interface BindingTarget {
@@ -35,11 +37,15 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const [selectedTarget, setSelectedTarget] = useState<BindingTarget | null>(null);
     const [isBinding, setIsBinding] = useState(false);
 
+
+
     // Use a ref to always have access to the current selectedTarget value
     const selectedTargetRef = useRef<BindingTarget | null>(null);
 
     // Keep the ref in sync with the state
     selectedTargetRef.current = selectedTarget;
+
+
 
     const selectKeyboardKey = useCallback(
         (layer: number, row: number, col: number) => {
@@ -225,6 +231,33 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         },
         [keyboard, setKeyboard, clearSelection, queue]
     );
+
+    const { getSetting } = useSettings();
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            const typingBindsKey = getSetting("typing-binds-key");
+            
+            if (!typingBindsKey || !selectedTargetRef.current) return;
+
+            // Ignore if user is typing in an input or textarea
+            const target = event.target as HTMLElement;
+            if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+
+            const qmkKeycode = KEYBOARD_EVENT_MAP[event.code];
+
+            if (qmkKeycode) {
+                event.preventDefault();
+                event.stopPropagation();
+                assignKeycode(qmkKeycode);
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [assignKeycode, getSetting]);
 
     const value: KeyBindingContextType = {
         selectedTarget,
