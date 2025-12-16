@@ -5,8 +5,12 @@ import { LE32, MSG_LEN } from "./utils";
 
 import { XzReadableStream } from "xz-decompress";
 import type { KeyboardInfo } from "../types/vial.types";
+import { ComboService } from "./combo.service";
 import { MacroService } from "./macro.service";
+import { OverrideService } from "./override.service";
+import { QMKService } from "./qmk.service";
 import { svalService } from "./sval.service";
+import { TapdanceService } from "./tapdance.service";
 
 // XZ decompression helper
 async function decompress(buffer: ArrayBuffer): Promise<string> {
@@ -49,10 +53,18 @@ async function decompress(buffer: ArrayBuffer): Promise<string> {
 export class VialService {
     private usb: VialUSB;
     private macro: MacroService;
+    private tapdance: TapdanceService;
+    private combo: ComboService;
+    private override: OverrideService;
+    private qmk: QMKService;
 
     constructor(usb: VialUSB) {
         this.usb = usb;
         this.macro = new MacroService(usb);
+        this.tapdance = new TapdanceService(usb);
+        this.combo = new ComboService(usb);
+        this.override = new OverrideService(usb);
+        this.qmk = new QMKService(usb);
     }
 
     static isWebHIDSupported(): boolean {
@@ -82,6 +94,10 @@ export class VialService {
 
         // Get keymap for all layers
         await this.getKeyMap(kbinfo);
+        await this.macro.get(kbinfo);
+        await this.tapdance.get(kbinfo);
+        await this.combo.get(kbinfo);
+        await this.override.get(kbinfo);
 
         return kbinfo;
     }
@@ -140,7 +156,7 @@ export class VialService {
 
     async getFeatures(kbinfo: KeyboardInfo): Promise<void> {
         // Get feature counts
-        await this.usb.sendVial(VialUSB.CMD_VIAL_DYNAMIC_ENTRY_OP, []);
+        const counts = await this.usb.sendVial(VialUSB.CMD_VIAL_DYNAMIC_ENTRY_OP, []);
 
         const macro_count = await this.usb.send(VialUSB.CMD_VIA_MACRO_GET_COUNT, [], { uint8: true, index: 1 });
 
@@ -150,6 +166,9 @@ export class VialService {
         })) as number;
 
         // Store feature information in kbinfo
+        kbinfo.tapdance_count = counts[0];
+        kbinfo.combo_count = counts[1];
+        kbinfo.key_override_count = counts[2];
         kbinfo.macro_count = macro_count;
         kbinfo.macros_size = macros_size;
     }
@@ -218,18 +237,18 @@ export class VialService {
     async updateMacros(kbinfo: KeyboardInfo) {
         await this.macro.push(kbinfo);
     }
-    // async updateTapdance(kbinfo, tdid) {
-    //   await this.tapdance.push(kbinfo, tdid);
-    // },
-    // async updateCombo(kbinfo, cmbid) {
-    //   await this.combo.push(kbinfo, cmbid);
-    // },
-    // async updateKeyoverride(kbinfo, koid) {
-    //   await this.key_override.push(kbinfo, koid);
-    // },
-    // async updateQMKSetting(kbinfo, qfield) {
-    //   await this.qmk.push(kbinfo, qfield);
-    // },
+    async updateTapdance(kbinfo: KeyboardInfo, tdid: number) {
+      await this.tapdance.push(kbinfo, tdid);
+    }
+    async updateCombo(kbinfo: KeyboardInfo, cmbid: number) {
+      await this.combo.push(kbinfo, cmbid);
+    }
+    async updateKeyoverride(kbinfo: KeyboardInfo, koid: number) {
+      await this.override.push(kbinfo, koid);
+    }
+    async updateQMKSetting(kbinfo: KeyboardInfo, qfield: number) {
+      await this.qmk.push(kbinfo, qfield);
+    }
 }
 
 export const vialService = new VialService(usbInstance);

@@ -17,6 +17,9 @@ export interface KeyboardInfo {
     tapdance?: TapdanceData;
     key_overrides?: KeyOverrideData;
     settings?: Record<number, number>;
+    tapdance_count?: number;
+    combo_count?: number;
+    key_override_count?: number;
 
     // Svalboard-specific
     sval_proto?: number;

@@ -1,6 +1,6 @@
 // USB HID communication layer for Vial protocol
-import { MSG_LEN, LE16, BE16 } from "./utils";
 import type { USBSendOptions } from "../types/vial.types";
+import { BE16, LE16, MSG_LEN } from "./utils";
 
 export class VialUSB {
   // Via+Vial command constants
@@ -358,6 +358,7 @@ export class VialUSB {
         [dynamicCmd, i],
         options
       );
+      console.log("data", data);
       entries.push(data);
     }
     return entries;
