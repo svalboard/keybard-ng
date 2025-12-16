@@ -1,15 +1,128 @@
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useSettings } from "@/contexts/SettingsContext";
+import { useVial } from "@/contexts/VialContext";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { fileService } from "@/services/file.service";
+import { useRef, useState } from "react";
 
 const SettingsPanel = () => {
     const { getSetting, updateSetting, settingsDefinitions, settingsCategories } = useSettings();
     const [activeCategory, setActiveCategory] = useState<string>("general");
+    const { keyboard, setKeyboard } = useVial();
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Export Dialog State
+    const [isExportOpen, setIsExportOpen] = useState(false);
+    const [exportFormat, setExportFormat] = useState<"vil" | "kbi">("vil");
+    const [includeMacros, setIncludeMacros] = useState(true);
+
+    const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            try {
+                const newKbInfo = await fileService.uploadFile(file);
+                if (newKbInfo) {
+                     setKeyboard(newKbInfo);
+                     // Optional: Show success toast
+                     console.log("Import successful", newKbInfo);
+                }
+            } catch (err) {
+                console.error("Upload failed", err);
+                // Optional: Show error toast
+            }
+        }
+        // Reset input so same file can be selected again
+        if (event.target) {
+            event.target.value = '';
+        }
+    };
+
+    const handleExport = async () => {
+        if (!keyboard) {
+            console.error("No keyboard loaded");
+            return;
+        }
+
+        try {
+            if (exportFormat === "vil") {
+                await fileService.downloadVIL(keyboard, includeMacros);
+            } else {
+                await fileService.downloadKBI(keyboard, includeMacros);
+            }
+            setIsExportOpen(false);
+        } catch (err) {
+             console.error("Export failed", err);
+        }
+    };
+
     return (
         <section className="space-y-3 h-full max-h-full flex flex-col w-full mx-auto py-4">
+             {/* Hidden file input for import */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".vil,.kbi,.json"
+                onChange={handleFileImport}
+            />
+
+            {/* Export Dialog */}
+             <Dialog open={isExportOpen} onOpenChange={setIsExportOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Export Configuration</DialogTitle>
+                        <DialogDescription>
+                            Choose the format to save your keyboard configuration.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4">
+                        <div className="flex flex-col gap-2">
+                             <Label>Format</Label>
+                             <Select value={exportFormat} onValueChange={(v: "vil" | "kbi") => setExportFormat(v)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select format" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="vil">Vial (.vil) - Universal</SelectItem>
+                                    <SelectItem value="kbi">Keybard (.kbi) - Full Backup</SelectItem>
+                                </SelectContent>
+                             </Select>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Switch id="include-macros" checked={includeMacros} onCheckedChange={(c: boolean) => setIncludeMacros(c)} />
+                            <label
+                                htmlFor="include-macros"
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                Include Macros
+                            </label>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => setIsExportOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button type="button" onClick={handleExport}>
+                            Export
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <div className="flex flex-row gap-2 justify-stretch align-stretch mb-3 w-full">
                 {settingsCategories.map((category) => (
                     <div
@@ -78,6 +191,11 @@ const SettingsPanel = () => {
                                     key={setting.name}
                                     onClick={() => {
                                         console.log(`Action ${setting.action} triggered`);
+                                        if (setting.action === "import-settings") {
+                                            fileInputRef.current?.click();
+                                        } else if (setting.action === "export-settings") {
+                                            setIsExportOpen(true);
+                                        }
                                     }}
                                 >
                                     <div className="flex flex-col gap-2">

@@ -1,5 +1,4 @@
-// Main Vial service - orchestrates keyboard communication and state
-
+import { KleService } from "./kle.service";
 import { VialUSB, usbInstance } from "./usb";
 import { LE32, MSG_LEN } from "./utils";
 
@@ -57,6 +56,7 @@ export class VialService {
     private combo: ComboService;
     private override: OverrideService;
     private qmk: QMKService;
+    private kle: KleService;
 
     constructor(usb: VialUSB) {
         this.usb = usb;
@@ -79,8 +79,18 @@ export class VialService {
         // Load keyboard information
         await this.getKeyboardInfo(kbinfo);
 
+        // Populate keylayout using KLE service if payload exists
+            if (kbinfo.payload && kbinfo.payload.layouts && kbinfo.payload.layouts.keymap) {
+                 try {
+                    (kbinfo as any).keylayout = this.kle.deserializeToKeylayout(kbinfo, kbinfo.payload.layouts.keymap as unknown as any[]);
+                 } catch (e) {
+                     console.error("Failed to deserialize keylayout:", e);
+                 }
+            }
+
         // Check for Svalboard-specific features
         const isSval = await svalService.check(kbinfo);
+// ...
         if (isSval) {
             console.log("Svalboard detected, proto:", kbinfo.sval_proto, "firmware:", kbinfo.sval_firmware);
             await svalService.pull(kbinfo);
