@@ -15,7 +15,7 @@ export class ImportService {
 
         // 1. Sync Keymap
         if (newKb.keymap && currentKb.keymap) {
-            for (let l = 0; l < newKb.layers; l++) {
+            for (let l = 0; l < (newKb?.layers || 0); l++) {
                 if (!newKb.keymap[l]) continue;
                 for (let r = 0; r < newKb.rows; r++) {
                     for (let c = 0; c < newKb.cols; c++) {
