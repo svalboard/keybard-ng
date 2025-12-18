@@ -1,4 +1,4 @@
-import { VialUSB, usbInstance } from "./usb";
+import { VialUSB, usbInstance } from "./usb.service";
 
 // Svalboard-specific protocol service
 import type { KeyboardInfo } from "../types/vial.types";

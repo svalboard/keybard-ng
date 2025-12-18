@@ -1,5 +1,5 @@
 import { KleService } from "./kle.service";
-import { VialUSB, usbInstance } from "./usb";
+import { VialUSB, usbInstance } from "./usb.service";
 import { LE32, MSG_LEN } from "./utils";
 
 import { XzReadableStream } from "xz-decompress";

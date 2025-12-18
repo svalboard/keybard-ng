@@ -1,6 +1,6 @@
 import type { KeyboardInfo } from "../types/vial.types";
 import { keyService } from "./key.service";
-import { VialUSB } from "./usb";
+import { VialUSB } from "./usb.service";
 
 export class TapdanceService {
     constructor(private usb: VialUSB) {}
