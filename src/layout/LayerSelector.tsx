@@ -8,6 +8,7 @@ import { colorClasses } from "@/utils/colors";
 import LayersActiveIcon from "@/components/icons/LayersActive";
 import { vialService } from "@/services/vial.service";
 import { DialogTrigger } from "@radix-ui/react-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { FC, useState } from "react";
 
 interface Props {
@@ -36,9 +37,16 @@ const LayerSelector: FC<Props> = ({ selectedLayer, setSelectedLayer }) => {
     return (
         <div className="w-full">
             <div className=" py-7 overflow-hidden flex-shrink-0 flex items-center justify-start text-gray-500 gap-1 pl-4 w-full">
-                <button onClick={toggleShowLayers} className="hover:bg-gray-200 p-1 rounded transition-colors mr-2 text-black">
-                    {showAllLayers ? <LayersDefaultIcon className="h-5 w-5" /> : <LayersActiveIcon className="h-5 w-5" />}
-                </button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button onClick={toggleShowLayers} className="hover:bg-gray-200 p-1 rounded transition-colors mr-2 text-black">
+                            {showAllLayers ? <LayersDefaultIcon className="h-5 w-5" /> : <LayersActiveIcon className="h-5 w-5" />}
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                        {showAllLayers ? "Show Active" : "Show All"}
+                    </TooltipContent>
+                </Tooltip>
                 <div className="max-w-full flex flex-row overflow-hidden flex-grow-0 gap-2">
                     {Array.from({ length: keyboard!.layers || 16 }, (_, i) => {
                         const layerData = keyboard!.keymap?.[i];

@@ -1,5 +1,6 @@
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ChevronsLeftRightEllipsis, Cpu, HelpCircle, LucideIcon, Settings, ChevronsRight } from "lucide-react";
+import { useCallback } from "react";
 
 import ComboIcon from "@/components/ComboIcon";
 import KeyboardIcon from "@/components/icons/Keyboard";
@@ -11,7 +12,12 @@ import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import Logo from "@/components/Logo";
 import { usePanels } from "@/contexts/PanelsContext";
 import { cn } from "@/lib/utils";
-import { useCallback } from "react";
+
+// --- Constants ---
+const ICON_GUTTER_WIDTH = "w-[43px]";
+const BASE_ICON_PADDING = "pl-[13px]";
+const LOGO_ICON_PADDING = "pl-[10px]";
+const MENU_ITEM_GAP_PX = 42; // Matches Gap-4 (16px) + Button Height (26px)
 
 export type SidebarItem = {
     title: string;
@@ -36,21 +42,30 @@ const footerItems: SidebarItem[] = [
     { title: "Settings", url: "settings", icon: Settings },
 ];
 
+// --- Sub-components ---
+
+const SlidingIndicator = ({ index }: { index: number }) => (
+    <div
+        className="absolute left-[4px] top-0 w-[3px] h-[26px] bg-black z-20 transition-transform duration-300 ease-in-out pointer-events-none"
+        style={{ transform: `translateY(${index * MENU_ITEM_GAP_PX}px)` }}
+    />
+);
+
+interface SidebarNavItemProps {
+    item: SidebarItem;
+    isActive: boolean;
+    isPreviousPanel?: boolean;
+    alternativeHeader?: boolean;
+    onClick: (item: SidebarItem) => void;
+}
+
 const SidebarNavItem = ({
     item,
     isActive,
     isPreviousPanel,
-    isCollapsed,
     alternativeHeader,
     onClick,
-}: {
-    item: SidebarItem;
-    isActive: boolean;
-    isPreviousPanel?: boolean;
-    isCollapsed: boolean;
-    alternativeHeader?: boolean;
-    onClick: (item: SidebarItem) => void;
-}) => (
+}: SidebarNavItemProps) => (
     <SidebarMenuItem className="cursor-pointer">
         <SidebarMenuButton
             asChild
@@ -64,7 +79,7 @@ const SidebarNavItem = ({
             )}
         >
             <button type="button" onClick={() => onClick(item)} className="flex w-full items-center justify-start">
-                <div className="w-[43px] h-full flex items-center justify-start pl-[13px] shrink-0">
+                <div className={cn(ICON_GUTTER_WIDTH, "h-full flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
                     <item.icon className="h-4 w-4 shrink-0" />
                 </div>
                 <span className="truncate group-data-[state=collapsed]:hidden">
@@ -75,21 +90,22 @@ const SidebarNavItem = ({
     </SidebarMenuItem>
 );
 
-const SlidingIndicator = ({ index }: { index: number }) => (
-    <div
-        className="absolute left-[4px] top-0 w-[3px] h-[26px] bg-black z-20 transition-transform duration-300 ease-in-out pointer-events-none"
-        style={{ transform: `translateY(${index * 42}px)` }}
-    />
-);
+// --- Main Component ---
 
 const AppSidebar = () => {
     const { state, toggleSidebar } = useSidebar("primary-nav", { defaultOpen: false });
     const isCollapsed = state === "collapsed";
-    const sidebarClasses = cn(
-        "z-11 fixed transition-[box-shadow,border-color] duration-300 ease-out border border-sidebar-border shadow-lg ml-2 h-[98vh] mt-[1vh] transition-all",
-        "rounded-3xl"
-    );
-    const { setItemToEdit, setActivePanel, openDetails, activePanel, panelToGoBack, alternativeHeader, setPanelToGoBack, setAlternativeHeader } = usePanels();
+
+    const {
+        setItemToEdit,
+        setActivePanel,
+        openDetails,
+        activePanel,
+        panelToGoBack,
+        alternativeHeader,
+        setPanelToGoBack,
+        setAlternativeHeader
+    } = usePanels();
 
     const handleItemSelect = useCallback(
         (item: SidebarItem) => {
@@ -105,6 +121,11 @@ const AppSidebar = () => {
     const activePrimaryIndex = primarySidebarItems.findIndex((item) => item.url === activePanel);
     const activeFooterIndex = footerItems.findIndex((item) => item.url === activePanel);
 
+    const sidebarClasses = cn(
+        "z-11 fixed transition-[box-shadow,border-color] duration-300 ease-out border border-sidebar-border shadow-lg ml-2 h-[98vh] mt-[1vh] transition-all",
+        "rounded-3xl"
+    );
+
     return (
         <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses}>
             <SidebarHeader className="p-0 py-2">
@@ -112,7 +133,7 @@ const AppSidebar = () => {
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild size="nav" className="hover:bg-transparent cursor-default">
                             <div className="flex w-full items-center justify-start translate-y-[3px]">
-                                <div className="w-[43px] h-4 flex items-center justify-start pl-[10px] shrink-0">
+                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
                                     <Logo />
                                 </div>
                                 <span className="text-xl font-bold truncate group-data-[state=collapsed]:hidden">Keybard</span>
@@ -122,7 +143,7 @@ const AppSidebar = () => {
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild size="nav" className="text-slate-600 transition-colors">
                             <button type="button" onClick={() => toggleSidebar()} className="flex w-full items-center justify-start">
-                                <div className="w-[43px] h-4 flex items-center justify-start pl-[13px] shrink-0">
+                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
                                     <ChevronsRight className={cn("h-4 w-4 shrink-0 transition-transform", !isCollapsed ? "rotate-180" : "")} />
                                 </div>
                                 <span className="text-sm font-semibold truncate group-data-[state=collapsed]:hidden">Hide Menu</span>
@@ -141,7 +162,6 @@ const AppSidebar = () => {
                             item={item}
                             isActive={activePanel === item.url}
                             isPreviousPanel={panelToGoBack === item.url}
-                            isCollapsed={isCollapsed}
                             alternativeHeader={alternativeHeader}
                             onClick={handleItemSelect}
                         />
@@ -157,7 +177,6 @@ const AppSidebar = () => {
                             key={item.url}
                             item={item}
                             isActive={activePanel === item.url}
-                            isCollapsed={isCollapsed}
                             onClick={handleItemSelect}
                         />
                     ))}
