@@ -20,6 +20,8 @@ export function getClassNameByColor(name: string) {
 
 export const colorClasses: { [key: string]: string } = {
     primary: "bg-kb-primary text-white",
+    black: "bg-black text-white",
+    sidebar: "bg-kb-sidebar-base text-white",
     red: "bg-kb-red text-white",
     green: "bg-kb-green text-white",
     blue: "bg-kb-blue text-white",

@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { VialService, vialService } from "../services/vial.service";
+import { svalService } from "../services/sval.service";
 
 import { fileService } from "../services/file.service";
 import { qmkService } from "../services/qmk.service";
@@ -92,6 +93,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const loadFromFile = useCallback(async (file: File) => {
         try {
             const kbinfo = await fileService.loadFile(file);
+            svalService.setupCosmeticLayerNames(kbinfo);
             setKeyboard(kbinfo);
             const filePath = file.name;
             setLoadedFrom(filePath);
@@ -113,6 +115,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const savedContent = localStorage.getItem("keybard_saved_file");
                 if (savedContent) {
                     const kbinfo = JSON.parse(savedContent) as KeyboardInfo;
+                    svalService.setupCosmeticLayerNames(kbinfo);
                     setKeyboard(kbinfo);
                     setLoadedFrom("Last Saved File");
                     setIsConnected(false);

@@ -31,7 +31,7 @@ const AlternativeHeader = () => {
                 <ArrowLeft className="h-6 w-6 text-gray-500" />
             </div>
             <div>
-                <h2 className="text-2xl font-medium leading-none text-slate-700">
+                <h2 className="text-[22px] font-semibold leading-none text-slate-700">
                     Add {getPanelTitle(activePanel!)} to {getPanelTitle(panelToGoBack!)}
                 </h2>
             </div>
@@ -39,7 +39,7 @@ const AlternativeHeader = () => {
     );
 };
 
-const SecondarySidebar: React.FC<SecondarySidebarProps> = ({}) => {
+const SecondarySidebar: React.FC<SecondarySidebarProps> = ({ }) => {
     const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
     const primaryOffset = primarySidebar.state === "collapsed" ? "calc(var(--sidebar-width-icon) + var(--spacing)*4)" : "calc(var(--sidebar-width-base) + var(--spacing)*4)";
     const { activePanel, handleCloseDetails, state, alternativeHeader, itemToEdit, setItemToEdit } = usePanels();
@@ -89,7 +89,7 @@ const SecondarySidebar: React.FC<SecondarySidebarProps> = ({}) => {
                 ) : (
                     <div className="flex items-center justify-between gap-4">
                         <div>
-                            <h2 className="text-3xl font-medium leading-none text-slate-700">{getPanelTitle(activePanel!)}</h2>
+                            <h2 className="text-[22px] font-semibold leading-none text-slate-700">{getPanelTitle(activePanel!)}</h2>
                         </div>
                         <Button type="button" variant="ghost" size="icon" className="shrink-0" onClick={handleClose} aria-label="Close details panel">
                             <X className="h-4 w-4" />

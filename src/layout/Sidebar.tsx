@@ -128,15 +128,15 @@ const AppSidebar = () => {
 
     return (
         <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses}>
-            <SidebarHeader className="p-0 py-2">
+            <SidebarHeader className="p-0 py-4">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild size="nav" className="hover:bg-transparent cursor-default">
-                            <div className="flex w-full items-center justify-start translate-y-[3px]">
+                            <div className="flex w-full items-center justify-start">
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
                                     <Logo />
                                 </div>
-                                <span className="text-xl font-bold truncate group-data-[state=collapsed]:hidden">Keybard</span>
+                                <span className="text-[22px] font-semibold truncate group-data-[state=collapsed]:hidden">Keybard</span>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -146,7 +146,7 @@ const AppSidebar = () => {
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
                                     <ChevronsRight className={cn("h-4 w-4 shrink-0 transition-transform", !isCollapsed ? "rotate-180" : "")} />
                                 </div>
-                                <span className="text-sm font-semibold truncate group-data-[state=collapsed]:hidden">Hide Menu</span>
+                                <span className="text-md font-medium truncate group-data-[state=collapsed]:hidden">Hide Menu</span>
                             </button>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

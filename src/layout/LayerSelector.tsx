@@ -7,7 +7,6 @@ import { svalService } from "@/services/sval.service";
 import { colorClasses } from "@/utils/colors";
 import LayersActiveIcon from "@/components/icons/LayersActive";
 import { vialService } from "@/services/vial.service";
-import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { FC, useState } from "react";
 
@@ -18,10 +17,11 @@ interface Props {
 
 const LayerSelector: FC<Props> = ({ selectedLayer, setSelectedLayer }) => {
     const { keyboard } = useVial();
-    const layerKeymap = keyboard!.keymap?.[selectedLayer] || [];
     const { clearSelection } = useKeyBinding();
 
     const [showAllLayers, setShowAllLayers] = useState(true);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [layerToEdit, setLayerToEdit] = useState<number>(selectedLayer);
 
     const handleSelectLayer = (layer: number) => () => {
         setSelectedLayer(layer);
@@ -63,6 +63,10 @@ const LayerSelector: FC<Props> = ({ selectedLayer, setSelectedLayer }) => {
                             <div
                                 key={layer}
                                 onClick={handleSelectLayer(i)}
+                                onDoubleClick={() => {
+                                    setLayerToEdit(i);
+                                    setIsDialogOpen(true);
+                                }}
                                 className={`
                         cursor-pointer px-5 py-1 rounded-full transition-colors relative flex-grow-0 flex-shrink-0 items-center justify-center text-sm font-medium
                         ${isActive ? "bg-gray-800 text-white shadow-md" : "hover:bg-gray-200"}
@@ -76,25 +80,17 @@ const LayerSelector: FC<Props> = ({ selectedLayer, setSelectedLayer }) => {
             </div>
             <div className="text-lg text-gray-600 mt-2 font-bold flex justify-start items-center px-5">
                 <div className={`w-4 h-4 ${colorClasses[layerColor]} mr-3 rounded-full`}></div>
-                <span className="text-lg font-medium">{svalService.getLayerName(keyboard!, selectedLayer)}</span>
-                <Dialog>
-                    <DialogTrigger asChild className="ml-2">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="inline-block h-7 w-7 ml-2 text-black hover:text-black rounded-sm  cursor-pointer hover:bg-gray-200 p-1 transition-colors"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                        </svg>
-                    </DialogTrigger>
-                    <EditLayer layer={selectedLayer} layerName={svalService.getLayerCosmetic(keyboard!, selectedLayer)} />
+                <span
+                    className="text-lg font-medium cursor-pointer"
+                    onDoubleClick={() => {
+                        setLayerToEdit(selectedLayer);
+                        setIsDialogOpen(true);
+                    }}
+                >
+                    {svalService.getLayerName(keyboard!, selectedLayer)}
+                </span>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <EditLayer layer={layerToEdit} />
                 </Dialog>
             </div>
         </div>
