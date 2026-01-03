@@ -35,6 +35,7 @@ describe('VialService', () => {
       send: vi.fn(),
       sendVial: vi.fn(),
       getViaBuffer: vi.fn(),
+      getDynamicEntries: vi.fn(),
       open: vi.fn().mockResolvedValue(true),
       close: vi.fn().mockResolvedValue(undefined)
     };
@@ -138,6 +139,8 @@ describe('VialService', () => {
         return Promise.resolve(buffer);
       }
     });
+
+    mockUSB.getDynamicEntries.mockResolvedValue([]);
 
     vialService = new VialService(mockUSB);
   });
