@@ -7,6 +7,7 @@ import KeyboardIcon from "@/components/icons/Keyboard";
 import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import MacrosIcon from "@/components/icons/MacrosIcon";
 import MatrixTesterIcon from "@/components/icons/MatrixTester";
+import MouseIcon from "@/components/icons/Mouse";
 import OverridesIcon from "@/components/icons/Overrides";
 import TapdanceIcon from "@/components/icons/Tapdance";
 import Logo from "@/components/Logo";
@@ -38,6 +39,7 @@ export type SidebarItem = {
 export const primarySidebarItems: SidebarItem[] = [
     { title: "Keys", url: "keyboard", icon: KeyboardIcon },
     { title: "Special Keys", url: "special", icon: GamepadDirectional },
+    { title: "Mouse", url: "mouse", icon: MouseIcon },
     { title: "Layers", url: "layers", icon: LayersDefaultIcon },
     { title: "Tap Dances", url: "tapdances", icon: TapdanceIcon },
     { title: "Combos", url: "combos", icon: ComboIcon },

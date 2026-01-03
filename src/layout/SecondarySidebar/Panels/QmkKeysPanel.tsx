@@ -23,7 +23,7 @@ const KeyButton: FC<KeyButtonProps> = ({ keycode, label, title, onClick, hoverBo
     return (
         <div
             className={cn(
-                "bg-kb-grey text-white h-14 w-14 rounded-md cursor-pointer hover:border-2 border-transparent transition-all flex flex-col items-center justify-center text-center text-xs font-medium",
+                "bg-kb-grey text-white h-14 w-14 rounded-md cursor-pointer hover:border-2 border-transparent transition-all flex flex-col items-center justify-center text-center text-xs font-medium group",
                 hoverBorderColor ? hoverBorderColor : "hover:border-red-600",
                 hoverBackgroundColor && hoverBackgroundColor
             )}
@@ -31,9 +31,9 @@ const KeyButton: FC<KeyButtonProps> = ({ keycode, label, title, onClick, hoverBo
             title={title || keycode}
             aria-label={label}
         >
-            {!show && <div className="text-[10px] bg-black/40 w-full rounded-t-sm">{(keyContents as any)?.top}</div>}
+            {!show && <div className="text-[10px] bg-black/40 group-hover:bg-black/20 w-full rounded-t-sm">{(keyContents as any)?.top}</div>}
             <div className="h-full items-center flex text-[10px]">{keyContents?.str}</div>
-            <div className="text-[10px] bg-black/40 w-full rounded-b-sm">{show}</div>
+            <div className="text-[10px] bg-black/40 group-hover:bg-black/20 w-full rounded-b-sm">{show}</div>
         </div>
     );
 };
