@@ -10,11 +10,15 @@ import { cn } from "@/lib/utils";
 import LayerSelector from "./LayerSelector";
 import AppSidebar from "./Sidebar";
 
+import { LayerProvider, useLayer } from "@/contexts/LayerContext";
+
 const EditorLayout = () => {
     return (
         <SidebarProvider defaultOpen={false}>
             <PanelsProvider>
-                <EditorLayoutInner />
+                <LayerProvider>
+                    <EditorLayoutInner />
+                </LayerProvider>
             </PanelsProvider>
         </SidebarProvider>
     );
@@ -22,7 +26,7 @@ const EditorLayout = () => {
 
 const EditorLayoutInner = () => {
     const { keyboard } = useVial();
-    const [selectedLayer, setSelectedLayer] = React.useState(0);
+    const { selectedLayer, setSelectedLayer } = useLayer();
 
     const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
     const { isMobile, state } = usePanels();

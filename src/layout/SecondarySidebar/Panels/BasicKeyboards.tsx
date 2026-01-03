@@ -7,7 +7,9 @@ import SpecialKeyboard from "@/components/Keyboards/SpecialKeyboard";
 import SvalboardKeyboard from "@/components/Keyboards/SvalboardKeyboard";
 import { Button } from "@/components/ui/button";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
+import { useLayer } from "@/contexts/LayerContext";
 import { useVial } from "@/contexts/VialContext";
+import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
 import { cn } from "@/lib/utils";
 import { KeyboardInfo } from "@/types/vial.types";
 
@@ -153,12 +155,17 @@ const BasicKeyboards = () => {
     const [activeModifiers, setActiveModifiers] = useState<string[]>([]);
     const { assignKeycode, isBinding } = useKeyBinding();
     const { keyboard } = useVial();
+    const { selectedLayer } = useLayer();
     console.log("BasicKeyboards keyboard:", keyboard);
 
     useEffect(() => {
         setActiveCategory("Numpad");
         setActiveModifiers([]);
     }, []);
+
+    const layerColorName = keyboard?.cosmetic?.layer_colors?.[selectedLayer] || "primary";
+    const hoverBorderColor = hoverBorderClasses[layerColorName] || hoverBorderClasses["primary"];
+    const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
 
     const handleModifierToggle = (modifier: string) => {
         setActiveModifiers((prev) => (prev.includes(modifier) ? prev.filter((item) => item !== modifier) : [...prev, modifier]));
@@ -224,7 +231,7 @@ const BasicKeyboards = () => {
 
     return (
         <div className="space-y-6">
-            <QwertyKeyboard keyboardRef={keyboardRef} onChange={() => {}} onKeyPress={handleKeyboardInput} />
+            <QwertyKeyboard keyboardRef={keyboardRef} onChange={() => { }} onKeyPress={handleKeyboardInput} />
             <section className="flex flex-row justify-around items-center">
                 <p className="text-sm font-normal uppercase tracking-wide text-muted-foreground">Modifiers</p>
                 <div className="flex flex-wrap gap-2">
@@ -249,7 +256,11 @@ const BasicKeyboards = () => {
                 <p className="text-sm font-normal uppercase tracking-wide text-muted-foreground ml-6">Special</p>
                 <div className="flex flex-wrap gap-2 flex-grow flex-row items-center justify-center ">
                     <div
-                        className="bg-black w-25 h-10 rounded-[4px] hover:shadow-md cursor-pointer hover:opacity-80 transition-all"
+                        className={cn(
+                            "bg-black w-25 h-10 rounded-[4px] hover:shadow-md cursor-pointer transition-all border-2 border-transparent",
+                            hoverBorderColor,
+                            hoverBackgroundColor
+                        )}
                         data-bind="key"
                         data-key="KC_NO"
                         onClick={() => assignKeycode("KC_NO")}
@@ -257,7 +268,11 @@ const BasicKeyboards = () => {
                         &nbsp;
                     </div>
                     <div
-                        className="bg-black w-25 h-10 rounded-[4px] hover:shadow-md text-white flex items-center justify-center cursor-pointer hover:opacity-80 transition-all"
+                        className={cn(
+                            "bg-black w-25 h-10 rounded-[4px] hover:shadow-md text-white flex items-center justify-center cursor-pointer transition-all border-2 border-transparent",
+                            hoverBorderColor,
+                            hoverBackgroundColor
+                        )}
                         data-bind="key"
                         data-key="KC_TRNS"
                         onClick={() => assignKeycode("KC_TRNS")}
@@ -288,12 +303,12 @@ const BasicKeyboards = () => {
                     </div>
                 </div>
                 <div className="space-y-4">
-                    {activeCategory === "Numpad" && <NumpadKeyboard keyboardRef={numpadKeyboardRef} onChange={() => {}} onKeyPress={handleKeyboardInput} />}
-                    {activeCategory === "International" && <InternationalKeyboard keyboardRef={internationalKeyboardRef} onChange={() => {}} onKeyPress={handleKeyboardInput} />}
+                    {activeCategory === "Numpad" && <NumpadKeyboard keyboardRef={numpadKeyboardRef} onChange={() => { }} onKeyPress={handleKeyboardInput} />}
+                    {activeCategory === "International" && <InternationalKeyboard keyboardRef={internationalKeyboardRef} onChange={() => { }} onKeyPress={handleKeyboardInput} />}
                     {activeCategory === "Svalboard" && (
-                        <SvalboardKeyboard keyboardRef={svalboardKeyboardRef} customKeyboardRef={customKeyboardRef} onChange={() => {}} onKeyPress={handleKeyboardInput} />
+                        <SvalboardKeyboard keyboardRef={svalboardKeyboardRef} customKeyboardRef={customKeyboardRef} onChange={() => { }} onKeyPress={handleKeyboardInput} />
                     )}
-                    {activeCategory === "Special" && <SpecialKeyboard keyboardRef={specialKeyboardRef} onChange={() => {}} onKeyPress={handleKeyboardInput} />}
+                    {activeCategory === "Special" && <SpecialKeyboard keyboardRef={specialKeyboardRef} onChange={() => { }} onKeyPress={handleKeyboardInput} />}
                 </div>
             </section>
         </div>

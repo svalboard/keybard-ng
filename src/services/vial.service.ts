@@ -262,7 +262,7 @@ export class VialService {
     }
 
     isLayerEmpty(layer: number[]): boolean {
-        return layer.every((keycode) => keycode === 0);
+        return layer.every((keycode) => keycode === 0 || keycode === -1 || keycode === 255);
     }
 }
 

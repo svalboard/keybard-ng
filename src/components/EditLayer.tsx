@@ -1,42 +1,60 @@
 import { DialogClose, DialogContent, DialogFooter, DialogHeader } from "@/components/ui/dialog";
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 
 import { useVial } from "@/contexts/VialContext";
 import { layerColors } from "@/utils/colors";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { svalService } from "@/services/sval.service";
 
 interface Props {
     layer: number;
-    layerName?: string;
 }
 
-const EditLayer: FC<Props> = ({ layer, layerName }) => {
-    const [selectedColor, setSelectedColor] = useState<string | null>(null);
-    const [name, setName] = useState<string>(layerName || "");
+const EditLayer: FC<Props> = ({ layer }) => {
     const { keyboard, setKeyboard } = useVial();
+    const currentName = keyboard ? svalService.getLayerName(keyboard, layer) : "";
+    const currentColor = keyboard?.cosmetic?.layer_colors?.[layer.toString()] || null;
+
+    const [selectedColor, setSelectedColor] = useState<string | null>(currentColor);
+    const [name, setName] = useState<string>(currentName);
+
+    // Sync state when currentName or currentColor changes (if the modal stays mounted)
+    useEffect(() => {
+        setName(currentName);
+    }, [currentName]);
+
+    useEffect(() => {
+        setSelectedColor(currentColor);
+    }, [currentColor]);
     const handleSubmit = () => {
         if (keyboard) {
-            const updatedKeyboard = { ...keyboard };
-            const layerCosmetics = updatedKeyboard.cosmetic?.layer || {};
-            if (name && layerCosmetics) {
-                layerCosmetics[layer] = name;
+            // Deep clone cosmetic to avoid shared reference issues
+            const cosmetic = JSON.parse(JSON.stringify(keyboard.cosmetic || { layer: {}, layer_colors: {} }));
+
+            if (!cosmetic.layer) cosmetic.layer = {};
+            if (!cosmetic.layer_colors) cosmetic.layer_colors = {};
+
+            if (name !== undefined) {
+                cosmetic.layer[layer.toString()] = name;
             }
-            if (!updatedKeyboard.cosmetic?.layer_colors) updatedKeyboard.cosmetic = { ...updatedKeyboard.cosmetic, layer_colors: {} };
-            const layerColors = updatedKeyboard.cosmetic?.layer_colors;
-            if (selectedColor && layerColors) {
-                if (!layerColors) updatedKeyboard.cosmetic = { ...updatedKeyboard.cosmetic, layer_colors: {} };
-                layerColors[layer] = selectedColor;
+
+            if (selectedColor) {
+                cosmetic.layer_colors[layer.toString()] = selectedColor;
             }
-            setKeyboard(updatedKeyboard);
+
+            setKeyboard({
+                ...keyboard,
+                cosmetic
+            });
         }
     };
     return (
         <DialogContent>
             <DialogHeader></DialogHeader>
             <div className="grid gap-4">
-                <Label htmlFor="name-1">Change name for layer {layer}</Label>
+                <Label htmlFor="name-1">Layer {layer} Name</Label>
                 <Input id="name-1" name="name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="grid gap-3 mt-4">
@@ -45,9 +63,8 @@ const EditLayer: FC<Props> = ({ layer, layerName }) => {
                     {layerColors.map((color) => (
                         <div
                             key={color.name}
-                            className={`w-10 h-10 rounded-full cursor-pointer hover:opacity-90 ${
-                                selectedColor === color.name ? "border-black border-2 shadow-md" : "border-transparent"
-                            }`}
+                            className={`w-10 h-10 rounded-full cursor-pointer hover:opacity-90 ${selectedColor === color.name ? "border-black border-2 shadow-md" : "border-transparent"
+                                }`}
                             style={{ backgroundColor: color.hex }}
                             onClick={() => setSelectedColor(color.name)}
                         ></div>
@@ -59,7 +76,7 @@ const EditLayer: FC<Props> = ({ layer, layerName }) => {
                     <Button variant="outline">Cancel</Button>
                 </DialogClose>
                 <DialogClose asChild>
-                    <Button onClick={() => handleSubmit()}>Save changes</Button>
+                    <Button onClick={() => handleSubmit()}>Save</Button>
                 </DialogClose>
             </DialogFooter>
         </DialogContent>

@@ -51,6 +51,8 @@
     --color-kb-brown: #b39369;
     --color-kb-gray-medium: #eaeae9;
     --color-kb-gray-border: #a7a9ac;
+    --color-kb-sidebar-base: #3E3E3E;
+    --color-kb-sidebar-dark: #000000;
 }
 
 :root {
@@ -127,6 +129,7 @@
         @apply border-border outline-ring/50;
         font-family: "Inter", sans-serif !important;
     }
+
     body {
         @apply bg-background text-foreground;
     }
@@ -134,6 +137,7 @@
     .hg-theme-default {
         background-color: white !important;
     }
+
     .controlArrows {
         display: flex;
         align-items: center;

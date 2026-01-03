@@ -1,100 +1,117 @@
 import EditLayer from "@/components/EditLayer";
+import LayersActiveIcon from "@/components/icons/LayersActive";
 import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import { Dialog } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useVial } from "@/contexts/VialContext";
+import { cn } from "@/lib/utils";
 import { svalService } from "@/services/sval.service";
-import { colorClasses } from "@/utils/colors";
-import LayersActiveIcon from "@/components/icons/LayersActive";
 import { vialService } from "@/services/vial.service";
-import { DialogTrigger } from "@radix-ui/react-dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { colorClasses } from "@/utils/colors";
 import { FC, useState } from "react";
 
-interface Props {
+interface LayerSelectorProps {
     selectedLayer: number;
     setSelectedLayer: (layer: number) => void;
 }
 
-const LayerSelector: FC<Props> = ({ selectedLayer, setSelectedLayer }) => {
+/**
+ * Component for selecting and managing active layers in the keyboard editor.
+ * Provides a quick-access tab bar for all layers and a detailed display of the selected layer.
+ */
+const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer }) => {
     const { keyboard } = useVial();
-    const layerKeymap = keyboard!.keymap?.[selectedLayer] || [];
     const { clearSelection } = useKeyBinding();
 
+    // UI state
     const [showAllLayers, setShowAllLayers] = useState(true);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [layerToEdit, setLayerToEdit] = useState<number>(selectedLayer);
+
+    if (!keyboard) return null;
 
     const handleSelectLayer = (layer: number) => () => {
         setSelectedLayer(layer);
         clearSelection();
     };
 
-    const toggleShowLayers = () => {
-        setShowAllLayers(!showAllLayers);
+    const handleOpenEditor = (layer: number) => {
+        setLayerToEdit(layer);
+        setIsDialogOpen(true);
     };
 
-    const layerColor = keyboard!.cosmetic?.layer_colors?.[selectedLayer] || "primary";
+    const toggleShowLayers = () => {
+        setShowAllLayers((prev) => !prev);
+    };
+
+    const currentLayerColor = keyboard.cosmetic?.layer_colors?.[selectedLayer] || "primary";
 
     return (
-        <div className="w-full">
-            <div className=" py-7 overflow-hidden flex-shrink-0 flex items-center justify-start text-gray-500 gap-1 pl-4 w-full">
+        <div className="w-full flex flex-col pt-4">
+            {/* Top Toolbar: Filter toggle and Layer Tabs */}
+            <div className="py-3 overflow-hidden flex-shrink-0 flex items-center justify-start text-gray-500 gap-1 pl-4 w-full">
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <button onClick={toggleShowLayers} className="hover:bg-gray-200 p-1 rounded transition-colors mr-2 text-black">
+                        <button
+                            onClick={toggleShowLayers}
+                            className="hover:bg-gray-200 p-1.5 rounded-md transition-colors mr-2 text-black flex items-center justify-center"
+                            aria-label={showAllLayers ? "Show Active Only" : "Show All Layers"}
+                        >
                             {showAllLayers ? <LayersDefaultIcon className="h-5 w-5" /> : <LayersActiveIcon className="h-5 w-5" />}
                         </button>
                     </TooltipTrigger>
                     <TooltipContent side="top">
-                        {showAllLayers ? "Show Active" : "Show All"}
+                        {showAllLayers ? "Show Active Layers Only" : "Show All Layers"}
                     </TooltipContent>
                 </Tooltip>
-                <div className="max-w-full flex flex-row overflow-hidden flex-grow-0 gap-2">
-                    {Array.from({ length: keyboard!.layers || 16 }, (_, i) => {
-                        const layerData = keyboard!.keymap?.[i];
+
+                <div className="max-w-full flex flex-row overflow-visible flex-grow-0 gap-2 p-1">
+                    {Array.from({ length: keyboard.layers || 16 }, (_, i) => {
+                        const layerData = keyboard.keymap?.[i];
                         const isEmpty = layerData ? vialService.isLayerEmpty(layerData) : true;
 
+                        // Filter out empty layers if filter is active
                         if (!showAllLayers && isEmpty && i !== selectedLayer) {
                             return null;
                         }
 
-                        const layer = svalService.getLayerNameNoLabel(keyboard!, i);
+                        const layerShortName = svalService.getLayerNameNoLabel(keyboard, i);
                         const isActive = selectedLayer === i;
+
                         return (
-                            // black bg for active layer 50% rounded corners
-                            <div
-                                key={layer}
+                            <button
+                                key={`layer-tab-${i}`}
                                 onClick={handleSelectLayer(i)}
-                                className={`
-                        cursor-pointer px-5 py-1 rounded-full transition-colors relative flex-grow-0 flex-shrink-0 items-center justify-center text-sm font-medium
-                        ${isActive ? "bg-gray-800 text-white shadow-md" : "hover:bg-gray-200"}
-                    `}
+                                onDoubleClick={() => handleOpenEditor(i)}
+                                className={cn(
+                                    "px-5 py-1 rounded-full transition-all text-sm font-medium cursor-pointer border-none outline-none whitespace-nowrap",
+                                    isActive
+                                        ? "bg-gray-800 text-white shadow-md scale-105"
+                                        : "bg-transparent text-gray-600 hover:bg-gray-200"
+                                )}
                             >
-                                <span className="text-sm">{layer}</span>
-                            </div>
+                                <span>{layerShortName}</span>
+                            </button>
                         );
                     })}
                 </div>
             </div>
-            <div className="text-lg text-gray-600 mt-2 font-bold flex justify-start items-center px-5">
-                <div className={`w-4 h-4 ${colorClasses[layerColor]} mr-3 rounded-full`}></div>
-                <span className="text-lg font-medium">{svalService.getLayerName(keyboard!, selectedLayer)}</span>
-                <Dialog>
-                    <DialogTrigger asChild className="ml-2">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="inline-block h-7 w-7 ml-2 text-black hover:text-black rounded-sm  cursor-pointer hover:bg-gray-200 p-1 transition-colors"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                        </svg>
-                    </DialogTrigger>
-                    <EditLayer layer={selectedLayer} layerName={svalService.getLayerCosmetic(keyboard!, selectedLayer)} />
+
+            {/* Bottom Status: Current Layer Name and Edit Trigger */}
+            <div className="text-lg text-gray-600 mt-2 font-bold flex justify-start items-center px-5 py-2">
+                <div className={cn("w-4 h-4 mr-3 rounded-full shadow-sm", colorClasses[currentLayerColor])} />
+                <span
+                    className="text-lg font-medium cursor-pointer hover:text-black transition-colors"
+                    onDoubleClick={() => handleOpenEditor(selectedLayer)}
+                    title="Double-click to rename or change color"
+                >
+                    {svalService.getLayerName(keyboard, selectedLayer)}
+                </span>
+
+                {/* Modal for editing layer properties */}
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <EditLayer layer={layerToEdit} />
                 </Dialog>
             </div>
         </div>

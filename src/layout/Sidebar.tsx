@@ -1,15 +1,25 @@
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { ChevronsLeftRightEllipsis, Cpu, HelpCircle, LucideIcon, Settings, ChevronsRight } from "lucide-react";
+import { ChevronsRight, Cpu, HelpCircle, LucideIcon, Settings } from "lucide-react";
 import { useCallback } from "react";
 
 import ComboIcon from "@/components/ComboIcon";
+import GamepadDirectional from "@/components/icons/GamepadDirectional";
 import KeyboardIcon from "@/components/icons/Keyboard";
+import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import MacrosIcon from "@/components/icons/MacrosIcon";
 import MatrixTesterIcon from "@/components/icons/MatrixTester";
 import OverridesIcon from "@/components/icons/Overrides";
 import TapdanceIcon from "@/components/icons/Tapdance";
-import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import Logo from "@/components/Logo";
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    useSidebar
+} from "@/components/ui/sidebar";
 import { usePanels } from "@/contexts/PanelsContext";
 import { cn } from "@/lib/utils";
 
@@ -27,13 +37,13 @@ export type SidebarItem = {
 
 export const primarySidebarItems: SidebarItem[] = [
     { title: "Keys", url: "keyboard", icon: KeyboardIcon },
+    { title: "Special Keys", url: "special", icon: GamepadDirectional },
     { title: "Layers", url: "layers", icon: LayersDefaultIcon },
-    { title: "Tapdances", url: "tapdances", icon: TapdanceIcon },
-    { title: "Macros", url: "macros", icon: MacrosIcon },
+    { title: "Tap Dances", url: "tapdances", icon: TapdanceIcon },
     { title: "Combos", url: "combos", icon: ComboIcon },
+    { title: "Macros", url: "macros", icon: MacrosIcon },
     { title: "Overrides", url: "overrides", icon: OverridesIcon },
     { title: "QMK Keys", url: "qmk", icon: Cpu },
-    { title: "Misc Keys", url: "misc", icon: ChevronsLeftRightEllipsis },
     { title: "Matrix Tester", url: "matrixtester", icon: MatrixTesterIcon },
 ];
 
@@ -128,15 +138,15 @@ const AppSidebar = () => {
 
     return (
         <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses}>
-            <SidebarHeader className="p-0 py-2">
+            <SidebarHeader className="p-0 py-4">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild size="nav" className="hover:bg-transparent cursor-default">
-                            <div className="flex w-full items-center justify-start translate-y-[3px]">
+                            <div className="flex w-full items-center justify-start">
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
                                     <Logo />
                                 </div>
-                                <span className="text-xl font-bold truncate group-data-[state=collapsed]:hidden">Keybard</span>
+                                <span className="text-[22px] font-semibold truncate group-data-[state=collapsed]:hidden">Keybard</span>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -146,7 +156,7 @@ const AppSidebar = () => {
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
                                     <ChevronsRight className={cn("h-4 w-4 shrink-0 transition-transform", !isCollapsed ? "rotate-180" : "")} />
                                 </div>
-                                <span className="text-sm font-semibold truncate group-data-[state=collapsed]:hidden">Hide Menu</span>
+                                <span className="text-md font-medium truncate group-data-[state=collapsed]:hidden">Hide Menu</span>
                             </button>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
