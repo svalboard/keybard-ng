@@ -7,16 +7,12 @@ import { useLayer } from "@/contexts/LayerContext";
 import { useVial } from "@/contexts/VialContext";
 import { colorClasses, hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
 import { cn } from "@/lib/utils";
-import { KeyboardInfo } from "@/types/vial.types";
+import { KeyboardInfo, KeyContent } from "@/types/vial.types";
 import { Key } from "@/components/Key";
 import { getKeyContents } from "@/utils/keys";
 import { keyService } from "@/services/key.service";
 
-// Mapping from react-simple-keyboard button text to QMK keycodes (kept for QwertyKeyboard compatibility if needed, though QwertyKeyboard likely handles its own)
-// QwertyKeyboard seems to use BUTTON_TO_KEYCODE internally or via callback. In BasicKeyboards original, BUTTON_TO_KEYCODE was used in getKeyCodeForButton.
-// QwertyKeyboard props: onChange, onKeyPress. onKeyPress sends "button".
-// We need getKeyCodeForButton to handle standard inputs from QwertyKeyboard.
-
+// Mapping from react-simple-keyboard button text to QMK keycodes
 const BUTTON_TO_KEYCODE: Record<string, string> = {
     // Letters
     a: "KC_A", b: "KC_B", c: "KC_C", d: "KC_D", e: "KC_E", f: "KC_F", g: "KC_G", h: "KC_H", i: "KC_I",
@@ -45,9 +41,10 @@ const getKeyCodeForButton = (keyboard: KeyboardInfo, button: string): string | u
 };
 
 const modifierOptions = ["Shift", "Ctrl", "Alt", "Gui"] as const;
+type Modifier = typeof modifierOptions[number];
 
 // Helper to apply modifiers to a keycode
-const applyModifiers = (keycode: string, activeModifiers: string[]) => {
+const applyModifiers = (keycode: string, activeModifiers: Modifier[]) => {
     if (activeModifiers.length === 0) return keycode;
 
     const hasCtrl = activeModifiers.includes("Ctrl");
@@ -82,7 +79,7 @@ const applyModifiers = (keycode: string, activeModifiers: string[]) => {
 
 const BasicKeyboards = () => {
     const keyboardRef = useRef(null);
-    const [activeModifiers, setActiveModifiers] = useState<string[]>([]);
+    const [activeModifiers, setActiveModifiers] = useState<Modifier[]>([]);
     const { assignKeycode, isBinding } = useKeyBinding();
     const { keyboard } = useVial();
     const { selectedLayer } = useLayer();
@@ -95,7 +92,7 @@ const BasicKeyboards = () => {
     const hoverBorderColor = hoverBorderClasses[layerColorName] || hoverBorderClasses["primary"];
     const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
 
-    const handleModifierToggle = (modifier: string) => {
+    const handleModifierToggle = (modifier: Modifier) => {
         setActiveModifiers((prev) => {
             if (prev.includes(modifier)) {
                 return prev.filter((item) => item !== modifier);
@@ -160,7 +157,7 @@ const BasicKeyboards = () => {
                         x={0} y={0} w={1} h={1} row={0} col={0}
                         keycode={k.keycode}
                         label={displayLabel}
-                        keyContents={keyContents}
+                        keyContents={keyContents as KeyContent | undefined}
                         layerColor="sidebar"
                         headerClassName="bg-kb-sidebar-dark group-hover:bg-black/30"
                         isRelative

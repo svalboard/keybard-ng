@@ -145,3 +145,15 @@ export interface VialAPI {
     updateKeyoverride(kbinfo: KeyboardInfo, koid: number): Promise<void>;
     updateQMKSetting(kbinfo: KeyboardInfo, qfield: string): Promise<void>;
 }
+
+export interface KeyContent {
+    type: string;
+    str: string;
+    title?: string;
+    top?: string;
+    layertext?: string;
+    tdid?: number;
+    modids?: number;
+    mods?: string;
+    [key: string]: any; // Allow other properties for now until fully typed
+}

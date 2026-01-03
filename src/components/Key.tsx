@@ -13,6 +13,7 @@ import ComboIcon from "./ComboIcon";
 import OverridesIcon from "./icons/Overrides";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Clock, Crosshair } from "lucide-react";
 import MouseIcon from "./icons/Mouse";
+import { KeyContent } from "@/types/vial.types";
 
 interface KeyProps {
     x: number; // X position in key units
@@ -25,7 +26,7 @@ interface KeyProps {
     col: number; // Matrix column
     selected?: boolean;
     onClick?: (row: number, col: number) => void;
-    keyContents?: any; // Additional key contents info
+    keyContents?: KeyContent; // Additional key contents info
     layerColor?: string;
     isRelative?: boolean;
     className?: string;
@@ -60,7 +61,6 @@ export const Key: React.FC<KeyProps> = ({
 
     const hasModifiers = keyContents && ["modmask"].includes(keyContents.type);
     const handleClick = () => {
-        console.log("content clicked", keyContents);
         if (onClick) {
             onClick(row, col);
         }
@@ -75,17 +75,17 @@ export const Key: React.FC<KeyProps> = ({
     };
     let l = label;
 
-    if (hasModifiers) {
+    if (hasModifiers && keyContents) {
         const show = showModMask(keyContents.modids);
         const keys = keyContents.str.split("\n");
         l = keys[0];
         bottomStr = show;
     }
     if (keyContents?.type === "tapdance") {
-        l = keyContents.tdid;
+        l = keyContents.tdid?.toString() || "";
     }
     if (keyContents?.type === "macro") {
-        l = keyContents.top.replace("M", "");
+        l = keyContents.top?.replace("M", "") || "";
     }
     if (keyContents?.type === "user") {
         l = keyContents.str;
@@ -108,6 +108,7 @@ export const Key: React.FC<KeyProps> = ({
     // Detect key types from label or keycode
     const lowerLabel = String(l).toLowerCase();
     const hasMouseWord = mouseWords.some(w => lowerLabel.includes(w.toLowerCase()));
+    // const isMouseCode = keycode.startsWith("KC_MS") || keycode.startsWith("KC_BTN") || keycode.startsWith("KC_WH") || keycode.startsWith("SV_");
     const isMouse = hasMouseWord;
 
     const isSniper = sniperWords.some(w => lowerLabel.includes(w.toLowerCase())) || keycode.includes("SNIPER");
@@ -170,7 +171,7 @@ export const Key: React.FC<KeyProps> = ({
             >
                 <span className={cn(variant === "small" ? "text-[10px] rounded-t-[4px]" : "text-sm rounded-t-sm", "whitespace-nowrap w-full text-center text-white font-semibold py-0", headerClassName)}>{keyContents?.layertext}</span>
                 <div className={cn("flex flex-row h-full w-full items-center justify-center", variant === "small" ? "gap-1" : "gap-2")}>
-                    <div className={cn(variant === "small" ? "text-[13px]" : "text-md", "text-center justify-center items-center flex font-semibold")}>{keyContents?.top.split("(")[1].replace(")", "")}</div>
+                    <div className={cn(variant === "small" ? "text-[13px]" : "text-md", "text-center justify-center items-center flex font-semibold")}>{keyContents?.top?.split("(")[1]?.replace(")", "")}</div>
                     <LayersIcon className={variant === "small" ? "w-3 h-3" : ""} />
                 </div>
             </div>
@@ -189,6 +190,13 @@ export const Key: React.FC<KeyProps> = ({
         topLabel = "OSM";
         centerLabel = keyContents.str;
     }
+
+    // Helper to determine styling for long text
+    const shouldShrinkText = ["user", "OSM"].includes(keyContents?.type || "") ||
+        (typeof centerLabel === 'string' && (centerLabel.length > 5 || (centerLabel.length === 5 && centerLabel.toUpperCase().includes("W"))));
+
+    const textStyle: React.CSSProperties = shouldShrinkText ? { whiteSpace: "pre-line", fontSize: "0.6rem", wordWrap: "break-word" } : {};
+    const bottomTextStyle: React.CSSProperties = bottomStr.length > 4 ? { whiteSpace: "pre-line", fontSize: "0.6rem", wordWrap: "break-word" } : {};
 
     const content = (
         <div
@@ -214,16 +222,14 @@ export const Key: React.FC<KeyProps> = ({
             {keyContents?.type === "override" && <OverridesIcon className=" mt-2 h-8" />}
             <div
                 className="text-center w-full h-full justify-center items-center flex font-semibold"
-                // @ts-ignore
-                style={["user", "OSM"].includes(keyContents?.type) || (typeof centerLabel === 'string' && (centerLabel.length > 5 || (centerLabel.length === 5 && centerLabel.toUpperCase().includes("W")))) ? { whiteSpace: "pre-line", fontSize: "0.6rem", textWrap: "break" } : {}}
+                style={textStyle}
             >
                 {centerLabel}
             </div>
             {bottomStr !== "" && (
                 <span
                     className={cn("font-semibold min-h-5 items-center flex justify-center text-sm whitespace-nowrap text-white w-full rounded-b-sm text-center py-0", headerClassName)}
-                    // @ts-ignore
-                    style={bottomStr.length > 4 ? { whiteSpace: "pre-line", fontSize: "0.6rem", textWrap: "break" } : {}}
+                    style={bottomTextStyle}
                 >
                     {bottomStr}
                 </span>

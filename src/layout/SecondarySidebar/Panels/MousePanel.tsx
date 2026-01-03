@@ -5,6 +5,7 @@ import { useVial } from "@/contexts/VialContext";
 import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
 import { getKeyContents } from "@/utils/keys";
 import { keyService } from "@/services/key.service";
+import { KeyContent } from "@/types/vial.types";
 
 const mouseKeys = [
     { keycode: "KC_BTN1", label: "Mouse 1" },
@@ -80,7 +81,7 @@ const MousePanel = () => {
                                     x={0} y={0} w={1} h={1} row={0} col={0}
                                     keycode={k.keycode}
                                     label={displayLabel}
-                                    keyContents={keyContents}
+                                    keyContents={keyContents as KeyContent | undefined}
                                     layerColor="sidebar"
                                     headerClassName="bg-kb-sidebar-dark group-hover:bg-black/30"
                                     isRelative
