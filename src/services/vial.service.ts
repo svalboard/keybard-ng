@@ -81,17 +81,17 @@ export class VialService {
         await this.getKeyboardInfo(kbinfo);
 
         // Populate keylayout using KLE service if payload exists
-            if (kbinfo.payload && kbinfo.payload.layouts && kbinfo.payload.layouts.keymap) {
-                 try {
-                    (kbinfo as any).keylayout = this.kle.deserializeToKeylayout(kbinfo, kbinfo.payload.layouts.keymap as unknown as any[]);
-                 } catch (e) {
-                     console.error("Failed to deserialize keylayout:", e);
-                 }
+        if (kbinfo.payload && kbinfo.payload.layouts && kbinfo.payload.layouts.keymap) {
+            try {
+                (kbinfo as any).keylayout = this.kle.deserializeToKeylayout(kbinfo, kbinfo.payload.layouts.keymap as unknown as any[]);
+            } catch (e) {
+                console.error("Failed to deserialize keylayout:", e);
             }
+        }
 
         // Check for Svalboard-specific features
         const isSval = await svalService.check(kbinfo);
-// ...
+        // ...
         if (isSval) {
             console.log("Svalboard detected, proto:", kbinfo.sval_proto, "firmware:", kbinfo.sval_firmware);
             await svalService.pull(kbinfo);
@@ -249,16 +249,20 @@ export class VialService {
         await this.macro.push(kbinfo);
     }
     async updateTapdance(kbinfo: KeyboardInfo, tdid: number) {
-      await this.tapdance.push(kbinfo, tdid);
+        await this.tapdance.push(kbinfo, tdid);
     }
     async updateCombo(kbinfo: KeyboardInfo, cmbid: number) {
-      await this.combo.push(kbinfo, cmbid);
+        await this.combo.push(kbinfo, cmbid);
     }
     async updateKeyoverride(kbinfo: KeyboardInfo, koid: number) {
-      await this.override.push(kbinfo, koid);
+        await this.override.push(kbinfo, koid);
     }
     async updateQMKSetting(kbinfo: KeyboardInfo, qfield: number) {
-      await this.qmk.push(kbinfo, qfield);
+        await this.qmk.push(kbinfo, qfield);
+    }
+
+    isLayerEmpty(layer: number[]): boolean {
+        return layer.every((keycode) => keycode === 0);
     }
 }
 

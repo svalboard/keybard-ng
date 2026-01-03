@@ -3,7 +3,7 @@ import { VialService, vialService } from "../services/vial.service";
 
 import { fileService } from "../services/file.service";
 import { qmkService } from "../services/qmk.service";
-import { usbInstance } from "../services/usb";
+import { usbInstance } from "../services/usb.service";
 import type { KeyboardInfo } from "../types/vial.types";
 import { storage } from "../utils/storage";
 

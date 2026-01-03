@@ -17,7 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const SIDEBAR_COOKIE_SUFFIX = "state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "12rem";
+const SIDEBAR_WIDTH = "10.5rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
@@ -374,7 +374,7 @@ function Sidebar({
                         "group-data-[collapsible=offcanvas]:group-data-[state=collapsed]:opacity-0",
                         "group-data-[side=left]:group-data-[collapsible=offcanvas]:group-data-[state=collapsed]:translate-x-4",
                         "group-data-[side=right]:group-data-[collapsible=offcanvas]:group-data-[state=collapsed]:-translate-x-4",
-                        ...(rounded ? (state === "collapsed" ? ["rounded-full"] : ["rounded-2xl"]) : [])
+                        ...(rounded ? ["rounded-3xl"] : [])
                     )}
                 >
                     {children}
@@ -517,7 +517,7 @@ function SidebarGroupContent({ className, ...props }: React.ComponentProps<"div"
 }
 
 function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
-    return <ul data-slot="sidebar-menu" data-sidebar="menu" className={cn("flex w-full min-w-0 flex-col gap-1", className)} {...props} />;
+    return <ul data-slot="sidebar-menu" data-sidebar="menu" className={cn("flex w-full min-w-0 flex-col gap-4", className)} {...props} />;
 }
 
 function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
@@ -532,18 +532,19 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-    "peer/menu-button cursor-pointer flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+    "peer/menu-button cursor-pointer flex w-full items-center gap-2 overflow-hidden rounded-none p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:text-sidebar-accent-foreground focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[state=open]:hover:text-sidebar-accent-foreground [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
     {
         variants: {
             variant: {
-                default: "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                default: "hover:text-sidebar-accent-foreground",
                 outline:
-                    "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
+                    "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
             },
             size: {
                 default: "h-8 text-sm",
                 sm: "h-7 text-xs",
                 lg: "h-12 text-sm group-data-[collapsible=icon]:p-0!",
+                nav: "h-[26px] text-sm font-semibold p-0 group-data-[collapsible=icon]:p-0",
             },
         },
         defaultVariants: {
@@ -626,7 +627,7 @@ function SidebarMenuAction({
                 "peer-data-[size=lg]/menu-button:top-2.5",
                 "group-data-[collapsible=icon]:hidden",
                 showOnHover &&
-                    "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
+                "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0",
                 className
             )}
             {...props}

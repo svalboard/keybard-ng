@@ -1,12 +1,15 @@
 import EditLayer from "@/components/EditLayer";
-import LayersIcon from "@/components/icons/Layers";
+import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import { Dialog } from "@/components/ui/dialog";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useVial } from "@/contexts/VialContext";
 import { svalService } from "@/services/sval.service";
 import { colorClasses } from "@/utils/colors";
+import LayersActiveIcon from "@/components/icons/LayersActive";
+import { vialService } from "@/services/vial.service";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { FC } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { FC, useState } from "react";
 
 interface Props {
     selectedLayer: number;
@@ -18,17 +21,41 @@ const LayerSelector: FC<Props> = ({ selectedLayer, setSelectedLayer }) => {
     const layerKeymap = keyboard!.keymap?.[selectedLayer] || [];
     const { clearSelection } = useKeyBinding();
 
+    const [showAllLayers, setShowAllLayers] = useState(true);
+
     const handleSelectLayer = (layer: number) => () => {
         setSelectedLayer(layer);
         clearSelection();
     };
+
+    const toggleShowLayers = () => {
+        setShowAllLayers(!showAllLayers);
+    };
+
     const layerColor = keyboard!.cosmetic?.layer_colors?.[selectedLayer] || "primary";
+
     return (
         <div className="w-full">
             <div className=" py-7 overflow-hidden flex-shrink-0 flex items-center justify-start text-gray-500 gap-1 pl-4 w-full">
-                <LayersIcon className="h-5 w-5 mr-2 text-black" />
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button onClick={toggleShowLayers} className="hover:bg-gray-200 p-1 rounded transition-colors mr-2 text-black">
+                            {showAllLayers ? <LayersDefaultIcon className="h-5 w-5" /> : <LayersActiveIcon className="h-5 w-5" />}
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                        {showAllLayers ? "Show Active" : "Show All"}
+                    </TooltipContent>
+                </Tooltip>
                 <div className="max-w-full flex flex-row overflow-hidden flex-grow-0 gap-2">
                     {Array.from({ length: keyboard!.layers || 16 }, (_, i) => {
+                        const layerData = keyboard!.keymap?.[i];
+                        const isEmpty = layerData ? vialService.isLayerEmpty(layerData) : true;
+
+                        if (!showAllLayers && isEmpty && i !== selectedLayer) {
+                            return null;
+                        }
+
                         const layer = svalService.getLayerNameNoLabel(keyboard!, i);
                         const isActive = selectedLayer === i;
                         return (
