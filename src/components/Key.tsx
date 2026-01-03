@@ -67,11 +67,12 @@ export const Key: React.FC<KeyProps> = ({
     };
 
     // Convert key units to pixels
+    const currentUnitSize = variant === "small" ? 30 : UNIT_SIZE;
     const style: React.CSSProperties = {
-        left: `${x * UNIT_SIZE}px`,
-        top: `${y * UNIT_SIZE}px`,
-        width: `${w * UNIT_SIZE}px`,
-        height: `${h * UNIT_SIZE}px`,
+        left: `${x * currentUnitSize}px`,
+        top: `${y * currentUnitSize}px`,
+        width: `${w * currentUnitSize}px`,
+        height: `${h * currentUnitSize}px`,
     };
     let l = label;
 
@@ -162,7 +163,7 @@ export const Key: React.FC<KeyProps> = ({
                     hoverBackgroundColor && hoverBackgroundColor,
                     className
                 )}
-                style={!isRelative ? style : {}}
+                style={isRelative ? { width: style.width, height: style.height } : style}
                 onClick={handleClick}
                 data-keycode={keycode}
                 data-row={row}
@@ -202,33 +203,51 @@ export const Key: React.FC<KeyProps> = ({
         <div
             className={cn(
                 colorClasses[layerColor],
-                "flex items-center overflow-hidden justify-center cursor-pointer transition-all duration-200 ease-in-out rounded-md uppercase flex flex-col items-center justify-between group",
+                "flex items-center overflow-hidden justify-center cursor-pointer transition-all duration-200 ease-in-out uppercase flex flex-col items-center justify-between group",
                 !isRelative && "absolute",
-                selected ? "border-2 border-kb-gray bg-red-500 text-white" : `border-2 border-kb-gray ${hoverBorderColor ? hoverBorderColor : "hover:border-red-500"}`,
+                variant === "small" ? "rounded-[5px] border" : "rounded-md border-2",
+                selected ? "bg-red-500 text-white" : `${hoverBorderColor ? hoverBorderColor : "hover:border-red-500"}`,
+                selected && (variant === "small" ? "border-kb-gray" : "border-2 border-kb-gray"),
+                !selected && (variant === "small" ? "border-kb-gray" : "border-2 border-kb-gray"),
                 hoverBackgroundColor && hoverBackgroundColor,
                 className
             )}
-            style={!isRelative ? style : {}}
+            style={isRelative ? { width: style.width, height: style.height } : style}
             onClick={handleClick}
             data-keycode={keycode}
             data-row={row}
             data-col={col}
             title={keycode}
         >
-            {topLabel && <span className={cn("text-sm whitespace-nowrap w-full rounded-t-sm text-center text-white font-semibold py-0 min-h-[1.2rem] flex items-center justify-center", headerClassName)}>{topLabel}</span>}
-            {keyContents?.type === "tapdance" && <TapdanceIcon className=" mt-2 h-8" />}
-            {keyContents?.type === "macro" && <MacrosIcon className=" mt-2 h-8" />}
-            {keyContents?.type === "combo" && <ComboIcon className=" mt-2 h-8" />}
-            {keyContents?.type === "override" && <OverridesIcon className=" mt-2 h-8" />}
+            {topLabel && (
+                <span className={cn(
+                    "whitespace-nowrap w-full text-center text-white font-semibold py-0 flex items-center justify-center",
+                    variant === "small" ? "text-[8px] min-h-[10px] rounded-t-[4px]" : "text-sm min-h-[1.2rem] rounded-t-sm",
+                    headerClassName
+                )}>
+                    {topLabel}
+                </span>
+            )}
+            {keyContents?.type === "tapdance" && <TapdanceIcon className={cn(variant === "small" ? "mt-1 h-4" : "mt-2 h-8")} />}
+            {keyContents?.type === "macro" && <MacrosIcon className={cn(variant === "small" ? "mt-1 h-4" : "mt-2 h-8")} />}
+            {keyContents?.type === "combo" && <ComboIcon className={cn(variant === "small" ? "mt-1 h-4" : "mt-2 h-8")} />}
+            {keyContents?.type === "override" && <OverridesIcon className={cn(variant === "small" ? "mt-1 h-4" : "mt-2 h-8")} />}
             <div
-                className="text-center w-full h-full justify-center items-center flex font-semibold"
+                className={cn(
+                    "text-center w-full h-full justify-center items-center flex font-semibold",
+                    variant === "small" ? "text-[10px] px-0.5" : "text-md"
+                )}
                 style={textStyle}
             >
                 {centerLabel}
             </div>
             {bottomStr !== "" && (
                 <span
-                    className={cn("font-semibold min-h-5 items-center flex justify-center text-sm whitespace-nowrap text-white w-full rounded-b-sm text-center py-0", headerClassName)}
+                    className={cn(
+                        "font-semibold items-center flex justify-center whitespace-nowrap text-white w-full text-center py-0",
+                        variant === "small" ? "text-[8px] min-h-[10px] rounded-b-[4px]" : "text-sm min-h-5 rounded-b-sm",
+                        headerClassName
+                    )}
                     style={bottomTextStyle}
                 >
                     {bottomStr}

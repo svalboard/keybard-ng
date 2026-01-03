@@ -7,6 +7,8 @@ import { MATRIX_COLS, SVALBOARD_LAYOUT, UNIT_SIZE } from "../constants/svalboard
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import type { KeyboardInfo } from "../types/vial.types";
 import { Key } from "./Key";
+import { useLayoutSettings } from "@/contexts/LayoutSettingsContext";
+import { getLabelForKeycode } from "./Keyboards/layouts";
 
 interface KeyboardProps {
     keyboard: KeyboardInfo;
@@ -15,8 +17,10 @@ interface KeyboardProps {
     setSelectedLayer: (layer: number) => void;
 }
 
-export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer, setSelectedLayer }) => {
+// Fix unused var warning
+export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) => {
     const { selectKeyboardKey, selectedTarget, clearSelection } = useKeyBinding();
+    const { internationalLayout } = useLayoutSettings();
     const layerColor = keyboard.cosmetic?.layer_colors?.[selectedLayer] || "primary";
     // Get the keymap for the selected layer
     const layerKeymap = keyboard.keymap?.[selectedLayer] || [];
@@ -63,8 +67,12 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer, set
 
                     // Get the keycode for this position in the current layer
                     const keycode = layerKeymap[pos] || 0;
-                    const { label, keyContents } = getKeyLabel(keyboard, keycode);
+                    const { label: defaultLabel, keyContents } = getKeyLabel(keyboard, keycode);
                     const keycodeName = getKeycodeName(keycode);
+
+                    // Try to get international label
+                    const internationalLabel = getLabelForKeycode(getKeycodeName(keycode), internationalLayout);
+                    const label = internationalLabel || defaultLabel;
 
                     return (
                         <Key
