@@ -10,12 +10,12 @@ export interface KeyboardInfo {
     layers?: number;
     custom_keycodes?: CustomKeycode[];
     keymap?: number[][];
-    macros?: MacroData;
+    macros?: MacroEntry[];
     macro_count?: number;
     macros_size?: number;
-    combos?: ComboData;
-    tapdance?: TapdanceData;
-    key_overrides?: KeyOverrideData;
+    combos?: ComboEntry[];
+    tapdances?: TapdanceEntry[];
+    key_overrides?: KeyOverrideEntry[];
     settings?: Record<number, number>;
     tapdance_count?: number;
     combo_count?: number;
@@ -79,48 +79,40 @@ export interface CustomKeycode {
     shortName: string;
 }
 
-export interface MacroData {
-    count?: number;
-    size?: number;
-    buffer?: Uint8Array;
+export interface MacroEntry {
+    mid: number;
+    actions: MacroAction[];
 }
 
-export interface ComboData {
-    count?: number;
-    entries?: ComboEntry[];
-}
+export type MacroAction = [string, string | number];
 
 export interface ComboEntry {
-    keys: number[];
-    output: number;
+    cmbid: number;
+    keys: string[];
+    output: string;
 }
 
-export interface TapdanceData {
-    count?: number;
-    entries?: TapdanceEntry[];
-}
 
 export interface TapdanceEntry {
-    onTap?: number;
-    onHold?: number;
-    onDoubleTap?: number;
-    onTapHold?: number;
-    tappingTerm?: number;
-}
-
-export interface KeyOverrideData {
-    count?: number;
-    entries?: KeyOverrideEntry[];
+    idx: number; // Index in the list
+    tap: string;
+    hold: string;
+    doubletap: string;
+    taphold: string;
+    tapping_term: number;
 }
 
 export interface KeyOverrideEntry {
-    trigger: number;
-    replacement: number;
+    koid: number;
+    trigger: string;
+    replacement: string;
     layers: number;
-    triggerMods: number;
-    suppressedMods: number;
+    trigger_mods: number;
+    negative_mod_mask: number;
+    suppressed_mods: number;
     options: number;
 }
+
 
 // Removed: QMKSettings interface (conflicted with qmk.d.ts)
 // Keyboard settings values are now stored as Record<number, number> in KeyboardInfo.settings

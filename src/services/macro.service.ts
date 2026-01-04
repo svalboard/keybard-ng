@@ -1,5 +1,5 @@
 import type { KeyboardInfo } from "../types/vial.types";
-import { keyService } from "./key.service"; // Assuming you have KEY equivalent
+import { keyService } from "./key.service";
 import { VialUSB } from "./usb.service";
 
 export class MacroService {
@@ -25,7 +25,7 @@ export class MacroService {
 
     private readonly QMK_EXT_ID = 1;
 
-    constructor(private usb: VialUSB) {}
+    constructor(private usb: VialUSB) { }
 
     async get(kbinfo: KeyboardInfo): Promise<void> {
         function checkComplete(data: any) {
@@ -36,11 +36,12 @@ export class MacroService {
         const macro_memory = await this.usb.getViaBuffer(VialUSB.CMD_VIA_MACRO_GET_BUFFER, kbinfo.macros_size || 0, { slice: 4, uint8: true, bytes: 1 }, checkComplete);
 
         const raw_macros = this.split(kbinfo, macro_memory);
-        kbinfo.macros = raw_macros.map((macro, mid) => this.parse(kbinfo, mid, macro)) as any;
+        kbinfo.macros = raw_macros.map((macro, mid) => this.parse(mid, macro));
     }
 
     async push(kbinfo: KeyboardInfo): Promise<void> {
-        const raw = this.dump(kbinfo.macros_size!, kbinfo.macros! as any);
+        if (!kbinfo.macros) return;
+        const raw = this.dump(kbinfo.macros_size!, kbinfo.macros);
         const rawview = new Uint8Array(raw);
         let i;
         let count = 0;
@@ -67,7 +68,7 @@ export class MacroService {
         return macros;
     }
 
-    parse(kbinfo: KeyboardInfo, mid: number, rawmacro: number[] | Uint8Array): any {
+    parse(mid: number, rawmacro: number[] | Uint8Array): any {
         const actions: any[] = [];
         let offset = 0;
         let curoffset = 0;

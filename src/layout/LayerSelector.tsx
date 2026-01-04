@@ -48,7 +48,7 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
     const currentLayerColor = keyboard.cosmetic?.layer_colors?.[selectedLayer] || "primary";
 
     return (
-        <div className="w-full flex flex-col pt-4">
+        <div className="w-full flex flex-col pt-4" onClick={(e) => e.stopPropagation()}>
             {/* Top Toolbar: Filter toggle and Layer Tabs */}
             <div className="py-3 overflow-hidden flex-shrink-0 flex items-center justify-start text-gray-500 gap-1 pl-4 w-full">
                 <Tooltip>

@@ -3,21 +3,21 @@ import { keyService } from "./key.service";
 import { VialUSB } from "./usb.service";
 
 export class OverrideService {
-    constructor(private usb: VialUSB) {}
+    constructor(private usb: VialUSB) { }
 
     async get(kbinfo: KeyboardInfo): Promise<void> {
         // Key overrides are stored in dynamic memory chunks. We do
         // KBINFO.key_override_count queries. So this can take a bit of time.
         const all_entries = await this.usb.getDynamicEntries(
             VialUSB.DYNAMIC_VIAL_KEY_OVERRIDE_GET,
-            (kbinfo as any).key_override_count!,
+            kbinfo.key_override_count!,
             { unpack: '<BHHHBBBB' }
         );
 
-        (kbinfo as any).key_overrides = [];
+        kbinfo.key_overrides = [];
 
         all_entries.forEach((raw: any[], idx: number) => {
-            (kbinfo as any).key_overrides!.push({
+            kbinfo.key_overrides!.push({
                 koid: idx,
                 trigger: keyService.stringify(raw[1]),
                 replacement: keyService.stringify(raw[2]),
@@ -31,7 +31,8 @@ export class OverrideService {
     }
 
     async push(kbinfo: KeyboardInfo, koid: number): Promise<void> {
-        const ko = (kbinfo as any).key_overrides![koid];
+        if (!kbinfo.key_overrides) return;
+        const ko = kbinfo.key_overrides[koid];
 
         await this.usb.sendVial(VialUSB.CMD_VIAL_DYNAMIC_ENTRY_OP, [
             VialUSB.DYNAMIC_VIAL_KEY_OVERRIDE_SET,

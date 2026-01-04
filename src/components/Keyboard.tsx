@@ -7,6 +7,8 @@ import { MATRIX_COLS, SVALBOARD_LAYOUT, UNIT_SIZE } from "../constants/svalboard
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import type { KeyboardInfo } from "../types/vial.types";
 import { Key } from "./Key";
+import { useLayoutSettings } from "@/contexts/LayoutSettingsContext";
+import { getLabelForKeycode } from "./Keyboards/layouts";
 
 interface KeyboardProps {
     keyboard: KeyboardInfo;
@@ -15,8 +17,10 @@ interface KeyboardProps {
     setSelectedLayer: (layer: number) => void;
 }
 
-export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer, setSelectedLayer }) => {
+// Fix unused var warning
+export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) => {
     const { selectKeyboardKey, selectedTarget, clearSelection } = useKeyBinding();
+    const { internationalLayout } = useLayoutSettings();
     const layerColor = keyboard.cosmetic?.layer_colors?.[selectedLayer] || "primary";
     // Get the keymap for the selected layer
     const layerKeymap = keyboard.keymap?.[selectedLayer] || [];
@@ -63,8 +67,12 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer, set
 
                     // Get the keycode for this position in the current layer
                     const keycode = layerKeymap[pos] || 0;
-                    const { label, keyContents } = getKeyLabel(keyboard, keycode);
+                    const { label: defaultLabel, keyContents } = getKeyLabel(keyboard, keycode);
                     const keycodeName = getKeycodeName(keycode);
+
+                    // Try to get international label
+                    const internationalLabel = getLabelForKeycode(getKeycodeName(keycode), internationalLayout);
+                    const label = internationalLabel || defaultLabel;
 
                     return (
                         <Key
@@ -87,7 +95,10 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer, set
             </div>
 
             {selectedTarget ? (
-                <div className="bg-white text-black p-4 mt-4 rounded shadow-md absolute bottom-5 right-5 rounded-2xl transition-all">
+                <div
+                    className="bg-white text-black p-4 mt-4 rounded shadow-md absolute bottom-5 right-5 rounded-2xl transition-all"
+                    onClick={(e) => e.stopPropagation()}
+                >
                     <h4>Selected Key</h4>
                     <p>
                         <b>Position</b>: Row {selectedTarget.row}, Col {selectedTarget.col}
@@ -96,7 +107,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer, set
                         <b>Matrix</b>: {(selectedTarget.row || 0) * MATRIX_COLS + (selectedTarget.col || 0)}
                     </p>
                     <p>
-                        <b>Keycode</b>: {getKeycodeName(layerKeymap[(selectedTarget.row || 0) * MATRIX_COLS + (selectedTarget?.col || 0)] || 0)}
+                        <b>Keycode</b>: {getKeycodeName(layerKeymap[(selectedTarget.row || 0) * MATRIX_COLS + (selectedTarget.col || 0)] || 0)}
                     </p>
                 </div>
             ) : undefined}

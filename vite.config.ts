@@ -5,6 +5,7 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
+    base: "/keybard-ng/",
     plugins: [react(), tailwindcss()],
     root: "src",
     publicDir: "../public",

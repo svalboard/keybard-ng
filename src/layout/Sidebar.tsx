@@ -38,19 +38,19 @@ export type SidebarItem = {
 
 export const primarySidebarItems: SidebarItem[] = [
     { title: "Keys", url: "keyboard", icon: KeyboardIcon },
-    { title: "Special Keys", url: "special", icon: GamepadDirectional },
+    { title: "Special Keys", url: "special", icon: MatrixTesterIcon },
+    { title: "QMK Keys", url: "qmk", icon: Cpu },
     { title: "Mouse", url: "mouse", icon: MouseIcon },
     { title: "Layers", url: "layers", icon: LayersDefaultIcon },
     { title: "Tap Dances", url: "tapdances", icon: TapdanceIcon },
     { title: "Combos", url: "combos", icon: ComboIcon },
     { title: "Macros", url: "macros", icon: MacrosIcon },
     { title: "Overrides", url: "overrides", icon: OverridesIcon },
-    { title: "QMK Keys", url: "qmk", icon: Cpu },
-    { title: "Matrix Tester", url: "matrixtester", icon: MatrixTesterIcon },
 ];
 
 const footerItems: SidebarItem[] = [
     { title: "About", url: "about", icon: HelpCircle },
+    { title: "Matrix Tester", url: "matrixtester", icon: GamepadDirectional },
     { title: "Settings", url: "settings", icon: Settings },
 ];
 
@@ -116,18 +116,24 @@ const AppSidebar = () => {
         panelToGoBack,
         alternativeHeader,
         setPanelToGoBack,
-        setAlternativeHeader
+        setAlternativeHeader,
+        open,
+        handleCloseDetails,
     } = usePanels();
 
     const handleItemSelect = useCallback(
         (item: SidebarItem) => {
-            setActivePanel(item.url);
-            openDetails();
-            setPanelToGoBack(null);
-            setAlternativeHeader(false);
-            setItemToEdit(null);
+            if (activePanel === item.url && open) {
+                handleCloseDetails();
+            } else {
+                setActivePanel(item.url);
+                openDetails();
+                setPanelToGoBack(null);
+                setAlternativeHeader(false);
+                setItemToEdit(null);
+            }
         },
-        [openDetails, setActivePanel, setPanelToGoBack, setAlternativeHeader, setItemToEdit]
+        [activePanel, open, handleCloseDetails, setActivePanel, openDetails, setPanelToGoBack, setAlternativeHeader, setItemToEdit]
     );
 
     const activePrimaryIndex = primarySidebarItems.findIndex((item) => item.url === activePanel);

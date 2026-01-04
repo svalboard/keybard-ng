@@ -12,13 +12,19 @@ import AppSidebar from "./Sidebar";
 
 import { LayerProvider, useLayer } from "@/contexts/LayerContext";
 
+import { LayoutSettingsProvider } from "@/contexts/LayoutSettingsContext";
+
+import { useKeyBinding } from "@/contexts/KeyBindingContext";
+
 const EditorLayout = () => {
     return (
         <SidebarProvider defaultOpen={false}>
             <PanelsProvider>
-                <LayerProvider>
-                    <EditorLayoutInner />
-                </LayerProvider>
+                <LayoutSettingsProvider>
+                    <LayerProvider>
+                        <EditorLayoutInner />
+                    </LayerProvider>
+                </LayoutSettingsProvider>
             </PanelsProvider>
         </SidebarProvider>
     );
@@ -27,6 +33,7 @@ const EditorLayout = () => {
 const EditorLayoutInner = () => {
     const { keyboard } = useVial();
     const { selectedLayer, setSelectedLayer } = useLayer();
+    const { clearSelection } = useKeyBinding();
 
     const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
     const { isMobile, state } = usePanels();
@@ -47,7 +54,11 @@ const EditorLayoutInner = () => {
         <div className={cn("flex h-screen max-w-screen p-0", showDetailsSidebar && "bg-white")}>
             <AppSidebar />
             <SecondarySidebar />
-            <div className="flex-1 px-4 h-screen max-h-screen flex flex-col max-w-full w-full overflow-hidden bg-kb-gray border-none" style={contentStyle}>
+            <div
+                className="flex-1 px-4 h-screen max-h-screen flex flex-col max-w-full w-full overflow-hidden bg-kb-gray border-none"
+                style={contentStyle}
+                onClick={() => clearSelection()}
+            >
                 <LayerSelector selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
                 <div className="flex-1 overflow-auto flex items-center overflow-x-auto max-w-full">
                     <Keyboard keyboard={keyboard!} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
