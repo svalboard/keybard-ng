@@ -67,7 +67,7 @@ const OverrideRow: React.FC<OverrideRowProps> = React.memo(({ index, onEdit, hov
                     label={index.toString()}
                     keyContents={{ type: "override" }}
                     layerColor="sidebar"
-                    headerClassName="bg-kb-sidebar-dark"
+                    headerClassName="bg-kb-sidebar-dark group-hover:bg-black/30"
                     isRelative
                     className="h-[60px] w-[60px] cursor-default"
                     hoverBorderColor={hoverBorderColor}

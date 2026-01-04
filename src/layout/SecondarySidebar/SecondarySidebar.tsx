@@ -11,6 +11,7 @@ import MacrosPanel from "./Panels/MacrosPanel";
 import SpecialKeysPanel from "./Panels/SpecialKeysPanel/SpecialKeysPanel";
 import OverridesPanel from "./Panels/OverridesPanel";
 import QmkKeyPanel from "./Panels/QmkKeysPanel";
+import MousePanel from "./Panels/MousePanel";
 import SettingsPanel from "./Panels/SettingsPanel";
 import TapdancePanel from "./Panels/TapdancePanel";
 
@@ -27,12 +28,13 @@ const getPanelTitle = (panel: string | null | undefined): string => {
     if (!panel) return "Details";
 
     const titles: Record<string, string> = {
-        keyboard: "Keyboard Keys",
+        keyboard: "Keys",
         layers: "Layers",
         tapdances: "Tap Dances",
         macros: "Macros",
         qmk: "QMK Keys",
         special: "Special Keys",
+        mouse: "Mouse",
         combos: "Combos",
         overrides: "Overrides",
         settings: "Settings",
@@ -105,6 +107,7 @@ const SecondarySidebar = () => {
             case "overrides": return <OverridesPanel />;
             case "qmk": return <QmkKeyPanel />;
             case "special": return <SpecialKeysPanel />;
+            case "mouse": return <MousePanel />;
             case "settings": return <SettingsPanel />;
             default:
                 return (

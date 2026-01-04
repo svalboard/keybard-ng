@@ -70,7 +70,7 @@ const ComboRow: React.FC<ComboRowProps> = React.memo(({ index, onEdit, hoverBord
                     label={index.toString()} // Just show the index
                     keyContents={{ type: "combo" }}
                     layerColor="sidebar"
-                    headerClassName="bg-kb-sidebar-dark"
+                    headerClassName="bg-kb-sidebar-dark group-hover:bg-black/30"
                     isRelative
                     className="h-[60px] w-[60px] cursor-default"
                     hoverBorderColor={hoverBorderColor}
