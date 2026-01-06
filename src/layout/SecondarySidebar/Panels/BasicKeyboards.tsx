@@ -168,7 +168,7 @@ const BasicKeyboards = ({ isPicker }: Props) => {
         <div className="space-y-6 relative">
             {isPicker && (
                 <div className="pb-2">
-                    <span className="font-semibold text-xl text-slate-700">Keys</span>
+                    <span className="font-semibold text-xl text-slate-700">Keyboard</span>
                 </div>
             )}
             <section className="flex flex-col gap-2 sticky top-0 z-20 bg-white pt-4 pb-4 -mt-4">

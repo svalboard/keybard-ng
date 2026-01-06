@@ -38,8 +38,8 @@ const EditorSidePanel: FC<Props> = ({ parentPanel: _parentPanel, className, acti
                     <div
                         key={i.panel}
                         className={cn(
-                            "cursor-pointer hover:bg-muted/40 px-2 py-3 h-10 w-10 rounded-xl items-center justify-center flex",
-                            activeTab === i.panel && "bg-muted/60 text-black"
+                            "cursor-pointer transition-colors px-2 py-3 h-10 w-10 items-center justify-center flex",
+                            activeTab === i.panel ? "text-slate-900" : "text-gray-400 hover:text-slate-900"
                         )}
                         onClick={() => {
                             if (onTabChange) {

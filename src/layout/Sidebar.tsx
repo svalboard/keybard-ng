@@ -36,11 +36,11 @@ export type SidebarItem = {
 };
 
 export const primarySidebarItems: SidebarItem[] = [
-    { title: "Keyboard Keys", url: "keyboard", icon: KeyboardIcon },
-    { title: "Special Keys", url: "special", icon: Gamepad },
-    { title: "QMK Keys", url: "qmk", icon: Cpu },
+    { title: "Keyboard", url: "keyboard", icon: KeyboardIcon },
+    { title: "Special", url: "special", icon: Gamepad },
+    { title: "QMK", url: "qmk", icon: Cpu },
     { title: "Layer Keys", url: "layers", icon: LayersDefaultIcon },
-    { title: "Mouse Keys", url: "mouse", icon: MouseIcon },
+    { title: "Mouse", url: "mouse", icon: MouseIcon },
     { title: "Tap Dances", url: "tapdances", icon: TapdanceIcon },
     { title: "Combos", url: "combos", icon: ComboIcon },
     { title: "Macros", url: "macros", icon: MacrosIcon },

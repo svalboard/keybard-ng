@@ -30,13 +30,13 @@ const getPanelTitle = (panel: string | null | undefined): string => {
     if (!panel) return "Details";
 
     const titles: Record<string, string> = {
-        keyboard: "Keyboard Keys",
+        keyboard: "Keyboard",
         layers: "Layer Keys",
         tapdances: "Tap Dances",
         macros: "Macros",
-        qmk: "QMK Keys",
-        special: "Special Keys",
-        mouse: "Mouse Keys",
+        qmk: "QMK",
+        special: "Special",
+        mouse: "Mouse",
         combos: "Combos",
         overrides: "Overrides",
         settings: "Settings",
@@ -105,7 +105,7 @@ const SecondarySidebar = () => {
     // Reset picker mode when picker closes
     React.useEffect(() => {
         if (!showPicker) {
-            const timeout = setTimeout(() => setPickerMode("keyboard"), 300);
+            const timeout = setTimeout(() => setPickerMode("keyboard"), 500);
             return () => clearTimeout(timeout);
         }
     }, [showPicker]);
@@ -191,7 +191,7 @@ const SecondarySidebar = () => {
             {/* Overlay Panel for Key Picker */}
             <div
                 className={cn(
-                    "absolute top-0 bottom-0 left-0 -right-[2px] bg-white shadow-[4px_0_16px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col",
+                    "absolute top-0 bottom-0 left-0 -right-[2px] bg-white shadow-[4px_0_16px_rgba(0,0,0,0.1)] z-20 transition-all duration-500 ease-in-out flex flex-col",
                     showPicker ? "translate-x-0 opacity-100" : "-translate-x-[120%] opacity-0 pointer-events-none"
                 )}
                 aria-hidden={!showPicker}
