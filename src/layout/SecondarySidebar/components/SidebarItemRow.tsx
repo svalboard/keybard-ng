@@ -120,7 +120,7 @@ const SidebarItemRow: React.FC<SidebarItemRowProps> = React.memo(
             <div
                 className={cn(
                     "flex flex-row items-center py-0 panel-layer-item group/item relative pl-6 pr-2 transition-colors",
-                    (onEdit || onNameChange || onColorChange) && "hover:bg-black/5 hover:rounded-lg transition-colors py-2",
+                    (onEdit || onNameChange || onColorChange) && "hover:bg-black/5 hover:rounded-lg py-2",
                     isClickable && "cursor-pointer",
                     className
                 )}
