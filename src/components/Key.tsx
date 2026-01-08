@@ -103,9 +103,23 @@ export const Key: React.FC<KeyProps> = ({
     if (hasModifiers && keyContents) {
         const show = showModMask(keyContents.modids);
         const keysArr = keyContents.str?.split("\n") || [];
+        const keyStr = keysArr[0] || "";
+
         if (!label || label === keycode) {
-            displayLabel = keysArr[0] || "";
+            // Main keyboard case: label equals keycode (e.g., "LCTL(kc)")
+            // Need to construct a display label like "LCTL (kc)" to match panel
+            if (keyStr === "" || keyStr === "KC_NO") {
+                // It's a placeholder - show modifier + (kc) in center
+                const modStr = keyContents.top || "";
+                displayLabel = `${modStr} (kc)`;
+            } else {
+                // It has an actual key - show modifier + key
+                const modStr = keyContents.top || "";
+                displayLabel = `${modStr} ${keyStr}`;
+            }
         }
+        // else: QMK panel case - label already has proper format like "LCTL (kc)"
+
         bottomStr = show;
     }
 

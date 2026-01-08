@@ -42,13 +42,13 @@ export const primarySidebarItems: SidebarItem[] = [
     { title: "Layer Keys", url: "layers", icon: LayersDefaultIcon },
     { title: "Mouse", url: "mouse", icon: MouseIcon },
     { title: "Tap Dances", url: "tapdances", icon: TapdanceIcon },
-    { title: "Combos", url: "combos", icon: ComboIcon },
     { title: "Macros", url: "macros", icon: MacrosIcon },
-    { title: "Overrides", url: "overrides", icon: OverridesIcon },
 ];
 
 const footerItems: SidebarItem[] = [
     { title: "About", url: "about", icon: HelpCircle },
+    { title: "Combos", url: "combos", icon: ComboIcon },
+    { title: "Overrides", url: "overrides", icon: OverridesIcon },
     { title: "Matrix Tester", url: "matrixtester", icon: GamepadDirectional },
     { title: "Settings", url: "settings", icon: Settings },
 ];

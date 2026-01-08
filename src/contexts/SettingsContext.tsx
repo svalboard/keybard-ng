@@ -90,7 +90,7 @@ export const SETTINGS: SettingDefinition[] = [
     {
         name: "left-dpi",
         label: "Left DPI",
-        description: "Adjust sensibility for your left pointing device.",
+        description: "Adjust sensitivity for your left pointing device.",
         type: "slider",
         defaultValue: 800,
         min: 100,
@@ -101,7 +101,7 @@ export const SETTINGS: SettingDefinition[] = [
     {
         name: "right-dpi",
         label: "Right DPI",
-        description: "Adjust sensibility for your right pointing device.",
+        description: "Adjust sensitivity for your right pointing device.",
         type: "slider",
         defaultValue: 800,
         min: 100,
@@ -247,7 +247,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const refreshHardwareSettings = useCallback(async () => {
         const hardwareSettings = SETTINGS.filter(s => s.scope === 'hardware');
         const newSettings: SettingsState = {};
-        
+
         for (const setting of hardwareSettings) {
             const val = await settingsService.getHardwareSetting(setting.name);
             if (val !== undefined) {

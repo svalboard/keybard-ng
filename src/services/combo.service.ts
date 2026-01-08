@@ -22,7 +22,7 @@ export class ComboService {
                     keyService.stringify(raw[2]),
                     keyService.stringify(raw[3]),
                     keyService.stringify(raw[4]),
-                ].filter(k => k !== "KC_NO"),
+                ].map(k => k === "KC_NO" ? "KC_NO" : k), // Keep all 4 slots
                 output: keyService.stringify(raw[5]),
             });
         });

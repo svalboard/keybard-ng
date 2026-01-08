@@ -9,8 +9,9 @@ import type { KeyboardInfo } from "../types/vial.types";
 import { Key } from "./Key";
 import { useLayoutSettings } from "@/contexts/LayoutSettingsContext";
 import { getLabelForKeycode } from "./Keyboards/layouts";
-import { headerClasses, hoverHeaderClasses } from "@/utils/colors";
+import { headerClasses, hoverHeaderClasses, hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
 import { InfoIcon } from "./icons/InfoIcon";
+import { usePanels } from "@/contexts/PanelsContext";
 
 interface KeyboardProps {
     keyboard: KeyboardInfo;
@@ -22,7 +23,34 @@ interface KeyboardProps {
 // Fix unused var warning
 export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) => {
     const { selectKeyboardKey, selectedTarget, clearSelection, hoveredKey, assignKeycode } = useKeyBinding();
+    const { activePanel, itemToEdit } = usePanels();
     const [showInfoPanel, setShowInfoPanel] = React.useState(false);
+
+    const isTransmitting = itemToEdit !== null && ["tapdances", "combos", "macros", "overrides"].includes(activePanel || "");
+
+    // Ref to store the selection before entering transmitting mode
+    const savedSelection = React.useRef<{ layer: number; row: number; col: number } | null>(null);
+
+    React.useEffect(() => {
+        if (isTransmitting) {
+            // Entering transmitting mode
+            if (selectedTarget?.type === "keyboard" && typeof selectedTarget.row === "number" && typeof selectedTarget.col === "number") {
+                savedSelection.current = {
+                    layer: selectedTarget.layer ?? selectedLayer,
+                    row: selectedTarget.row,
+                    col: selectedTarget.col,
+                };
+                clearSelection();
+            }
+        } else {
+            // Exiting transmitting mode
+            if (savedSelection.current) {
+                const { layer, row, col } = savedSelection.current;
+                selectKeyboardKey(layer, row, col);
+                savedSelection.current = null;
+            }
+        }
+    }, [isTransmitting]); // Depend on isTransmitting to trigger transitions
 
     // React.useEffect(() => {
     //     if (selectedTarget) {
@@ -42,6 +70,15 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
     };
 
     const handleKeyClick = (row: number, col: number) => {
+        // If in transmitting mode, send the key's value to the selected target
+        if (isTransmitting) {
+            const pos = row * MATRIX_COLS + col;
+            const keycode = layerKeymap[pos] || 0;
+            const keycodeName = getKeycodeName(keycode);
+            assignKeycode(keycodeName);
+            return;
+        }
+
         // if key is already selected, deselect it
         if (isKeySelected(row, col)) {
             clearSelection();
@@ -99,6 +136,23 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
                     const internationalLabel = getLabelForKeycode(getKeycodeName(keycode), internationalLayout);
                     const label = internationalLabel || defaultLabel;
 
+                    // Calculate transmitting style overrides
+                    let keyLayerColor = layerColor;
+                    let keyHeaderClassFull = `${headerClass} ${hoverHeaderClass}`;
+                    let keyHoverBg = undefined;
+                    let keyHoverBorder = undefined;
+                    let keyHoverLayerColor = undefined;
+
+                    if (isTransmitting) {
+                        keyLayerColor = "sidebar";
+                        keyHeaderClassFull = `bg-kb-sidebar-dark ${hoverHeaderClass}`;
+
+                        // Use original layer color for hover states
+                        keyHoverBg = hoverBackgroundClasses[layerColor];
+                        keyHoverBorder = hoverBorderClasses[layerColor];
+                        keyHoverLayerColor = layerColor;
+                    }
+
                     return (
                         <Key
                             key={`${row}-${col}`}
@@ -113,8 +167,11 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
                             selected={isKeySelected(row, col)}
                             onClick={handleKeyClick}
                             keyContents={keyContents}
-                            layerColor={layerColor}
-                            headerClassName={`${headerClass} ${hoverHeaderClass}`}
+                            layerColor={keyLayerColor}
+                            headerClassName={keyHeaderClassFull}
+                            hoverBackgroundColor={keyHoverBg}
+                            hoverBorderColor={keyHoverBorder}
+                            hoverLayerColor={keyHoverLayerColor}
                         />
                     );
                 })}

@@ -8,13 +8,15 @@ import { getKeyContents } from "@/utils/keys";
 import { useDebounce } from "@uidotdev/usehooks";
 import { Key } from "@/components/Key";
 
+import { Trash2 } from "lucide-react";
+
 interface Props { }
 
 const TapdanceEditor: FC<Props> = () => {
     const { keyboard, setKeyboard } = useVial();
     const { setPanelToGoBack, setAlternativeHeader, itemToEdit } = usePanels();
     const currTapDance = (keyboard as any).tapdances?.[itemToEdit!];
-    const { selectTapdanceKey, selectedTarget, assignKeycode } = useKeyBinding();
+    const { selectTapdanceKey, selectedTarget } = useKeyBinding();
     const isSlotSelected = (slot: string) => {
         return selectedTarget?.type === "tapdance" && selectedTarget.tapdanceId === itemToEdit && selectedTarget.tapdanceSlot === slot;
     };
@@ -24,14 +26,14 @@ const TapdanceEditor: FC<Props> = () => {
         if (currTapDance) {
             setTapMs(currTapDance.tapms);
         }
-    }, []);
+    }, [itemToEdit]); // Use itemToEdit instead of currTapDance to avoid infinite loop
     const keys = {
-        tap: getKeyContents(keyboard!, currTapDance.tap),
-        doubletap: getKeyContents(keyboard!, currTapDance.doubletap),
-        hold: getKeyContents(keyboard!, currTapDance.hold),
-        taphold: getKeyContents(keyboard!, currTapDance.taphold),
+        tap: getKeyContents(keyboard!, currTapDance?.tap || "KC_NO"),
+        doubletap: getKeyContents(keyboard!, currTapDance?.doubletap || "KC_NO"),
+        hold: getKeyContents(keyboard!, currTapDance?.hold || "KC_NO"),
+        taphold: getKeyContents(keyboard!, currTapDance?.taphold || "KC_NO"),
     };
-    console.log("Rendering TapdanceEditor for tapdance:", itemToEdit, "with keys:", keys, "and currTapDance:", currTapDance);
+
     useEffect(() => {
         setPanelToGoBack("tapdances");
         setAlternativeHeader(true);
@@ -55,19 +57,35 @@ const TapdanceEditor: FC<Props> = () => {
         updateTapMs(debouncedTapMs);
     }, [debouncedTapMs]);
 
+    const updateKeyAssignment = (slot: string, keycode: string) => {
+        if (!keyboard || itemToEdit === null) return;
+        const updatedKeyboard = { ...keyboard };
+        const tapdances = [...(updatedKeyboard as any).tapdances];
+        if (tapdances[itemToEdit]) {
+            tapdances[itemToEdit] = {
+                ...tapdances[itemToEdit],
+                [slot]: keycode
+            };
+        }
+        (updatedKeyboard as any).tapdances = tapdances;
+        setKeyboard(updatedKeyboard);
+    };
+
     // Handle Delete/Backspace for selected key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Delete" || e.key === "Backspace") {
                 if (selectedTarget?.type === "tapdance" && selectedTarget.tapdanceId === itemToEdit && selectedTarget.tapdanceSlot) {
-                    assignKeycode("KC_NO");
+                    // Update key assignment directly instead of using assignKeycode which might context switch
+                    // Actually assignKeycode uses selected target so it's fine, but consistent direct update is safer for local logic
+                    updateKeyAssignment(selectedTarget.tapdanceSlot, "KC_NO");
                 }
             }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedTarget, itemToEdit, assignKeycode]);
+    }, [selectedTarget, itemToEdit]);
 
 
 
@@ -97,33 +115,46 @@ const TapdanceEditor: FC<Props> = () => {
         }
 
         return (
-            <div className="flex flex-row items-center gap-4">
-                <div className="relative w-[60px] h-[60px]">
-                    <Key
-                        isRelative
-                        x={0}
-                        y={0}
-                        w={1}
-                        h={1}
-                        row={-1}
-                        col={-1}
-                        keycode={content?.top || "KC_NO"}
-                        label={content?.str || ""}
-                        keyContents={content}
-                        selected={isSlotSelected(type)}
-                        onClick={() => selectTapdanceKey(itemToEdit!, type)}
-                        layerColor={keyColor}
-                        className={keyClassName}
-                        headerClassName={headerClass}
-                    />
+            <div className="relative w-full">
+                <div className="flex flex-row items-center gap-4 peer">
+                    <div className="relative w-[60px] h-[60px]">
+                        <Key
+                            isRelative
+                            x={0}
+                            y={0}
+                            w={1}
+                            h={1}
+                            row={-1}
+                            col={-1}
+                            keycode={content?.top || "KC_NO"}
+                            label={content?.str || ""}
+                            keyContents={content}
+                            selected={isSlotSelected(type)}
+                            onClick={() => selectTapdanceKey(itemToEdit!, type)}
+                            layerColor={keyColor}
+                            className={keyClassName}
+                            headerClassName={headerClass}
+                        />
+                    </div>
+                    <span className="text-sm font-medium text-slate-600">{label}</span>
                 </div>
-                <span className="text-sm font-medium text-slate-600">{label}</span>
+                {hasContent && (
+                    <div className="absolute -left-10 top-0 h-full flex items-center justify-center opacity-0 peer-hover:opacity-100 hover:opacity-100 transition-opacity">
+                        <button
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full"
+                            onClick={() => updateKeyAssignment(type, "KC_NO")}
+                            title="Clear key"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
         );
     };
 
     return (
-        <div className="flex flex-col gap-6 py-8 pl-[76px]">
+        <div className="flex flex-col gap-6 py-8 pl-[84px]">
             {renderKey("Tap", keys.tap, "tap")}
             {renderKey("Hold", keys.hold, "hold")}
             {renderKey("Tap-Hold", keys.taphold, "taphold")}

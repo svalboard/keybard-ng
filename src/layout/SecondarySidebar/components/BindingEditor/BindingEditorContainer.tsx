@@ -1,6 +1,6 @@
 import "./BindingEditorContainer.css";
 
-import { FC, useCallback, useState, useEffect } from "react";
+import { FC, useCallback, useState, useEffect, useRef, KeyboardEvent } from "react";
 
 import ComboIcon from "@/components/ComboIcon";
 import MacrosIcon from "@/components/icons/MacrosIcon";
@@ -8,6 +8,7 @@ import OverridesIcon from "@/components/icons/Overrides";
 import { usePanels } from "@/contexts/PanelsContext";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import ComboEditor from "./ComboEditor";
 import MacroEditor from "./MacroEditor";
 import OverrideEditor from "./OverrideEditor";
@@ -58,9 +59,46 @@ const BindingEditorContainer: FC<Props> = ({ shouldClose }) => {
         }
     }, [handleCloseEditor, isClosing]);
 
-    const { keyboard } = useVial();
+    const { keyboard, setKeyboard } = useVial();
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editTitleValue, setEditTitleValue] = useState("");
+    const inputRef = useRef<HTMLInputElement>(null);
 
-    const containerClasses = cn("absolute top-1/2 -translate-y-1/2", bindingTypeToEdit === "overrides" ? "w-[500px] right-[-500px]" : "w-[400px] right-[-400px]");
+    const handleStartEditingTitle = () => {
+        if (!keyboard || bindingTypeToEdit !== "macros" || itemToEdit === null) return;
+        const currentName = keyboard.cosmetic?.macros?.[itemToEdit.toString()] || `Macro Key ${itemToEdit}`;
+        setEditTitleValue(currentName);
+        setIsEditingTitle(true);
+    };
+
+    const handleSaveTitle = () => {
+        if (!keyboard || bindingTypeToEdit !== "macros" || itemToEdit === null) {
+            setIsEditingTitle(false);
+            return;
+        }
+
+        const cosmetic = JSON.parse(JSON.stringify(keyboard.cosmetic || {}));
+        if (!cosmetic.macros) cosmetic.macros = {};
+
+        if (editTitleValue.trim() === "" || editTitleValue.trim() === `Macro Key ${itemToEdit}`) {
+            delete cosmetic.macros[itemToEdit.toString()];
+        } else {
+            cosmetic.macros[itemToEdit.toString()] = editTitleValue;
+        }
+
+        setKeyboard({ ...keyboard, cosmetic });
+        setIsEditingTitle(false);
+    };
+
+    const handleTitleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            handleSaveTitle();
+        } else if (e.key === "Escape") {
+            setIsEditingTitle(false);
+        }
+    };
+
+    const containerClasses = cn("absolute top-1/2 -translate-y-1/2", bindingTypeToEdit === "overrides" ? "w-[500px] right-[-500px]" : "w-[450px] right-[-450px]");
     const panelClasses = cn("binding-editor bg-kb-gray-medium rounded-r-2xl p-5 flex flex-col w-full min-h-[500px] shadow-[4px_0_16px_rgba(0,0,0,0.1)]", isClosing ? "binding-editor--exit" : "binding-editor--enter");
 
     const renderHeaderIcon = () => {
@@ -101,18 +139,52 @@ const BindingEditorContainer: FC<Props> = ({ shouldClose }) => {
     return (
         <div className={containerClasses}>
             <div className={panelClasses} onAnimationEnd={handleAnimationEnd}>
-                <div className="flex flex-row w-full items-center pr-5 pl-[76px] justify-between pt-2">
+                <div className="flex flex-row w-full items-center pr-5 pl-[84px] justify-between pt-2 pb-5">
                     <div className="flex flex-row items-center">
                         {renderHeaderIcon()}
-                        <div className="pl-5 text-xl font-normal">{(labels as any)[bindingTypeToEdit!]}</div>
+                        <div className="pl-5 text-xl font-normal">
+                            {bindingTypeToEdit === "macros" ? (
+                                isEditingTitle ? (
+                                    <div className="flex items-center gap-2 bg-white rounded-md px-1 py-0.5 border border-black shadow-sm">
+                                        <Input
+                                            ref={inputRef}
+                                            value={editTitleValue}
+                                            onChange={(e) => setEditTitleValue(e.target.value)}
+                                            onBlur={handleSaveTitle}
+                                            onKeyDown={handleTitleKeyDown}
+                                            className="h-auto py-1 px-2 text-lg font-bold border-none focus-visible:ring-0 w-auto min-w-[130px]"
+                                            autoFocus
+                                        />
+                                    </div>
+                                ) : (
+                                    <div
+                                        className="cursor-pointer hover:bg-black/5 rounded-md px-2 py-1 transition-colors"
+                                        onClick={handleStartEditingTitle}
+                                        title="Click to rename"
+                                    >
+                                        {keyboard?.cosmetic?.macros?.[itemToEdit!.toString()] || `Macro Key ${itemToEdit}`}
+                                    </div>
+                                )
+                            ) : bindingTypeToEdit === "combos" ? (
+                                `Combo Key ${itemToEdit}`
+                            ) : bindingTypeToEdit === "tapdances" ? (
+                                `Tap Dance Key ${itemToEdit}`
+                            ) : bindingTypeToEdit === "overrides" ? (
+                                `Override ${itemToEdit}`
+                            ) : (
+                                (labels as any)[bindingTypeToEdit!]
+                            )}
+                        </div>
                     </div>
-                    <button
-                        type="button"
-                        onClick={handleAnimatedClose}
-                        className="rounded-sm p-1 text-kb-gray-border transition-all hover:text-black focus:outline-none focus:text-black cursor-pointer"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
+                    {!isEditingTitle && (
+                        <button
+                            type="button"
+                            onClick={handleAnimatedClose}
+                            className="rounded-sm p-1 text-kb-gray-border transition-all hover:text-black focus:outline-none focus:text-black cursor-pointer"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    )}
                 </div>
                 {bindingTypeToEdit === "tapdances" && <TapdanceEditor />}
                 {bindingTypeToEdit === "combos" && <ComboEditor />}

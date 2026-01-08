@@ -73,7 +73,11 @@ const MOUSE_KEYS: readonly MouseKeyDefinition[] = [
  * The panel uses the shared SidebarItemRow component for consistent styling
  * with other panels like Tap Dances and Combos.
  */
-const MousePanel: React.FC = () => {
+interface Props {
+    isPicker?: boolean;
+}
+
+const MousePanel: React.FC<Props> = ({ isPicker }) => {
     const { keyboard } = useVial();
     const { assignKeycode } = useKeyBinding();
     const { selectedLayer } = useLayer();
@@ -98,6 +102,11 @@ const MousePanel: React.FC = () => {
 
     return (
         <section className="flex h-full max-h-full flex-col space-y-3 pt-3">
+            {isPicker && (
+                <div className="pb-2">
+                    <span className="font-semibold text-xl text-slate-700">Mouse</span>
+                </div>
+            )}
             <div className="scrollbar-thin flex flex-grow flex-col overflow-auto">
                 {MOUSE_KEYS.map((mouseKey, index) => {
                     const keyContents = getKeyContents(keyboard, mouseKey.keycode) as KeyContent;

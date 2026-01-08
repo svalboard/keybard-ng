@@ -28,6 +28,7 @@ export interface KeyboardInfo {
     cosmetic?: {
         layer?: Record<string, string>;
         layer_colors?: Record<string, string>;
+        macros?: Record<string, string>;
     };
     keylayout?: Record<string, any>; // Using any for now to match KLE output structure
 }

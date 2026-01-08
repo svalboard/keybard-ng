@@ -142,6 +142,9 @@ export function getModMasks(modids: any) {
 }
 
 export function getKeyContents(KBINFO: KeyboardInfo, keystr: any) {
+    if (keystr === undefined || keystr === null) {
+        return undefined;
+    }
     let m;
 
     keystr = keyService.canonical(keystr);

@@ -48,11 +48,12 @@ const TapdancePanel: React.FC = () => {
             </div>
 
             <div className="flex flex-col">
-                {tapdances.map((_, i) => {
+                {tapdances.map((tdEntry, i) => {
                     const keycode = `TD(${i})`;
                     const keyContents = getKeyContents(keyboard, keycode) as KeyContent;
 
-                    const td = (keyboard as any).tapdances?.[i] || {};
+                    // Use tdEntry directly from the map
+                    const td = tdEntry || ({} as any);
                     const states = [
                         { label: "Tap", key: td.tap },
                         { label: "Hold", key: td.hold },
@@ -60,13 +61,17 @@ const TapdancePanel: React.FC = () => {
                         { label: "Double", key: td.doubletap },
                     ];
 
-                    const stateContents = states.map(s => getKeyContents(keyboard, s.key));
+                    const stateContents = states.map((s) => getKeyContents(keyboard, s.key) as KeyContent);
 
                     // Check if any key is actually assigned (not just KC_NO/empty)
-                    const hasAssignment = stateContents.some((k: any) => (k?.top && k.top !== "KC_NO") || (k?.str && k.str !== "KC_NO" && k.str !== ""));
+                    const hasAssignment = stateContents.some(
+                        (k) => (k?.top && k.top !== "KC_NO") || (k?.str && k.str !== "KC_NO" && k.str !== "")
+                    );
 
-                    const renderSmallKey = (content: any, idx: number) => {
-                        const hasContent = (content?.top && content?.top !== "KC_NO") || (content?.str && content?.str !== "" && content?.str !== "KC_NO");
+                    const renderSmallKey = (content: KeyContent, idx: number) => {
+                        const hasContent =
+                            (content?.top && content?.top !== "KC_NO") ||
+                            (content?.str && content?.str !== "" && content?.str !== "KC_NO");
 
                         return (
                             <div className="w-[30px] h-[30px] relative" key={idx}>
@@ -83,7 +88,9 @@ const TapdancePanel: React.FC = () => {
                                     keyContents={content}
                                     variant="small"
                                     layerColor={hasContent ? "sidebar" : undefined}
-                                    className={!hasContent ? "bg-transparent border border-kb-gray-border" : "border-kb-gray"}
+                                    className={
+                                        !hasContent ? "bg-transparent border border-kb-gray-border" : "border-kb-gray"
+                                    }
                                     headerClassName={!hasContent ? "hidden" : "bg-kb-sidebar-dark"}
                                     disableHover
                                     onClick={() => handleEdit(i)}

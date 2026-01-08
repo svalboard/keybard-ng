@@ -5,7 +5,11 @@ import { useVial } from "@/contexts/VialContext";
 import { hoverBackgroundClasses, hoverBorderClasses, hoverHeaderClasses } from "@/utils/colors";
 import { Key } from "@/components/Key";
 
-const QmkKeyPanel = () => {
+interface Props {
+    isPicker?: boolean;
+}
+
+const QmkKeyPanel = ({ isPicker }: Props) => {
     const { assignKeycode } = useKeyBinding();
     const { keyboard } = useVial();
     const { selectedLayer } = useLayer();
@@ -41,12 +45,17 @@ const QmkKeyPanel = () => {
 
     return (
         <div className="space-y-6 pt-3 pb-8">
+            {isPicker && (
+                <div className="pb-2">
+                    <span className="font-semibold text-xl text-slate-700">QMK</span>
+                </div>
+            )}
             {/* One-Shot Modifiers Section */}
             <section className="flex flex-col gap-3">
                 <span className="font-semibold text-lg text-slate-700">One-Shot Modifiers</span>
 
                 <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-slate-500 uppercase tracking-widest">Left Hand Side</span>
+                    <span className="text-base font-medium text-black">Left Hand Side</span>
                     <div className="flex flex-wrap gap-2">
                         {renderKey("OSM(MOD_LSFT)", "OSM LSft")}
                         {renderKey("OSM(MOD_LCTL)", "OSM LCtl")}
@@ -67,7 +76,7 @@ const QmkKeyPanel = () => {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-slate-500 uppercase tracking-widest">Right Hand Side</span>
+                    <span className="text-base font-medium text-black">Right Hand Side</span>
                     <div className="flex flex-wrap gap-2">
                         {renderKey("OSM(MOD_RSFT)", "OSM RSft")}
                         {renderKey("OSM(MOD_RCTL)", "OSM RCtl")}
@@ -93,7 +102,7 @@ const QmkKeyPanel = () => {
                 <span className="font-semibold text-lg text-slate-700">Mod-Tap / ModMasks</span>
 
                 <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-slate-500 uppercase tracking-widest">Left Hand Side</span>
+                    <span className="text-base font-medium text-black">Left Hand Side</span>
                     <div className="flex flex-wrap gap-2">
                         {renderKey("LCTL(kc)", "LCTL (kc)")}
                         {renderKey("LSFT(kc)", "LSFT (kc)")}
@@ -114,7 +123,7 @@ const QmkKeyPanel = () => {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <span className="text-sm font-medium text-slate-500 uppercase tracking-widest">Right Hand Side</span>
+                    <span className="text-base font-medium text-black">Right Hand Side</span>
                     <div className="flex flex-wrap gap-2">
                         {renderKey("RCTL(kc)", "RCTL (kc)")}
                         {renderKey("RSFT(kc)", "RSFT (kc)")}

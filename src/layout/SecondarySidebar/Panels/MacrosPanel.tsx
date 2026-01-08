@@ -22,7 +22,6 @@ const MacrosPanel: React.FC<Props> = ({ isPicker }) => {
         setBindingTypeToEdit,
         setAlternativeHeader,
         setPanelToGoBack,
-        setActivePanel,
     } = usePanels();
 
     if (!keyboard) return null;
@@ -39,7 +38,6 @@ const MacrosPanel: React.FC<Props> = ({ isPicker }) => {
         setBindingTypeToEdit("macros");
         setAlternativeHeader(true);
         setPanelToGoBack("macros");
-        setActivePanel("keyboard");
     };
 
     return (
@@ -61,6 +59,8 @@ const MacrosPanel: React.FC<Props> = ({ isPicker }) => {
                             keyboard={keyboard}
                             keycode={keycode}
                             label={i.toString()}
+                            hasCustomName={!!keyboard.cosmetic?.macros?.[i.toString()]}
+                            customName={keyboard.cosmetic?.macros?.[i.toString()]}
                             keyContents={keyContents}
                             onEdit={isPicker ? undefined : handleEdit}
                             onAssignKeycode={assignKeycode}

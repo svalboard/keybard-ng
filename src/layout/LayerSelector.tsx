@@ -160,7 +160,7 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
             {/* Bottom Status: Current Layer Name and Edit Trigger */}
             <div className="mt-2 flex justify-start items-center px-5 py-2 relative">
                 {/* Color Dot with Picker */}
-                <div className="relative mr-3" ref={pickerRef}>
+                <div className="relative mr-3 left-px" ref={pickerRef}>
                     <div
                         className={cn(
                             "w-6 h-6 rounded-full shadow-sm cursor-pointer transition-transform hover:scale-110 border-2",

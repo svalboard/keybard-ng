@@ -2,6 +2,7 @@ import React from "react";
 import { ArrowRight, Plus } from "lucide-react";
 
 import SidebarItemRow from "@/layout/SecondarySidebar/components/SidebarItemRow";
+import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useLayer } from "@/contexts/LayerContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
@@ -12,6 +13,7 @@ import { KeyContent } from "@/types/vial.types";
 
 const CombosPanel: React.FC = () => {
     const { keyboard } = useVial();
+    const { assignKeycode } = useKeyBinding();
     const { selectedLayer } = useLayer();
     const {
         setItemToEdit,
@@ -35,10 +37,14 @@ const CombosPanel: React.FC = () => {
     };
 
     return (
-        <div className="space-y-3 pt-3 pb-8 relative">
-            <div className="flex flex-col">
-                {combos.map((combo, i) => {
-                    const isKeyAssigned = (content: any) => {
+        <section className="space-y-3 h-full max-h-full flex flex-col pt-3">
+            {/* Scrollable Combos List */}
+            <div className="flex flex-col overflow-auto flex-grow scrollbar-thin">
+                {combos.map((comboEntry, i) => {
+                    // Cast to unknown first if there are type mismatches, but ideally use ComboEntry
+                    const combo = comboEntry as any as import("@/types/vial.types").ComboEntry;
+
+                    const isKeyAssigned = (content: KeyContent | undefined) => {
                         if (!content) return false;
                         const top = content.top;
                         const str = content.str;
@@ -46,14 +52,16 @@ const CombosPanel: React.FC = () => {
                     };
 
                     const inputs = [0, 1, 2, 3].map(idx => ({
-                        content: getKeyContents(keyboard, (combo as any)[idx.toString()]),
+                        content: getKeyContents(keyboard, combo.keys[idx] || "KC_NO") as KeyContent,
                         id: idx
                     })).filter(k => isKeyAssigned(k.content));
 
-                    const result = getKeyContents(keyboard, (combo as any)["4"]);
+                    // Use resultKeycode directly if available, otherwise KC_NO
+                    const resultKeycode = combo.output;
+                    const result = getKeyContents(keyboard, resultKeycode || "KC_NO") as KeyContent;
                     const hasAssignment = inputs.length > 0 || isKeyAssigned(result);
 
-                    const renderSmallKey = (content: any, idx: number) => {
+                    const renderSmallKey = (content: KeyContent, idx: number) => {
                         const hasContent = (content?.top && content.top !== "KC_NO") || (content?.str && content.str !== "KC_NO" && content.str !== "");
                         return (
                             <div key={idx} className="relative w-[30px] h-[30px]">
@@ -87,7 +95,7 @@ const CombosPanel: React.FC = () => {
                         </div>
                     ) : undefined;
 
-                    // Dummy key content for sidebar row functionality
+                    // Restore visual style: use "combo" type for icon and index for label
                     const keyContents = { type: "combo" } as KeyContent;
 
                     return (
@@ -96,24 +104,29 @@ const CombosPanel: React.FC = () => {
                             index={i}
                             keyboard={keyboard}
                             label={i.toString()}
+                            keycode={resultKeycode || "KC_NO"}
                             keyContents={keyContents}
                             onEdit={handleEdit}
+                            onAssignKeycode={assignKeycode}
                             hoverBorderColor={hoverBorderColor}
                             hoverBackgroundColor={hoverBackgroundColor}
                             hoverLayerColor={layerColorName}
                             hoverHeaderClass={hoverHeaderClass}
+                            showPreviewKey={false}
+                            className="py-4"
                         >
                             {rowChildren}
                         </SidebarItemRow>
                     );
                 })}
+
                 {combos.length === 0 && (
                     <div className="text-center text-gray-500 mt-10">
                         No combos found.
                     </div>
                 )}
             </div>
-        </div>
+        </section>
     );
 };
 

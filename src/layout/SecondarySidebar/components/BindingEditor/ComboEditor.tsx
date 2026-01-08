@@ -1,25 +1,35 @@
-import { FC, useEffect } from "react";
+import { FC, useEffect, useRef } from "react";
 
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
 import { getKeyContents } from "@/utils/keys";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Trash2 } from "lucide-react";
 import { Key } from "@/components/Key";
+
+import { useLayer } from "@/contexts/LayerContext";
+import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
 
 interface Props { }
 
 const ComboEditor: FC<Props> = () => {
     const { keyboard } = useVial();
     const { setPanelToGoBack, setAlternativeHeader, itemToEdit } = usePanels();
-    const { selectComboKey, selectedTarget } = useKeyBinding();
-    const currCombo = (keyboard as any).combos?.[itemToEdit!];
+    const { selectComboKey, selectedTarget, assignKeycode } = useKeyBinding();
+    const { selectedLayer } = useLayer();
+    const hasAutoSelected = useRef(false);
+
+    const layerColorName = keyboard?.cosmetic?.layer_colors?.[selectedLayer] || "primary";
+    const hoverBorderColor = hoverBorderClasses[layerColorName] || hoverBorderClasses["primary"];
+    const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
+
+    const currCombo = (keyboard as any).combos?.[itemToEdit!] as import("@/types/vial.types").ComboEntry;
     const keys = {
-        0: getKeyContents(keyboard!, currCombo["0"]),
-        1: getKeyContents(keyboard!, currCombo["1"]),
-        2: getKeyContents(keyboard!, currCombo["2"]),
-        3: getKeyContents(keyboard!, currCombo["3"]),
-        4: getKeyContents(keyboard!, currCombo["4"]),
+        0: getKeyContents(keyboard!, currCombo.keys[0]),
+        1: getKeyContents(keyboard!, currCombo.keys[1]),
+        2: getKeyContents(keyboard!, currCombo.keys[2]),
+        3: getKeyContents(keyboard!, currCombo.keys[3]),
+        4: getKeyContents(keyboard!, currCombo.output),
     };
 
     // Check if a specific combo slot is selected
@@ -31,7 +41,13 @@ const ComboEditor: FC<Props> = () => {
         setPanelToGoBack("combos");
         setAlternativeHeader(true);
         console.log("currCombo", currCombo);
-    }, []);
+
+        // Auto-select the first key slot when the editor opens (only once)
+        if (itemToEdit !== null && !hasAutoSelected.current) {
+            hasAutoSelected.current = true;
+            selectComboKey(itemToEdit, 0);
+        }
+    }, [itemToEdit, setPanelToGoBack, setAlternativeHeader, selectComboKey]);
 
     const renderKey = (content: any, slot: number) => {
         const isSelected = isSlotSelected(slot);
@@ -56,7 +72,7 @@ const ComboEditor: FC<Props> = () => {
         }
 
         return (
-            <div className="relative w-[60px] h-[60px]">
+            <div className="relative w-[60px] h-[60px] group/key">
                 <Key
                     isRelative
                     x={0} y={0} w={1} h={1} row={-1} col={-1}
@@ -68,7 +84,32 @@ const ComboEditor: FC<Props> = () => {
                     layerColor={keyColor}
                     className={keyClassName}
                     headerClassName={headerClass}
+                    hoverBorderColor={hoverBorderColor}
+                    hoverBackgroundColor={hoverBackgroundColor}
+                    hoverLayerColor={layerColorName}
                 />
+
+                {hasContent && (
+                    <div className="absolute -left-10 top-0 h-full flex items-center justify-center opacity-0 group-hover/key:opacity-100 transition-opacity">
+                        <button
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                // We need to clear this specific slot.
+                                // If the slot is currently selected, clearSelection is handled by assignKeycode naturally if we were to select it first.
+                                // But here we might not be selected.
+                                // We should select the slot then assign KC_NO.
+                                // However, assignKeycode works on 'selectedTarget'.
+                                // So we must select this slot first!
+                                selectComboKey(itemToEdit!, slot);
+                                setTimeout(() => assignKeycode("KC_NO"), 0);
+                            }}
+                            title="Clear key"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
         );
     };
