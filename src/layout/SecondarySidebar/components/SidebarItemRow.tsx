@@ -119,8 +119,8 @@ const SidebarItemRow: React.FC<SidebarItemRowProps> = React.memo(
         return (
             <div
                 className={cn(
-                    "flex flex-row items-end py-0 panel-layer-item group/item relative pl-6 pr-2 transition-colors",
-                    (onEdit || onNameChange || onColorChange) && "hover:bg-black/5 hover:rounded-lg pt-2",
+                    "flex flex-row items-center py-0 panel-layer-item group/item relative pl-6 pr-2 transition-colors",
+                    (onEdit || onNameChange || onColorChange) && "hover:bg-black/5 hover:rounded-lg transition-colors py-2",
                     isClickable && "cursor-pointer",
                     className
                 )}
@@ -134,7 +134,7 @@ const SidebarItemRow: React.FC<SidebarItemRowProps> = React.memo(
             >
                 {/* Index and Optional Color Indicator */}
                 <div
-                    className="flex flex-row items-center flex-shrink-0 mb-2 gap-2"
+                    className="flex flex-row items-center flex-shrink-0 gap-2"
                     title={`Item ${index}`}
                 >
                     {color && (
@@ -182,7 +182,7 @@ const SidebarItemRow: React.FC<SidebarItemRowProps> = React.memo(
 
                 {/* Label Area / Children / Dotted Leader */}
                 <div
-                    className="flex-grow flex flex-row items-end mb-2 min-w-0 relative h-6 mr-3 ml-1"
+                    className="flex-grow flex flex-row items-center min-w-0 relative h-6 mr-3 ml-1"
                 >
                     {children ? (
                         <div className="relative z-10 w-full h-full flex items-center">
@@ -211,7 +211,7 @@ const SidebarItemRow: React.FC<SidebarItemRowProps> = React.memo(
                                     />
                                 </div>
                             ) : (
-                                <div className="relative z-10 flex flex-row items-end gap-2 bg-transparent min-w-0 flex-shrink">
+                                <div className="relative z-10 flex flex-row items-center gap-2 bg-transparent min-w-0 flex-shrink">
                                     {(hasCustomName || (label && label !== index.toString())) && (
                                         <span className="text-base font-medium truncate pr-0">
                                             {hasCustomName ? customName : label}
@@ -227,7 +227,7 @@ const SidebarItemRow: React.FC<SidebarItemRowProps> = React.memo(
                 </div>
 
                 {/* Action Area (Preview Key) */}
-                <div className="flex flex-row flex-shrink-0 items-center gap-1 mb-1.5 ml-auto">
+                <div className="flex flex-row flex-shrink-0 items-center gap-1 ml-auto">
                     {showPreviewKey && (
                         <Key
                             x={0}

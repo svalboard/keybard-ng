@@ -113,7 +113,7 @@ const CombosPanel: React.FC = () => {
                             hoverLayerColor={layerColorName}
                             hoverHeaderClass={hoverHeaderClass}
                             showPreviewKey={false}
-                            className="pt-8 pb-0"
+                            className="py-4"
                         >
                             {rowChildren}
                         </SidebarItemRow>
