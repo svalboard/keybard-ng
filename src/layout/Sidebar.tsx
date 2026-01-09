@@ -91,7 +91,7 @@ const SidebarNavItem = ({
         >
             <button type="button" onClick={() => onClick(item)} className="flex w-full items-center justify-start">
                 <div className={cn(ICON_GUTTER_WIDTH, "h-full flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <item.icon className="h-4 w-4 shrink-0 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:ml-[2px]" />
                 </div>
                 <span className="truncate group-data-[state=collapsed]:hidden">
                     {item.title}
@@ -147,9 +147,9 @@ const AppSidebar = () => {
         <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses}>
             <SidebarHeader className="p-0 py-4">
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild size="nav" className="hover:bg-transparent cursor-default">
-                            <div className="flex w-full items-center justify-start">
+                    <SidebarMenuItem className="bg-green flex items-center">
+                        <SidebarMenuButton asChild size="nav" className="hover:bg-transparent cursor-default pr-2">
+                            <div className="flex w-full items-center justify-center">
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
                                     <Logo />
                                 </div>
@@ -159,9 +159,9 @@ const AppSidebar = () => {
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild size="nav" className="text-slate-600 transition-colors">
-                            <button type="button" onClick={() => toggleSidebar()} className="flex w-full items-center justify-start">
-                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
-                                    <ChevronsRight className={cn("h-4 w-4 shrink-0 transition-transform", !isCollapsed ? "rotate-180" : "")} />
+                            <button type="button" onClick={() => toggleSidebar()} className="flex w-full items-center">
+                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-center shrink-0", BASE_ICON_PADDING)}>
+                                    <ChevronsRight className={cn("h-4 w-full -ml-2 -pl-2 shrink-0 transition-transform", !isCollapsed ? "rotate-180" : "")} />
                                 </div>
                                 <span className="text-md font-medium truncate group-data-[state=collapsed]:hidden">Hide Menu</span>
                             </button>
@@ -170,8 +170,8 @@ const AppSidebar = () => {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent className="py-2 !overflow-visible flex flex-col justify-center">
-                <SidebarMenu className="relative">
+            <SidebarContent className="py-2 !overflow-visible flex flex-col justify-center items-center">
+                <SidebarMenu className="relative flex items-center justify-center w-full">
                     {activePrimaryIndex !== -1 && <SlidingIndicator index={activePrimaryIndex} />}
                     {primarySidebarItems.map((item) => (
                         <SidebarNavItem
