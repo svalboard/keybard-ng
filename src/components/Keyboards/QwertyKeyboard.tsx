@@ -4,15 +4,13 @@ import { useLayer } from "@/contexts/LayerContext";
 import { useVial } from "@/contexts/VialContext";
 import { Key } from "@/components/Key";
 import { getKeyContents } from "@/utils/keys";
-import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
+import { hoverBackgroundClasses, hoverBorderClasses, hoverHeaderClasses } from "@/utils/colors";
 import { KeyContent } from "@/types/vial.types";
 import { LAYOUTS, BUTTON_TO_KEYCODE_MAP, KEY_DISPLAY_OVERRIDES, LAYOUT_KEY_MAPS } from "@/components/Keyboards/layouts";
 import { useLayoutSettings } from "@/contexts/LayoutSettingsContext";
 
 interface IProps {
-    onChange: (input: string) => void;
     onKeyPress?: (button: string) => void;
-    keyboardRef: any;
     activeModifiers?: string[];
 }
 
@@ -26,6 +24,9 @@ const QwertyKeyboard: FunctionComponent<IProps> = ({ onKeyPress: onKeyPressCallb
     const layerColorName = keyboard?.cosmetic?.layer_colors?.[selectedLayer] || "primary";
     const hoverBorderColor = hoverBorderClasses[layerColorName] || hoverBorderClasses["primary"];
     const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
+
+    const hoverHeaderClass = hoverHeaderClasses[layerColorName] || hoverHeaderClasses["primary"];
+
 
     const currentLayout = LAYOUTS[internationalLayout] || LAYOUTS["us"];
     const layoutKeyMap = LAYOUT_KEY_MAPS[internationalLayout] || {};
@@ -106,11 +107,12 @@ const QwertyKeyboard: FunctionComponent<IProps> = ({ onKeyPress: onKeyPressCallb
                             label={displayLabel}
                             keyContents={keyContents as KeyContent | undefined}
                             layerColor="sidebar"
-                            headerClassName="bg-kb-sidebar-dark group-hover:bg-black/30"
+                            headerClassName={`bg-kb-sidebar-dark ${hoverHeaderClass}`}
                             isRelative
                             variant="small"
                             hoverBorderColor={hoverBorderColor}
                             hoverBackgroundColor={hoverBackgroundColor}
+                            hoverLayerColor={layerColorName}
                             onClick={() => onKeyPress(outputKey)}
                         />
                     );

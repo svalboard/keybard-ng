@@ -61,7 +61,9 @@ const EditorLayoutInner = () => {
             >
                 <LayerSelector selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
                 <div className="flex-1 overflow-auto flex items-center overflow-x-auto max-w-full">
-                    <Keyboard keyboard={keyboard!} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
+                    <div className={cn(showDetailsSidebar && "pr-[450px]")}>
+                        <Keyboard keyboard={keyboard!} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
+                    </div>
                 </div>
             </div>
         </div>

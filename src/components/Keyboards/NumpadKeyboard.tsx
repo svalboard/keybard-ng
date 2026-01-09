@@ -11,7 +11,7 @@ interface IProps {
     keyboardRef: any;
 }
 
-const NumpadKeyboard: FunctionComponent<IProps> = ({ onChange, onKeyPress: onKeyPressCallback, keyboardRef }) => {
+const NumpadKeyboard: FunctionComponent<IProps> = ({ onChange, onKeyPress: onKeyPressCallback, keyboardRef: _keyboardRef }) => {
     const [layoutName, setLayoutName] = useState("default");
     const onKeyPress = (button: string) => {
         if (button === "{shift}" || button === "{lock}") {

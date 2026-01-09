@@ -4,7 +4,7 @@ import SidebarItemRow from "@/layout/SecondarySidebar/components/SidebarItemRow"
 import { useLayer } from "@/contexts/LayerContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
-import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
+import { hoverBackgroundClasses, hoverBorderClasses, hoverHeaderClasses } from "@/utils/colors";
 import { KeyContent } from "@/types/vial.types";
 
 const OverridesPanel: React.FC = () => {
@@ -23,6 +23,7 @@ const OverridesPanel: React.FC = () => {
     const layerColorName = keyboard?.cosmetic?.layer_colors?.[selectedLayer] || "primary";
     const hoverBorderColor = hoverBorderClasses[layerColorName] || hoverBorderClasses["primary"];
     const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
+    const hoverHeaderClass = hoverHeaderClasses[layerColorName] || hoverHeaderClasses["primary"];
 
     const overrides = keyboard.key_overrides || [];
 
@@ -50,6 +51,8 @@ const OverridesPanel: React.FC = () => {
                             onEdit={handleEdit}
                             hoverBorderColor={hoverBorderColor}
                             hoverBackgroundColor={hoverBackgroundColor}
+                            hoverLayerColor={layerColorName}
+                            hoverHeaderClass={hoverHeaderClass}
                         />
                     );
                 })}

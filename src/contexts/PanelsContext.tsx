@@ -37,7 +37,7 @@ export const PanelsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [bindingTypeToEdit, setBindingTypeToEdit] = useState<string | null>(null);
 
     const sidebar = useSidebar("details-panel", { defaultOpen: false });
-    const { isMobile, open: detailsOpen, state: detailsState, setOpen, setOpenMobile } = sidebar;
+    const { isMobile, open: detailsOpen, setOpen, setOpenMobile } = sidebar;
 
     const openDetails = useCallback(() => {
         if (isMobile) {

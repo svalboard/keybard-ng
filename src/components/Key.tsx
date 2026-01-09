@@ -1,8 +1,8 @@
-import "./Key.css";
 import React from "react";
 import { cn } from "@/lib/utils";
+import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { showModMask } from "@/utils/keys";
-import { colorClasses } from "@/utils/colors";
+import { colorClasses, hoverContainerTextClasses } from "@/utils/colors";
 import { UNIT_SIZE } from "../constants/svalboard-layout";
 import { KeyContent } from "@/types/vial.types";
 import { getHeaderIcons, getCenterContent, getTypeIcon } from "@/utils/key-icons";
@@ -26,6 +26,8 @@ interface KeyProps {
     variant?: "default" | "small";
     hoverBorderColor?: string;
     hoverBackgroundColor?: string;
+    hoverLayerColor?: string;
+    disableHover?: boolean;
 }
 
 /**
@@ -51,9 +53,13 @@ export const Key: React.FC<KeyProps> = ({
     variant = "default",
     hoverBorderColor,
     hoverBackgroundColor,
+    hoverLayerColor,
+    disableHover = false,
 }) => {
     const isSmall = variant === "small";
     const currentUnitSize = isSmall ? 30 : UNIT_SIZE;
+    const { setHoveredKey } = useKeyBinding();
+
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -61,6 +67,23 @@ export const Key: React.FC<KeyProps> = ({
             onClick(row, col);
         }
     };
+
+    const handleMouseEnter = () => {
+        if (disableHover) return;
+        setHoveredKey({
+            type: "keyboard",
+            row,
+            col,
+            keycode,
+            label,
+        });
+    };
+
+    const handleMouseLeave = () => {
+        if (disableHover) return;
+        setHoveredKey(null);
+    };
+
 
     // Style for positioning and dimensions
     const boxStyle: React.CSSProperties = {
@@ -79,10 +102,24 @@ export const Key: React.FC<KeyProps> = ({
 
     if (hasModifiers && keyContents) {
         const show = showModMask(keyContents.modids);
-        const keysArr = keyContents.str.split("\n");
+        const keysArr = keyContents.str?.split("\n") || [];
+        const keyStr = keysArr[0] || "";
+
         if (!label || label === keycode) {
-            displayLabel = keysArr[0];
+            // Main keyboard case: label equals keycode (e.g., "LCTL(kc)")
+            // Need to construct a display label like "LCTL (kc)" to match panel
+            if (keyStr === "" || keyStr === "KC_NO") {
+                // It's a placeholder - show modifier + (kc) in center
+                const modStr = keyContents.top || "";
+                displayLabel = `${modStr} (kc)`;
+            } else {
+                // It has an actual key - show modifier + key
+                const modStr = keyContents.top || "";
+                displayLabel = `${modStr} ${keyStr}`;
+            }
         }
+        // else: QMK panel case - label already has proper format like "LCTL (kc)"
+
         bottomStr = show;
     }
 
@@ -91,10 +128,10 @@ export const Key: React.FC<KeyProps> = ({
     } else if (keyContents?.type === "macro") {
         displayLabel = keyContents.top?.replace("M", "") || "";
     } else if (keyContents?.type === "user") {
-        displayLabel = keyContents.str;
+        displayLabel = keyContents.str || "";
     } else if (keyContents?.type === "OSM") {
         topLabel = "OSM";
-        displayLabel = keyContents.str;
+        displayLabel = keyContents.str || "";
     }
 
     if (displayLabel === "KC_NO") {
@@ -121,18 +158,26 @@ export const Key: React.FC<KeyProps> = ({
     const bottomTextStyle: React.CSSProperties =
         bottomStr.length > 4 ? { whiteSpace: "pre-line", fontSize: "0.6rem", wordWrap: "break-word" } : {};
 
+    // Get the base color classes
+    const colorClass = colorClasses[layerColor] || colorClasses["primary"];
+
+    // Determine hover color - use hoverLayerColor if provided, otherwise default to current layer
+    const effectiveHoverColorName = hoverLayerColor || layerColor;
+    const hoverContainerTextClass = hoverContainerTextClasses[effectiveHoverColorName] || hoverContainerTextClasses["primary"];
+
     // Common container classes
     const containerClasses = cn(
-        colorClasses[layerColor],
         "flex flex-col items-center justify-between cursor-pointer transition-all duration-200 ease-in-out uppercase group overflow-hidden",
         !isRelative && "absolute",
         isSmall ? "rounded-[5px] border" : "rounded-md border-2",
         selected
             ? "bg-red-500 text-white border-kb-gray"
             : cn(
+                colorClass,
                 "border-kb-gray",
-                hoverBorderColor || "hover:border-red-500",
-                hoverBackgroundColor
+                !disableHover && (hoverBorderColor || "hover:border-red-500"),
+                !disableHover && hoverBackgroundColor,
+                !disableHover && hoverContainerTextClass
             ),
         className
     );
@@ -145,11 +190,14 @@ export const Key: React.FC<KeyProps> = ({
                 className={containerClasses}
                 style={boxStyle}
                 onClick={handleClick}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
                 title={keycode}
             >
                 <span className={cn(
-                    "whitespace-nowrap w-full text-center text-white font-semibold py-0",
+                    "whitespace-nowrap w-full text-center font-semibold py-0 transition-colors duration-200",
                     isSmall ? "text-[10px] rounded-t-[4px]" : "text-sm rounded-t-sm",
+                    "text-white",
                     headerClassName
                 )}>
                     {keyContents?.layertext}
@@ -174,19 +222,22 @@ export const Key: React.FC<KeyProps> = ({
             className={containerClasses}
             style={boxStyle}
             onClick={handleClick}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             title={keycode}
         >
             {topLabel && (
                 <span className={cn(
-                    "whitespace-nowrap w-full text-center text-white font-semibold py-0 flex items-center justify-center",
+                    "whitespace-nowrap w-full text-center font-semibold py-0 flex items-center justify-center transition-colors duration-200",
                     isSmall ? "text-[8px] min-h-[10px] rounded-t-[4px]" : "text-sm min-h-[1.2rem] rounded-t-sm",
+                    "text-white",
                     headerClassName
                 )}>
                     {topLabel}
                 </span>
             )}
 
-            {keyContents && getTypeIcon(keyContents.type, variant)}
+            {keyContents && getTypeIcon(keyContents.type || "", variant)}
 
             <div
                 className={cn(
@@ -201,8 +252,9 @@ export const Key: React.FC<KeyProps> = ({
             {bottomStr !== "" && (
                 <span
                     className={cn(
-                        "font-semibold items-center flex justify-center whitespace-nowrap text-white w-full text-center py-0",
+                        "font-semibold items-center flex justify-center whitespace-nowrap w-full text-center py-0 transition-colors duration-200",
                         isSmall ? "text-[8px] min-h-[10px] rounded-b-[4px]" : "text-sm min-h-5 rounded-b-sm",
+                        "text-white",
                         headerClassName
                     )}
                     style={bottomTextStyle}

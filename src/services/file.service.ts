@@ -18,7 +18,7 @@ const DEFAULT_KB_INFO: any = {
     keymap: [],
     filters: [],
     // Add other default fields as necessary based on SVALBOARD
-    settings: {} as any, 
+    settings: {} as any,
     uid: "0",
     name: "Unknown",
     layout_options: -1
@@ -136,21 +136,21 @@ export class FileService {
 
         // Ensure keylayout exists
         if (!(copy as any).keylayout && copy.payload?.layouts?.keymap) {
-             try {
-                 (copy as any).keylayout = this.kleService.deserializeToKeylayout(copy, copy.payload.layouts.keymap as unknown as any[]);
-             } catch (e) {
-                 console.warn("Could not generate keylayout for export", e);
-             }
+            try {
+                (copy as any).keylayout = this.kleService.deserializeToKeylayout(copy, copy.payload.layouts.keymap as unknown as any[]);
+            } catch (e) {
+                console.warn("Could not generate keylayout for export", e);
+            }
         }
         if (!includeMacros && copy.macros) {
             // Clear macros
-             copy.macros = (copy.macros as any).map((m: any, mid: number) => ({ mid: mid, actions: [] }));
+            copy.macros = copy.macros.map((_m, mid: number) => ({ mid: mid, actions: [] }));
         }
 
         if (copy.keymap) {
-             (copy as any).keymap = copy.keymap.map(layer => 
-                 layer.map(keycode => keyService.stringify(keycode))
-             );
+            (copy as any).keymap = copy.keymap.map(layer =>
+                layer.map(keycode => keyService.stringify(keycode))
+            );
         }
 
         const kbi = JSON.stringify(copy, undefined, 2);
@@ -165,7 +165,7 @@ export class FileService {
         });
     }
 
-    async downloadKeymapH(kbinfo: KeyboardInfo): Promise<void> {
+    async downloadKeymapH(_kbinfo: KeyboardInfo): Promise<void> {
         // TODO: Implement kbinfoToCKeymap logic here or import it if available
         // For now, leaving as placeholder or assuming global exists (which we should avoid)
         // const content = kbinfoToCKeymap(kbinfo);
@@ -237,13 +237,13 @@ export class FileService {
         // but we might need to populate 'keylayout' for UI.
         // In the original code: kbinfo.keylayout = KLE.deserializeToKeylayout(kbinfo, kbinfo.payload.layouts.keymap);
         // We need to implement deserializeToKeylayout.
-        
+
         // This part depends on where 'payload.layouts.keymap' comes from. 
         // In .vil upload, standard .vil doesn't have QMK payload. 
         // .kbi usually does.
-        
+
         if (kbinfo.payload?.layouts?.keymap) {
-             kbinfo.keylayout = this.deserializeToKeylayout(kbinfo, kbinfo.payload.layouts.keymap as any);
+            kbinfo.keylayout = this.deserializeToKeylayout(kbinfo, kbinfo.payload.layouts.keymap as any);
         }
 
         // Normalize keycodes (string -> number) if necessary
@@ -251,7 +251,7 @@ export class FileService {
 
         return kbinfo;
     }
-    
+
     // --- Conversion Logic ---
 
     kbinfoToVIL(kbinfo: KeyboardInfo, includeMacros: boolean): string {
@@ -267,15 +267,15 @@ export class FileService {
             combo: kbinfo.combos,
             encoder_layout: new Array(16).fill([]), // TODO: check encoder count
             key_override: (kbinfo.key_overrides as any)?.map((ko: any) => {
-                const { ...rest } = ko; 
+                const { ...rest } = ko;
                 // @ts-ignore
-                delete rest.koid; 
+                delete rest.koid;
                 return rest;
             }) || [],
             layout_options: -1,
             macro: macros,
             settings: kbinfo.settings,
-            tap_dance: (kbinfo.tapdance as any)?.map((td: any) => [td.tap, td.hold, td.doubletap, td.taphold, td.tapms]) || [],
+            tap_dance: (kbinfo.tapdances as any)?.map((td: any) => [td.tap, td.hold, td.doubletap, td.taphold, td.tapms]) || [],
             uid: kbidrepl,
             version: 1,
             via_protocol: 9,
@@ -285,7 +285,7 @@ export class FileService {
         // Layout conversion
         vil.layout = [];
         if (kbinfo.keymap && kbinfo.rows && kbinfo.cols) {
-             for (let l = 0; l < (kbinfo.layers || 0) ; l++) {
+            for (let l = 0; l < (kbinfo.layers || 0); l++) {
                 const km = kbinfo.keymap[l];
                 const layer = [];
                 for (let r = 0; r < kbinfo.rows; r++) {
@@ -293,14 +293,14 @@ export class FileService {
                     for (let c = 0; c < kbinfo.cols; c++) {
                         // Use keyService to convert keycode to string (vilify logic)
                         // Assuming keyService.stringify is compatible or we need custom logic
-                        row.push(keyService.stringify(km[(r * kbinfo.cols) + c])); 
+                        row.push(keyService.stringify(km[(r * kbinfo.cols) + c]));
                     }
                     layer.push(row);
                 }
                 vil.layout.push(layer);
             }
         }
-       
+
         let jsvil = JSON.stringify(vil, undefined, 2);
         jsvil = jsvil.replace('"' + kbidrepl + '"', kbinfo.kbid || '"0"');
         return jsvil;
@@ -322,22 +322,22 @@ export class FileService {
         kbinfo.macros = vil.macro.map((macro: any[], mid: number) => {
             const actions: any[] = [];
             for (const act of macro) {
-                 // Format: [type, param1, param2...] - varies by macro type
-                 // In simple text macros often structure is [[type, val], ...]
-                 // We need to match what files.js expects: { actions: [[type, val]...], mid }
-                 // The incoming VIL macro is array of actions.
-                 // Actually, original code says:
-                 /*
-                    for (const act of macro) {
-                        for (let i = 1; i < act.length; i++) {
-                        actions.push([act[0], act[i]]);
-                        }
-                    }
-                 */
-                 // Wait, this looks like it flattens [type, val1, val2] into [type, val1], [type, val2]?
-                 // This seems specific to how VIL stores macros. I'll copy the logic.
+                // Format: [type, param1, param2...] - varies by macro type
+                // In simple text macros often structure is [[type, val], ...]
+                // We need to match what files.js expects: { actions: [[type, val]...], mid }
+                // The incoming VIL macro is array of actions.
+                // Actually, original code says:
+                /*
+                   for (const act of macro) {
+                       for (let i = 1; i < act.length; i++) {
+                       actions.push([act[0], act[i]]);
+                       }
+                   }
+                */
+                // Wait, this looks like it flattens [type, val1, val2] into [type, val1], [type, val2]?
+                // This seems specific to how VIL stores macros. I'll copy the logic.
                 if (Array.isArray(act)) {
-                     for (let i = 1; i < act.length; i++) {
+                    for (let i = 1; i < act.length; i++) {
                         actions.push([act[0], act[i]]);
                     }
                 }
@@ -346,14 +346,14 @@ export class FileService {
         });
 
         kbinfo.settings = vil.settings;
-        kbinfo.tapdance = vil.tap_dance.map((td: any[], tdid: number) => {
+        kbinfo.tapdances = vil.tap_dance.map((td: any[], tdid: number) => {
             return {
-                tdid: tdid,
+                idx: tdid,
                 tap: td[0],
                 hold: td[1],
                 doubletap: td[2],
                 taphold: td[3],
-                tapms: td[4]
+                tapping_term: td[4]
             };
         });
 
@@ -362,42 +362,42 @@ export class FileService {
         const km: number[][] = [];
         const keylayout: any[] = [];
         if (vil.layout) {
-             // Determine rows/cols from layout if not set
-             const layers = vil.layout.length;
-             const rows = vil.layout[0]?.length || 0;
-             const cols = vil.layout[0]?.[0]?.length || 0;
-             
-             kbinfo.layers = layers;
-             kbinfo.rows = kbinfo.rows || rows;
-             kbinfo.cols = kbinfo.cols || cols;
+            // Determine rows/cols from layout if not set
+            const layers = vil.layout.length;
+            const rows = vil.layout[0]?.length || 0;
+            const cols = vil.layout[0]?.[0]?.length || 0;
 
-             for (let l = 0; l < layers; l++) {
-                 km.push([]);
-                 for (let r = 0; r < rows; r++) {
-                     for (let c = 0; c < cols; c++) {
-                         const keyStr = vil.layout[l][r][c];
-                         // Parse string to keycode
-                         km[l][(r * cols) + c] = keyService.parse(keyStr);
+            kbinfo.layers = layers;
+            kbinfo.rows = kbinfo.rows || rows;
+            kbinfo.cols = kbinfo.cols || cols;
 
-                         // Generate default keylayout (only need once, e.g. for layer 0)
-                         if (l === 0) {
-                             keylayout.push({
-                                 x: c,
-                                 y: r,
-                                 w: 1,
-                                 h: 1,
-                                 label: "",
-                                 matrix: [(r * cols) + c] // simplified matrix mapping
-                             });
-                         }
-                     }
-                 }
-             }
+            for (let l = 0; l < layers; l++) {
+                km.push([]);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const keyStr = vil.layout[l][r][c];
+                        // Parse string to keycode
+                        km[l][(r * cols) + c] = keyService.parse(keyStr);
+
+                        // Generate default keylayout (only need once, e.g. for layer 0)
+                        if (l === 0) {
+                            keylayout.push({
+                                x: c,
+                                y: r,
+                                w: 1,
+                                h: 1,
+                                label: "",
+                                matrix: [(r * cols) + c] // simplified matrix mapping
+                            });
+                        }
+                    }
+                }
+            }
         }
         kbinfo.keymap = km;
         (kbinfo as any).keylayout = keylayout;
         kbinfo.kbid = '' + vil.uid;
-        
+
         return kbinfo;
     }
 

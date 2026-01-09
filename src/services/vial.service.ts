@@ -1,4 +1,5 @@
 import { KleService } from "./kle.service";
+import { keyService } from "./key.service";
 import { VialUSB, usbInstance } from "./usb.service";
 import { LE32, MSG_LEN } from "./utils";
 
@@ -79,6 +80,9 @@ export class VialService {
     async load(kbinfo: KeyboardInfo): Promise<KeyboardInfo> {
         // Load keyboard information
         await this.getKeyboardInfo(kbinfo);
+
+        // Register custom keycodes (SV_...) from the keyboard definition
+        keyService.generateAllKeycodes(kbinfo);
 
         // Populate keylayout using KLE service if payload exists
         if (kbinfo.payload && kbinfo.payload.layouts && kbinfo.payload.layouts.keymap) {

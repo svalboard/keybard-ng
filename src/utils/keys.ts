@@ -142,7 +142,9 @@ export function getModMasks(modids: any) {
 }
 
 export function getKeyContents(KBINFO: KeyboardInfo, keystr: any) {
-    const orig = keystr;
+    if (keystr === undefined || keystr === null) {
+        return undefined;
+    }
     let m;
 
     keystr = keyService.canonical(keystr);
@@ -150,7 +152,8 @@ export function getKeyContents(KBINFO: KeyboardInfo, keystr: any) {
     const keyid = keyService.parse(keystr);
 
     if (keyid === 0) {
-        return keyService.define("KC_NO");
+        const def = keyService.define("KC_NO");
+        return def ? { ...def, top: "KC_NO" } : def;
     }
 
     if (!keyid) {
@@ -175,11 +178,13 @@ export function getKeyContents(KBINFO: KeyboardInfo, keystr: any) {
             };
         }
         // Fallback to default if not found
-        return keyService.define(keystr);
+        const def = keyService.define(keystr);
+        return def ? { ...def, top: keystr } : def;
     }
 
     if (keystr.startsWith("KC_") && (keyid & 0xff00) === 0) {
-        return keyService.define(keystr);
+        const def = keyService.define(keystr);
+        return def ? { ...def, top: keystr } : def;
     }
 
     m = keystr.match(/^OSM\((.*)\)$/);
@@ -199,7 +204,6 @@ export function getKeyContents(KBINFO: KeyboardInfo, keystr: any) {
             const mkey = keyService.define(keyid);
             const lname = getEditableName(KBINFO, "layer", m[2], m[2], true);
             if (m[1] in LAYERKEYS) {
-                let str = `(${lname})`;
                 const ldesc = LAYERKEYS[m[1]];
                 return {
                     type: "layer",
@@ -306,7 +310,9 @@ export function getKeyContents(KBINFO: KeyboardInfo, keystr: any) {
     }
 
     if (keyid in CODEMAP) {
-        return keyService.define(keyid);
+        const def = keyService.define(keyid);
+        const top = typeof keystr === "string" ? keystr : (CODEMAP[keyid] as string);
+        return def ? { ...def, top } : def;
     }
     return {
         str: keystr,

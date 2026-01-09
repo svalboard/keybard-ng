@@ -1,4 +1,4 @@
-import { ChevronsRight, Cpu, HelpCircle, LucideIcon, Settings } from "lucide-react";
+import { ChevronsRight, Cpu, Gamepad, HelpCircle, LucideIcon, Settings } from "lucide-react";
 import { useCallback } from "react";
 
 import ComboIcon from "@/components/ComboIcon";
@@ -6,7 +6,6 @@ import GamepadDirectional from "@/components/icons/GamepadDirectional";
 import KeyboardIcon from "@/components/icons/Keyboard";
 import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import MacrosIcon from "@/components/icons/MacrosIcon";
-import MatrixTesterIcon from "@/components/icons/MatrixTester";
 import MouseIcon from "@/components/icons/Mouse";
 import OverridesIcon from "@/components/icons/Overrides";
 import TapdanceIcon from "@/components/icons/Tapdance";
@@ -37,19 +36,19 @@ export type SidebarItem = {
 };
 
 export const primarySidebarItems: SidebarItem[] = [
-    { title: "Keys", url: "keyboard", icon: KeyboardIcon },
-    { title: "Special Keys", url: "special", icon: MatrixTesterIcon },
-    { title: "QMK Keys", url: "qmk", icon: Cpu },
+    { title: "Keyboard", url: "keyboard", icon: KeyboardIcon },
+    { title: "Special", url: "special", icon: Gamepad },
+    { title: "QMK", url: "qmk", icon: Cpu },
+    { title: "Layer Keys", url: "layers", icon: LayersDefaultIcon },
     { title: "Mouse", url: "mouse", icon: MouseIcon },
-    { title: "Layers", url: "layers", icon: LayersDefaultIcon },
     { title: "Tap Dances", url: "tapdances", icon: TapdanceIcon },
-    { title: "Combos", url: "combos", icon: ComboIcon },
     { title: "Macros", url: "macros", icon: MacrosIcon },
-    { title: "Overrides", url: "overrides", icon: OverridesIcon },
 ];
 
 const footerItems: SidebarItem[] = [
     { title: "About", url: "about", icon: HelpCircle },
+    { title: "Combos", url: "combos", icon: ComboIcon },
+    { title: "Overrides", url: "overrides", icon: OverridesIcon },
     { title: "Matrix Tester", url: "matrixtester", icon: GamepadDirectional },
     { title: "Settings", url: "settings", icon: Settings },
 ];
@@ -154,7 +153,7 @@ const AppSidebar = () => {
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
                                     <Logo />
                                 </div>
-                                <span className="text-[22px] font-semibold truncate group-data-[state=collapsed]:hidden">Keybard</span>
+                                <span className="text-[22px] font-semibold truncate group-data-[state=collapsed]:hidden">keybard</span>
                             </div>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

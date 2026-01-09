@@ -70,6 +70,6 @@ export const HARDWARE_SETTINGS_REGISTRY: Record<string, HardwareSettingHandler> 
     }
 };
 
-function split16(num: number): number[] {
-    return [num & 0xFF, (num >> 8) & 0xFF];
-}
+// function split16(num: number): number[] {
+//     return [num & 0xFF, (num >> 8) & 0xFF];
+// }

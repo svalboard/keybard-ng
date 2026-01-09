@@ -11,7 +11,7 @@ interface IProps {
 }
 
 const SpecialKeyboard: FunctionComponent<IProps> = ({ onChange, onKeyPress: onKeyPressCallback, keyboardRef }) => {
-    const [layoutName, setLayoutName] = useState("default");
+    const [layoutName] = useState("default");
 
     const onKeyPress = (button: string) => {
         if (onKeyPressCallback) onKeyPressCallback(button);

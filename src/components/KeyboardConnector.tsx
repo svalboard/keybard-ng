@@ -170,6 +170,8 @@ const KeyboardConnector: React.FC = () => {
                     {keyboard.keymap && (
                         <Keyboard
                             keyboard={keyboard}
+                            selectedLayer={0}
+                            setSelectedLayer={() => { }}
                             onKeyClick={(layer, row, col) => {
                                 console.log(`Clicked key at layer ${layer}, row ${row}, col ${col}`);
                             }}

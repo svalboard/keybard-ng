@@ -4,7 +4,7 @@ import { useLayer } from "@/contexts/LayerContext";
 import { useVial } from "@/contexts/VialContext";
 import { keyService } from "@/services/key.service";
 
-import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
+import { hoverBackgroundClasses, hoverBorderClasses, hoverHeaderClasses } from "@/utils/colors";
 
 const MediaKeys = () => {
     const { assignKeycode } = useKeyBinding();
@@ -14,6 +14,7 @@ const MediaKeys = () => {
     const layerColorName = keyboard?.cosmetic?.layer_colors?.[selectedLayer] || "primary";
     const hoverBorderColor = hoverBorderClasses[layerColorName] || hoverBorderClasses["primary"];
     const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
+    const hoverHeaderClass = hoverHeaderClasses[layerColorName] || hoverHeaderClasses["primary"];
 
     const keys = [
         { keycode: "KC_AGIN", label: "Again" },
@@ -76,11 +77,12 @@ const MediaKeys = () => {
                             keycode={k.keycode}
                             label={k.displayLabel}
                             layerColor="sidebar"
-                            headerClassName="bg-kb-sidebar-dark group-hover:bg-black/30"
+                            headerClassName={`bg-kb-sidebar-dark ${hoverHeaderClass}`}
                             isRelative
                             className="h-[60px] w-[60px]"
                             hoverBorderColor={hoverBorderColor}
                             hoverBackgroundColor={hoverBackgroundColor}
+                            hoverLayerColor={layerColorName}
                             onClick={() => assignKeycode(k.keycode)}
                         />
                     ))}

@@ -3,6 +3,7 @@ import { VialService, vialService } from "../services/vial.service";
 import { svalService } from "../services/sval.service";
 
 import { fileService } from "../services/file.service";
+import { keyService } from "../services/key.service";
 import { qmkService } from "../services/qmk.service";
 import { usbInstance } from "../services/usb.service";
 import type { KeyboardInfo } from "../types/vial.types";
@@ -94,6 +95,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const kbinfo = await fileService.loadFile(file);
             svalService.setupCosmeticLayerNames(kbinfo);
+            keyService.generateAllKeycodes(kbinfo);
             setKeyboard(kbinfo);
             const filePath = file.name;
             setLoadedFrom(filePath);
@@ -116,6 +118,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (savedContent) {
                     const kbinfo = JSON.parse(savedContent) as KeyboardInfo;
                     svalService.setupCosmeticLayerNames(kbinfo);
+                    keyService.generateAllKeycodes(kbinfo);
                     setKeyboard(kbinfo);
                     setLoadedFrom("Last Saved File");
                     setIsConnected(false);

@@ -15,7 +15,7 @@ interface Props {
 const EditLayer: FC<Props> = ({ layer }) => {
     const { keyboard, setKeyboard } = useVial();
     const currentName = keyboard ? svalService.getLayerName(keyboard, layer) : "";
-    const currentColor = keyboard?.cosmetic?.layer_colors?.[layer.toString()] || null;
+    const currentColor = keyboard?.cosmetic?.layer_colors?.[layer.toString()] || "green";
 
     const [selectedColor, setSelectedColor] = useState<string | null>(currentColor);
     const [name, setName] = useState<string>(currentName);

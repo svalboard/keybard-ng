@@ -26,9 +26,14 @@ export class TapdanceService {
         });
     }
 
-    async push(kbinfo: KeyboardInfo): Promise<void> {
+    async push(kbinfo: KeyboardInfo, tdid?: number): Promise<void> {
         if (!kbinfo.tapdances) return;
-        for (const td of kbinfo.tapdances) {
+
+        const toPush = tdid !== undefined
+            ? kbinfo.tapdances.filter(td => td.idx === tdid)
+            : kbinfo.tapdances;
+
+        for (const td of toPush) {
             await this.usb.sendVial(VialUSB.CMD_VIAL_DYNAMIC_ENTRY_OP, [
                 VialUSB.DYNAMIC_VIAL_TAP_DANCE_SET,
                 td.idx,

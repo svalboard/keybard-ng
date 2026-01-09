@@ -22,10 +22,7 @@ interface ItemGroup<T> {
     endIndex: number;
 }
 
-const suffixByType = {
-    tapdances: "TD",
-    macros: "M",
-};
+// suffixByType was here
 
 const getKeyCode = (bindingType: string, index: number) => {
     if (bindingType === "tapdances") {
@@ -87,7 +84,7 @@ const BindingsList: FC<Props> = ({ editElement, icon, bindingType, notBindable, 
             );
 
             const editControl = shouldUseDialog ? <DialogTrigger asChild>{editButton}</DialogTrigger> : editButton;
-            const isActive = absoluteIndex === itemToEdit;
+            // const isActive = absoluteIndex === itemToEdit;
 
             return (
                 <div className={cn("flex flex-row items-center justify-between p-3 gap-3 panel-layer-item group/item")} key={absoluteIndex}>

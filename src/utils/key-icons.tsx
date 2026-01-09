@@ -49,11 +49,26 @@ export const getCenterContent = (
 
     const showArrows = (isMouse && (isUp || isDown || isLeft || isRight)) || ["up", "down", "left", "right"].includes(lowerLabel);
 
+    const isWheel = lowerLabel.includes("wheel") || keycode.includes("WH");
+
     if (showArrows) {
-        if (isUp) return <ArrowUp className="w-5 h-5" />;
-        if (isDown) return <ArrowDown className="w-5 h-5" />;
-        if (isLeft) return <ArrowLeft className="w-5 h-5" />;
-        if (isRight) return <ArrowRight className="w-5 h-5" />;
+        let ArrowIcon;
+        if (isUp) ArrowIcon = <ArrowUp className="w-5 h-5" />;
+        if (isDown) ArrowIcon = <ArrowDown className="w-5 h-5" />;
+        if (isLeft) ArrowIcon = <ArrowLeft className="w-5 h-5" />;
+        if (isRight) ArrowIcon = <ArrowRight className="w-5 h-5" />;
+
+        if (ArrowIcon) {
+            if (isWheel) {
+                return (
+                    <div className="flex flex-col items-center justify-center -space-y-1">
+                        <span className="text-[9px] font-bold">WHEEL</span>
+                        {ArrowIcon}
+                    </div>
+                );
+            }
+            return ArrowIcon;
+        }
     }
 
     if (showArrowsOnly) return null;

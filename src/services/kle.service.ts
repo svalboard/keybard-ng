@@ -6,9 +6,9 @@ export interface KeyProp {
     x: number; y: number; x2: number; y2: number;
     width: number; height: number; width2: number; height2: number;
     rotation_angle: number; rotation_x: number; rotation_y: number;
-    labels: string[]; 
-    textColor: (string | undefined)[]; 
-    textSize: (number | undefined)[]; 
+    labels: string[];
+    textColor: (string | undefined)[];
+    textSize: (number | undefined)[];
     default: { textColor: string; textSize: number };
     color: string; profile: string; nub: boolean;
     ghost: boolean; stepped: boolean; decal: boolean;
@@ -33,12 +33,12 @@ export interface KleDeserializeResult {
 export class KleService {
 
     // --- Helpers from kle.js ---
-    
+
     // Matrix class logic
-    private Matrix(a: number, b: number, c: number, d: number, e: number, f: number) {
-        return { a, b, c, d, e, f };
-    }
-    
+    // private Matrix(a: number, b: number, c: number, d: number, e: number, f: number) {
+    //     return { a, b, c, d, e, f };
+    // }
+
     // ... [We will include necessary math helpers here] ...
 
     // --- Deserialization Logic ---
@@ -58,12 +58,12 @@ export class KleService {
             sm: "", sb: "", st: ""
         };
 
-        const current: KeyProp & { align: number; f2?: number; fa?: number[] } = { 
+        const current: KeyProp & { align: number; f2?: number; fa?: number[] } = {
             ...JSON.parse(JSON.stringify(defaultKeyProps)), // Clean copy
             textColor: defaultKeyProps.default.textColor as any, // Initialize as string (or array logic fix)
             align: 4
         };
-        
+
         // Fix initial textColor array
         if (!Array.isArray(current.textColor)) current.textColor = [];
 
@@ -74,19 +74,19 @@ export class KleService {
 
         // Label map logic
         const labelMap = [
-            [ 0, 6, 2, 8, 9,11, 3, 5, 1, 4, 7,10],
-            [ 1, 7,-1,-1, 9,11, 4,-1,-1,-1,-1,10],
-            [ 3,-1, 5,-1, 9,11,-1,-1, 4,-1,-1,10],
-            [ 4,-1,-1,-1, 9,11,-1,-1,-1,-1,-1,10],
-            [ 0, 6, 2, 8,10,-1, 3, 5, 1, 4, 7,-1],
-            [ 1, 7,-1,-1,10,-1, 4,-1,-1,-1,-1,-1],
-            [ 3,-1, 5,-1,10,-1,-1,-1, 4,-1,-1,-1],
-            [ 4,-1,-1,-1,10,-1,-1,-1,-1,-1,-1,-1]
+            [0, 6, 2, 8, 9, 11, 3, 5, 1, 4, 7, 10],
+            [1, 7, -1, -1, 9, 11, 4, -1, -1, -1, -1, 10],
+            [3, -1, 5, -1, 9, 11, -1, -1, 4, -1, -1, 10],
+            [4, -1, -1, -1, 9, 11, -1, -1, -1, -1, -1, 10],
+            [0, 6, 2, 8, 10, -1, 3, 5, 1, 4, 7, -1],
+            [1, 7, -1, -1, 10, -1, 4, -1, -1, -1, -1, -1],
+            [3, -1, 5, -1, 10, -1, -1, -1, 4, -1, -1, -1],
+            [4, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1]
         ];
 
         const reorderLabelsIn = (labels: any[], align: number, skipdefault?: boolean) => {
             const ret: any[] = [];
-            for(let i = skipdefault ? 1 : 0; i < labels.length; ++i) {
+            for (let i = skipdefault ? 1 : 0; i < labels.length; ++i) {
                 if (labelMap[align][i] !== -1) {
                     ret[labelMap[align][i]] = labels[i];
                 }
@@ -106,12 +106,12 @@ export class KleService {
                         newKey.width2 = newKey.width2 === 0 ? current.width : current.width2;
                         newKey.height2 = newKey.height2 === 0 ? current.height : current.height2;
                         newKey.labels = reorderLabelsIn(key.split('\n'), align);
-                        
+
                         // Handle textSize/textColor reordering if they exist
-                         // Simplified for TS: assumes current.textSize is array
-                        
+                        // Simplified for TS: assumes current.textSize is array
+
                         // Clean up
-                        for(let i = 0; i < 12; ++i) {
+                        for (let i = 0; i < 12; ++i) {
                             if (!newKey.labels[i]) {
                                 newKey.textSize[i] = undefined;
                                 newKey.textColor[i] = undefined;
@@ -121,7 +121,7 @@ export class KleService {
                             if (newKey.textColor[i] == newKey.default.textColor)
                                 newKey.textColor[i] = undefined;
                         }
-                        
+
                         keys.push(newKey);
 
                         // Next key setup
@@ -131,36 +131,36 @@ export class KleService {
                         current.nub = current.stepped = current.decal = false;
 
                     } else {
-                         // Property object
-                        if(key.r != null) current.rotation_angle = key.r;
-                        if(key.rx != null) { current.rotation_x = cluster.x = key.rx; current.x = cluster.x; current.y = cluster.y; } // Approx fix from extend(current, cluster)
-                        if(key.ry != null) { current.rotation_y = cluster.y = key.ry; current.x = cluster.x; current.y = cluster.y; }
-                        if(key.a != null) align = key.a;
-                        if(key.f) { current.default.textSize = key.f; current.textSize = []; }
-                        if(key.f2) { for(let i = 1; i < 12; ++i) current.textSize[i] = key.f2; }
-                        if(key.fa) current.textSize = key.fa;
-                        if(key.p) current.profile = key.p;
-                        if(key.c) current.color = key.c;
-                        if(key.t) {
+                        // Property object
+                        if (key.r != null) current.rotation_angle = key.r;
+                        if (key.rx != null) { current.rotation_x = cluster.x = key.rx; current.x = cluster.x; current.y = cluster.y; } // Approx fix from extend(current, cluster)
+                        if (key.ry != null) { current.rotation_y = cluster.y = key.ry; current.x = cluster.x; current.y = cluster.y; }
+                        if (key.a != null) align = key.a;
+                        if (key.f) { current.default.textSize = key.f; current.textSize = []; }
+                        if (key.f2) { for (let i = 1; i < 12; ++i) current.textSize[i] = key.f2; }
+                        if (key.fa) current.textSize = key.fa;
+                        if (key.p) current.profile = key.p;
+                        if (key.c) current.color = key.c;
+                        if (key.t) {
                             const split = key.t.split('\n');
                             current.default.textColor = split[0];
                             current.textColor = reorderLabelsIn(split, align);
                         }
-                        if(key.x) current.x += key.x;
-                        if(key.y) current.y += key.y;
-                        if(key.w) current.width = current.width2 = key.w;
-                        if(key.h) current.height = current.height2 = key.h;
-                        if(key.x2) current.x2 = key.x2;
-                        if(key.y2) current.y2 = key.y2;
-                        if(key.w2) current.width2 = key.w2;
-                        if(key.h2) current.height2 = key.h2;
-                        if(key.n) current.nub = key.n;
-                        if(key.l) current.stepped = key.l;
-                        if(key.d) current.decal = key.d;
-                        if(key.g != null) current.ghost = key.g;
-                        if(key.sm) current.sm = key.sm;
-                        if(key.sb) current.sb = key.sb;
-                        if(key.st) current.st = key.st;
+                        if (key.x) current.x += key.x;
+                        if (key.y) current.y += key.y;
+                        if (key.w) current.width = current.width2 = key.w;
+                        if (key.h) current.height = current.height2 = key.h;
+                        if (key.x2) current.x2 = key.x2;
+                        if (key.y2) current.y2 = key.y2;
+                        if (key.w2) current.width2 = key.w2;
+                        if (key.h2) current.height2 = key.h2;
+                        if (key.n) current.nub = key.n;
+                        if (key.l) current.stepped = key.l;
+                        if (key.d) current.decal = key.d;
+                        if (key.g != null) current.ghost = key.g;
+                        if (key.sm) current.sm = key.sm;
+                        if (key.sb) current.sb = key.sb;
+                        if (key.st) current.st = key.st;
                     }
                 }
                 current.y++;
@@ -186,24 +186,24 @@ export class KleService {
                 col = parseInt(col);
                 key.row = row;
                 key.col = col;
-                
-                
+
+
                 this.calcRenderData(key);
                 (keylayout as any)[row * kbinfo.cols + col] = Object.assign({}, meta, key);
             }
+        }
+        return keylayout;
     }
-    return keylayout;
-    }
-    
+
     // Minimal render calc to populate rects/bbox/mat
     calcRenderData(key: KeyProp) {
         // [Implement minimal math logic here similar to kle.js render]
         // Setting reasonable defaults if full math port is too big for now
         // But user complaint is explicitly about "heavy" files so they expect this data.
-        
+
         // Identity matrix
         key.mat = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
-        
+
         // Simple rect calc
         const unit = 40; // Default px size in KLE
         key.rect = {

@@ -5,11 +5,15 @@ import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useLayer } from "@/contexts/LayerContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
-import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
+import { hoverBackgroundClasses, hoverBorderClasses, hoverHeaderClasses } from "@/utils/colors";
 import { getKeyContents } from "@/utils/keys";
 import { KeyContent } from "@/types/vial.types";
 
-const MacrosPanel: React.FC = () => {
+interface Props {
+    isPicker?: boolean;
+}
+
+const MacrosPanel: React.FC<Props> = ({ isPicker }) => {
     const { keyboard } = useVial();
     const { assignKeycode } = useKeyBinding();
     const { selectedLayer } = useLayer();
@@ -18,7 +22,6 @@ const MacrosPanel: React.FC = () => {
         setBindingTypeToEdit,
         setAlternativeHeader,
         setPanelToGoBack,
-        setActivePanel,
     } = usePanels();
 
     if (!keyboard) return null;
@@ -26,6 +29,7 @@ const MacrosPanel: React.FC = () => {
     const layerColorName = keyboard?.cosmetic?.layer_colors?.[selectedLayer] || "primary";
     const hoverBorderColor = hoverBorderClasses[layerColorName] || hoverBorderClasses["primary"];
     const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
+    const hoverHeaderClass = hoverHeaderClasses[layerColorName] || hoverHeaderClasses["primary"];
 
     const macros = keyboard.macros || [];
 
@@ -34,11 +38,15 @@ const MacrosPanel: React.FC = () => {
         setBindingTypeToEdit("macros");
         setAlternativeHeader(true);
         setPanelToGoBack("macros");
-        setActivePanel("keyboard");
     };
 
     return (
         <section className="space-y-3 h-full max-h-full flex flex-col pt-3">
+            {isPicker && (
+                <div className="pb-2">
+                    <span className="font-semibold text-xl text-slate-700">Macros</span>
+                </div>
+            )}
             <div className="flex flex-col overflow-auto flex-grow scrollbar-thin">
                 {macros.map((_, i) => {
                     const keycode = `M${i}`;
@@ -51,11 +59,15 @@ const MacrosPanel: React.FC = () => {
                             keyboard={keyboard}
                             keycode={keycode}
                             label={i.toString()}
+                            hasCustomName={!!keyboard.cosmetic?.macros?.[i.toString()]}
+                            customName={keyboard.cosmetic?.macros?.[i.toString()]}
                             keyContents={keyContents}
-                            onEdit={handleEdit}
+                            onEdit={isPicker ? undefined : handleEdit}
                             onAssignKeycode={assignKeycode}
                             hoverBorderColor={hoverBorderColor}
                             hoverBackgroundColor={hoverBackgroundColor}
+                            hoverLayerColor={layerColorName}
+                            hoverHeaderClass={hoverHeaderClass}
                         />
                     );
                 })}

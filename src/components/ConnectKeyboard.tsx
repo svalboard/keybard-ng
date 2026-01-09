@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { useVial } from "@/contexts/VialContext";
 
 const ConnectKeyboard = () => {
-    const { keyboard, isConnected, isWebHIDSupported, loadedFrom, connect, disconnect, loadKeyboard, loadFromFile } = useVial();
+    const { isConnected, connect, disconnect, loadKeyboard, loadFromFile } = useVial();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
