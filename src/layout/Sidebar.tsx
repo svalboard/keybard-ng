@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 // --- Constants ---
 const ICON_GUTTER_WIDTH = "w-[43px]";
 const BASE_ICON_PADDING = "pl-[13px]";
-const LOGO_ICON_PADDING = "pl-[10px]";
+const LOGO_ICON_PADDING = "group-data-[state=collapsed]:pl-[10px]";
 const MENU_ITEM_GAP_PX = 42; // Matches Gap-4 (16px) + Button Height (26px)
 
 export type SidebarItem = {
@@ -148,9 +148,9 @@ const AppSidebar = () => {
             <SidebarHeader className="p-0 py-4">
                 <SidebarMenu>
                     <SidebarMenuItem className="bg-green flex items-center">
-                        <SidebarMenuButton asChild size="nav" className="hover:bg-transparent cursor-default pr-2">
+                        <SidebarMenuButton asChild size="nav" className="hover:bg-transparent cursor-default">
                             <div className="flex w-full items-center justify-center">
-                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
+                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0 group-data-[state=collapsed]:w-full", LOGO_ICON_PADDING)}>
                                     <Logo />
                                 </div>
                                 <span className="text-[22px] font-semibold truncate group-data-[state=collapsed]:hidden">keybard</span>

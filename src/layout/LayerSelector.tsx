@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { svalService } from "@/services/sval.service";
 import { vialService } from "@/services/vial.service";
 import { colorClasses, layerColors } from "@/utils/colors";
-import { FC, useState, useRef, useEffect } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 
 interface LayerSelectorProps {
     selectedLayer: number;
@@ -114,7 +114,7 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
                     <TooltipTrigger asChild>
                         <button
                             onClick={toggleShowLayers}
-                            className="hover:bg-gray-200 p-1.5 rounded-md transition-colors mr-2 text-black flex items-center justify-center"
+                            className="hover:bg-gray-200 p-1.5 rounded-md transition-colors mr-2 text-black flex items-center justify-center cursor-pointer"
                             aria-label={showAllLayers ? "Hide Blank Layers" : "Show All Layers"}
                         >
                             {showAllLayers ? <LayersDefaultIcon className="h-5 w-5" /> : <LayersActiveIcon className="h-5 w-5" />}
