@@ -176,7 +176,7 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
                                 <button
                                     key={color.name}
                                     className={cn(
-                                        "w-6 h-6 rounded-full transition-all hover:scale-110 border-2",
+                                        "w-6 h-6 cursor-pointer rounded-full transition-all hover:scale-110 border-2",
                                         (keyboard.cosmetic?.layer_colors?.[selectedLayer] === color.name) ||
                                             (!keyboard.cosmetic?.layer_colors?.[selectedLayer] && color.name === "green")
                                             ? "border-black border-3"
@@ -205,7 +205,7 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
                     </div>
                 ) : (
                     <div
-                        className="text-lg flex justify-start items-center cursor-pointer group hover:bg-black/5 rounded-md px-2 py-1 transition-colors"
+                        className="text-lg cursor-text flex justify-start items-center cursor-pointer group hover:bg-black/5 rounded-md px-2 py-1 transition-colors"
                         onClick={handleStartEditing}
                         title="Click to rename"
                     >
