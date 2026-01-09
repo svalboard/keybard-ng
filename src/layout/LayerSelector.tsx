@@ -1,5 +1,6 @@
 import LayersActiveIcon from "@/components/icons/LayersActive";
 import LayersDefaultIcon from "@/components/icons/LayersDefault";
+import { Ellipsis } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
@@ -9,6 +10,14 @@ import { svalService } from "@/services/sval.service";
 import { vialService } from "@/services/vial.service";
 import { colorClasses, layerColors } from "@/utils/colors";
 import { FC, useState, useRef, useEffect } from "react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { KEYMAP } from "@/constants/keygen";
 
 interface LayerSelectorProps {
     selectedLayer: number;
@@ -105,6 +114,113 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
         ...layerColors,
     ];
 
+    // Layer Actions
+    const { isConnected } = useVial();
+
+    const handleCopyLayer = () => {
+        if (!keyboard?.keymap) return;
+        const layerData = keyboard.keymap[selectedLayer];
+        navigator.clipboard.writeText(JSON.stringify(layerData));
+    };
+
+    const handlePasteLayer = async () => {
+        if (!keyboard) return;
+        try {
+            const text = await navigator.clipboard.readText();
+            const layerData = JSON.parse(text);
+            if (Array.isArray(layerData)) {
+                if (layerData.length === 0) return;
+
+                // Update keys
+                for (let r = 0; r < keyboard.rows; r++) {
+                    for (let c = 0; c < keyboard.cols; c++) {
+                        const idx = r * keyboard.cols + c;
+                        if (idx < layerData.length) {
+                            const val = layerData[idx];
+                            if (isConnected) {
+                                await vialService.updateKey(selectedLayer, r, c, val);
+                            } else {
+                                if (keyboard.keymap) keyboard.keymap[selectedLayer][idx] = val;
+                            }
+                        }
+                    }
+                }
+
+                if (isConnected) {
+                    // Refresh map from device
+                    await vialService.getKeyMap(keyboard);
+                }
+
+                // Trigger React update
+                setKeyboard({ ...keyboard });
+            }
+        } catch (e) {
+            console.error("Failed to paste layer", e);
+        }
+    };
+
+    const handleWipeDisable = async () => {
+        if (!keyboard) return;
+        const KC_NO = 0;
+        for (let r = 0; r < keyboard.rows; r++) {
+            for (let c = 0; c < keyboard.cols; c++) {
+                if (isConnected) {
+                    await vialService.updateKey(selectedLayer, r, c, KC_NO);
+                } else {
+                    const idx = r * keyboard.cols + c;
+                    if (keyboard.keymap) keyboard.keymap[selectedLayer][idx] = KC_NO;
+                }
+            }
+        }
+        if (isConnected) {
+            await vialService.getKeyMap(keyboard);
+        }
+        setKeyboard({ ...keyboard });
+    };
+
+    const handleWipeTransparent = async () => {
+        if (!keyboard) return;
+        const KC_TRNS = KEYMAP['KC_TRNS']?.code ?? 1;
+        for (let r = 0; r < keyboard.rows; r++) {
+            for (let c = 0; c < keyboard.cols; c++) {
+                if (isConnected) {
+                    await vialService.updateKey(selectedLayer, r, c, KC_TRNS);
+                } else {
+                    const idx = r * keyboard.cols + c;
+                    if (keyboard.keymap) keyboard.keymap[selectedLayer][idx] = KC_TRNS;
+                }
+            }
+        }
+        if (isConnected) {
+            await vialService.getKeyMap(keyboard);
+        }
+        setKeyboard({ ...keyboard });
+    };
+
+    const handleChangeDisabledToTransparent = async () => {
+        if (!keyboard?.keymap) return;
+        const KC_TRNS = KEYMAP['KC_TRNS']?.code ?? 1;
+        const KC_NO = 0;
+        const currentLayerData = keyboard.keymap[selectedLayer];
+
+        for (let r = 0; r < keyboard.rows; r++) {
+            for (let c = 0; c < keyboard.cols; c++) {
+                const idx = r * keyboard.cols + c;
+                const currentKey = currentLayerData[idx];
+                if (currentKey === KC_NO) {
+                    if (isConnected) {
+                        await vialService.updateKey(selectedLayer, r, c, KC_TRNS);
+                    } else {
+                        keyboard.keymap[selectedLayer][idx] = KC_TRNS;
+                    }
+                }
+            }
+        }
+        if (isConnected) {
+            await vialService.getKeyMap(keyboard);
+        }
+        setKeyboard({ ...keyboard });
+    };
 
     return (
         <div className="w-full flex flex-col pt-4" onClick={(e) => e.stopPropagation()}>
@@ -214,6 +330,35 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
                         </span>
                     </div>
                 )}
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className="ml-2 hover:bg-black/5 p-1 rounded-full transition-colors flex items-center justify-center text-black outline-none">
+                            <Ellipsis size={18} strokeWidth={1.5} />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-64">
+                        <DropdownMenuItem disabled>
+                            Apply
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleCopyLayer}>
+                            Copy
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handlePasteLayer}>
+                            Paste
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={handleWipeDisable}>
+                            All Blank
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleWipeTransparent}>
+                            All Transparent
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={handleChangeDisabledToTransparent}>
+                            Switch Blank to Transparent
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </div>
     );
