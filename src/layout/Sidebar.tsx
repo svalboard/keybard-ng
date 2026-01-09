@@ -1,4 +1,4 @@
-import { ChevronsRight, Cpu, Gamepad, HelpCircle, LucideIcon, Settings } from "lucide-react";
+import { ChevronsRight, Cpu, Gamepad, HelpCircle, LucideIcon, Settings, Zap } from "lucide-react";
 import { useCallback } from "react";
 
 import ComboIcon from "@/components/ComboIcon";
@@ -21,6 +21,7 @@ import {
     useSidebar
 } from "@/components/ui/sidebar";
 import { usePanels } from "@/contexts/PanelsContext";
+import { useVial } from "@/contexts/VialContext";
 import { cn } from "@/lib/utils";
 
 // --- Constants ---
@@ -126,6 +127,8 @@ const AppSidebar = () => {
         handleCloseDetails,
     } = usePanels();
 
+    const { connect } = useVial();
+
     const handleItemSelect = useCallback(
         (item: SidebarItem) => {
             if (activePanel === item.url && open) {
@@ -178,6 +181,16 @@ const AppSidebar = () => {
                                     <ChevronsRight className={cn("h-4 w-4 shrink-0 transition-transform", !isCollapsed ? "rotate-180" : "")} />
                                 </div>
                                 <span className="text-md font-medium truncate group-data-[state=collapsed]:hidden">Hide Menu</span>
+                            </button>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild size="nav" className="text-slate-600 transition-colors">
+                            <button type="button" onClick={() => connect()} className="flex w-full items-center justify-start">
+                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
+                                    <Zap className="h-4 w-4 shrink-0" />
+                                </div>
+                                <span className="text-md font-medium truncate group-data-[state=collapsed]:hidden">Connect</span>
                             </button>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
