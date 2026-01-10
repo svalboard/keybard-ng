@@ -20,8 +20,6 @@ const OverridesPanel: React.FC = () => {
         setItemToEdit,
         setBindingTypeToEdit,
         setAlternativeHeader,
-        setPanelToGoBack,
-        setActivePanel,
     } = usePanels();
 
     if (!keyboard) return null;
@@ -37,8 +35,6 @@ const OverridesPanel: React.FC = () => {
         setItemToEdit(index);
         setBindingTypeToEdit("overrides");
         setAlternativeHeader(true);
-        setPanelToGoBack("overrides");
-        setActivePanel("keyboard");
     };
 
     const updateOverrideOption = (index: number, bit: number, checked: boolean) => {
@@ -77,7 +73,6 @@ const OverridesPanel: React.FC = () => {
                                     className={hasContent ? "border-kb-gray" : "bg-transparent border border-kb-gray-border"}
                                     headerClassName={hasContent ? "bg-kb-sidebar-dark" : "text-black"}
                                     variant="small"
-                                    disableHover
                                     onClick={() => handleEdit(i)}
                                 />
                             </div>
@@ -99,10 +94,10 @@ const OverridesPanel: React.FC = () => {
                                 <button
                                     onClick={() => updateOverrideOption(i, ENABLED_BIT, true)}
                                     className={cn(
-                                        "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[3px] transition-all font-bold",
+                                        "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[3px] transition-all font-bold border",
                                         isEnabled
-                                            ? "bg-black text-white shadow-sm border border-black"
-                                            : "text-gray-500 hover:text-black hover:bg-white hover:shadow-sm"
+                                            ? "bg-black text-white shadow-sm border-black"
+                                            : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"
                                     )}
                                 >
                                     ON
@@ -110,10 +105,10 @@ const OverridesPanel: React.FC = () => {
                                 <button
                                     onClick={() => updateOverrideOption(i, ENABLED_BIT, false)}
                                     className={cn(
-                                        "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[3px] transition-all font-bold",
+                                        "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[3px] transition-all font-bold border",
                                         !isEnabled
-                                            ? "bg-black text-white shadow-sm border border-black"
-                                            : "text-gray-500 hover:text-black hover:bg-white hover:shadow-sm"
+                                            ? "bg-black text-white shadow-sm border-black"
+                                            : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"
                                     )}
                                 >
                                     OFF

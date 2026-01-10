@@ -2,7 +2,6 @@ import { FC, useState, useEffect } from "react";
 import { ArrowRight, Trash2 } from "lucide-react";
 
 import { Key } from "@/components/Key";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
@@ -31,7 +30,7 @@ const ENABLED_BIT = 1 << 7;
 
 const OverrideEditor: FC<Props> = () => {
     const { keyboard, setKeyboard } = useVial();
-    const { itemToEdit } = usePanels();
+    const { itemToEdit, setPanelToGoBack, setAlternativeHeader } = usePanels();
     const { selectOverrideKey, selectedTarget } = useKeyBinding();
     const [activeTab, setActiveTab] = useState<TabType>("Trigger");
 
@@ -40,6 +39,8 @@ const OverrideEditor: FC<Props> = () => {
 
     useEffect(() => {
         selectOverrideKey(overrideIndex, "trigger");
+        setPanelToGoBack("overrides");
+        setAlternativeHeader(true);
     }, []);
 
     const isSlotSelected = (slot: "trigger" | "replacement") => {
@@ -172,17 +173,17 @@ const OverrideEditor: FC<Props> = () => {
     const isEnabled = (override.options & ENABLED_BIT) !== 0;
 
     return (
-        <div className="flex flex-col gap-4 py-8 pl-[44px] pr-5 pb-4">
+        <div className="flex flex-col gap-4 py-8 pl-[84px] pr-5 pb-4">
             {/* Active Switch */}
             {/* Active Toggle */}
-            <div className="flex flex-row items-center gap-0.5 bg-gray-200/50 p-0.5 rounded-md border border-gray-300/50 w-fit">
+            <div className="flex flex-row items-center gap-0.5 bg-gray-200/50 p-0.5 rounded-md border border-gray-400/50 w-fit">
                 <button
                     onClick={() => updateOption(ENABLED_BIT, true)}
                     className={cn(
-                        "px-3 py-1 text-xs uppercase tracking-wide rounded-[4px] transition-all font-bold",
+                        "px-3 py-1 text-xs uppercase tracking-wide rounded-[4px] transition-all font-bold border",
                         isEnabled
-                            ? "bg-black text-white shadow-sm border border-black"
-                            : "text-gray-500 hover:text-black hover:bg-white hover:shadow-sm"
+                            ? "bg-black text-white shadow-sm border-black"
+                            : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"
                     )}
                 >
                     ON
@@ -190,10 +191,10 @@ const OverrideEditor: FC<Props> = () => {
                 <button
                     onClick={() => updateOption(ENABLED_BIT, false)}
                     className={cn(
-                        "px-3 py-1 text-xs uppercase tracking-wide rounded-[4px] transition-all font-bold",
+                        "px-3 py-1 text-xs uppercase tracking-wide rounded-[4px] transition-all font-bold border",
                         !isEnabled
-                            ? "bg-black text-white shadow-sm border border-black"
-                            : "text-gray-500 hover:text-black hover:bg-white hover:shadow-sm"
+                            ? "bg-black text-white shadow-sm border-black"
+                            : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"
                     )}
                 >
                     OFF
@@ -209,22 +210,20 @@ const OverrideEditor: FC<Props> = () => {
             </div>
 
             {/* Tabs */}
-            <div className="flex flex-row gap-2 p-1 w-fit">
+            <div className="flex flex-row items-center gap-1 bg-gray-200/50 p-1 rounded-lg border border-gray-400/50 w-full mt-8">
                 {TABS.map((tab) => (
-                    <Button
+                    <button
                         key={tab}
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                            "px-5 py-1 rounded-full transition-all text-sm font-medium cursor-pointer border-none outline-none whitespace-nowrap",
-                            activeTab === tab
-                                ? "bg-gray-800 text-white shadow-md scale-105 hover:bg-gray-900 hover:text-white"
-                                : "bg-transparent text-gray-600 hover:bg-white"
-                        )}
                         onClick={() => setActiveTab(tab)}
+                        className={cn(
+                            "flex-1 py-2 text-sm uppercase tracking-wider rounded-md transition-all font-bold border",
+                            activeTab === tab
+                                ? "bg-black text-white shadow-md border-black"
+                                : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"
+                        )}
                     >
                         {tab}
-                    </Button>
+                    </button>
                 ))}
             </div>
 

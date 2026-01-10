@@ -83,7 +83,6 @@ const MacrosPanel: React.FC<Props> = ({ isPicker }) => {
                                         layerColor="sidebar"
                                         className="border-kb-gray"
                                         headerClassName="bg-kb-sidebar-dark"
-                                        disableHover
                                     />
                                 </div>
                             );

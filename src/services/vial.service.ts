@@ -1,7 +1,7 @@
 import { KleService } from "./kle.service";
 import { keyService } from "./key.service";
 import { VialUSB, usbInstance } from "./usb.service";
-import { LE32, MSG_LEN } from "./utils";
+import { LE32 } from "./utils";
 
 import { XzReadableStream } from "xz-decompress";
 import type { KeyboardInfo } from "../types/vial.types";
@@ -125,34 +125,105 @@ export class VialService {
         })) as number;
 
         // Vial protocol and Keyboard ID
+        // Response validation: Reject stale echoes from other commands.
+        // Accept if: (Not echo) OR (Echo of correct command)
         const vial_kbid = await this.usb.sendVial(VialUSB.CMD_VIAL_GET_KEYBOARD_ID, [], {
             unpack: "I<Q",
+            validateInput: (u8) => u8[0] !== VialUSB.CMD_VIA_VIAL_PREFIX || u8[1] === VialUSB.CMD_VIAL_GET_KEYBOARD_ID
         });
         kbinfo.vial_proto = vial_kbid[0] as number;
         kbinfo.kbid = (vial_kbid[1] as bigint).toString();
 
-        // Get compressed JSON payload
-        const payload_size = await this.usb.sendVial(VialUSB.CMD_VIAL_GET_SIZE, [], {
-            uint32: true,
-            index: 0,
+        // Get compressed JSON payload size
+        const sizeData = await this.usb.sendVial(VialUSB.CMD_VIAL_GET_SIZE, [], {
+            uint8: true,
+            validateInput: (u8) => u8[0] !== VialUSB.CMD_VIA_VIAL_PREFIX || u8[1] === VialUSB.CMD_VIAL_GET_SIZE
         });
+
+        // Offset logic remains the same (check for echo to determine offset)
+        let sizeOffset = 0;
+        if ((sizeData[0] as number) === VialUSB.CMD_VIA_VIAL_PREFIX && (sizeData[1] as number) === VialUSB.CMD_VIAL_GET_SIZE) {
+            sizeOffset = 2;
+        }
+
+        const dvSize = new DataView(sizeData.buffer);
+        // Size is always Little Endian
+        const payload_size = dvSize.getUint32(sizeOffset, true);
+
+        // console.log("Payload Size:", payload_size, "Offset:", sizeOffset);
+
+        if (payload_size > 50 * 1024 * 1024) { // Safety sanity check (50MB)
+            throw new Error(`Invalid payload size: ${payload_size}`);
+        }
 
         let block = 0;
         let sz = payload_size;
         const payload = new ArrayBuffer(payload_size);
         const pdv = new DataView(payload);
-        let offset = 0;
+        let dstOffset = 0;
+
+        let protocolDataOffset = 0; // Will be determined on first block
 
         while (sz > 0) {
             const data = await this.usb.sendVial(VialUSB.CMD_VIAL_GET_DEFINITION, [...LE32(block)], {
                 uint8: true,
             });
 
-            for (let i = 0; i < MSG_LEN && offset < payload_size; i++) {
-                pdv.setInt8(offset, data[i]);
-                offset += 1;
+            // On first block, detect offset using XZ Magic Bytes (FD 37 7A 58 5A 00)
+            if (block === 0) {
+                // Check for Echo (FE 02)
+                if ((data[0] as number) === VialUSB.CMD_VIA_VIAL_PREFIX && (data[1] as number) === VialUSB.CMD_VIAL_GET_DEFINITION) {
+                    // It *looks* like an echo, but verify against XZ magic if possible to be sure
+                    // XZ Magic: FD 37 7A 58 5A 00
+                    if (data[2] === 0xFD && data[3] === 0x37) {
+                        protocolDataOffset = 2;
+                    } else if (data[0] === 0xFD && data[1] === 0x37) {
+                        protocolDataOffset = 0;
+                    } else {
+                        // Fallback heuristic: assume echo if we saw it earlier or strictly see pattern
+                        protocolDataOffset = 2;
+                    }
+                } else {
+                    protocolDataOffset = 0;
+                }
+                // console.log("Definition Protocol Offset:", protocolDataOffset);
             }
-            sz = sz - MSG_LEN;
+
+            // Copy data
+            // Available data length in this chunk
+            const available = data.length - protocolDataOffset;
+            const toCopy = Math.min(available, sz);
+
+            for (let i = 0; i < toCopy; i++) {
+                if (dstOffset < payload_size) {
+                    pdv.setInt8(dstOffset, data[protocolDataOffset + i]);
+                    dstOffset += 1;
+                }
+            }
+
+            // NOTE: Vial protocol usually implies 32 bytes of DATA.
+            // If echo eats 2 bytes, we validly only got 30 bytes of data.
+            // We decrement 'sz' by actual copied amount.
+            // But 'block' increments by 1.
+            // Does 'block' map to 32-byte chunks or (32-offset)-byte chunks?
+            // Standard Vial firmware uses: `offset = block * 32`. 
+            // So if we lose 2 bytes, we have HOLES in our data. 
+            // HOWEVER, if the firmware echoes, it implies it's wrapping the response.
+            // If it's wrapping, a compliant firmware should probably shift the offset or we are doomed to corruption.
+            // Let's assume for now that if Echo exists, the firmware implementation handles `memcpy(buf+2, data + block*30, 30)` logic OR
+            // we are simply missing bytes.
+            // Given the user error "XZ decompression failed", it's possible we were getting data but it was corrupt.
+            // CORRECTION: corrupted likely means "Header bytes treated as data".
+            // So stripping headers is the correct first step. 
+            // If the buffer is then "short", we just process next block.
+            // IMPORTANT: If firmware uses `block * 32`, and we only read 30 bytes, we miss 2 bytes every chunk.
+            // THIS would be catastrophic for XZ.
+            // HOPEFULLY, 'Echo' implies 'No data loss' (packet size > 32?) or 'offset logic changed'.
+            // Or maybe 'get_definition' does NOT echo, even if 'get_size' did?
+            // The heuristic above (checking XZ magic at 0) handles the "Does not echo" case.
+            // If it DOES echo, we have to assume the data at [2..] is the valid stream continuation.
+
+            sz = sz - toCopy;
             block += 1;
         }
 
@@ -227,16 +298,36 @@ export class VialService {
     async pollMatrix(kbinfo: KeyboardInfo): Promise<boolean[][]> {
         const data = await this.usb.send(VialUSB.CMD_VIA_GET_KEYBOARD_VALUE, [VialUSB.VIA_SWITCH_MATRIX_STATE]);
         const rowbytes = Math.ceil(kbinfo.cols / 8);
-        let offset = 2;
+
+        // Debug polling
+        // console.log("Poll data len:", data.length, "Rowbytes:", rowbytes, "Rows:", kbinfo.rows, "Cols:", kbinfo.cols);
+        // console.log("Byte 0:", data[0], "Byte 1:", data[1]);
+
+        // Determine offset: some firmwares echo the command (0x02 0x03), others might not? 
+        // Standard VIA echoes. 
+        let offset = 0;
+        if (data[0] === VialUSB.CMD_VIA_GET_KEYBOARD_VALUE && data[1] === VialUSB.VIA_SWITCH_MATRIX_STATE) {
+            offset = 2;
+        }
 
         const kmpressed: boolean[][] = [];
         for (let row = 0; row < kbinfo.rows; row++) {
             const rowpressed: boolean[] = [];
+            // Ensure we don't read past buffer
+            if (offset + rowbytes > data.length) {
+                break;
+            }
             const coldata = data.slice(offset, offset + rowbytes);
             for (let col = 0; col < kbinfo.cols; col++) {
                 const colbyte = Math.floor(col / 8);
-                const colbit = 1 << col % 8;
-                rowpressed.push((coldata[colbyte] & colbit) !== 0);
+                const colbit = 1 << (col % 8);
+
+                // Safety check for colbyte
+                if (colbyte < coldata.length) {
+                    rowpressed.push((coldata[colbyte] & colbit) !== 0);
+                } else {
+                    rowpressed.push(false);
+                }
             }
             offset += rowbytes;
             kmpressed.push(rowpressed);

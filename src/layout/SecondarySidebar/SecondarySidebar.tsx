@@ -34,7 +34,7 @@ const getPanelTitle = (panel: string | null | undefined): string => {
         layers: "Layer Keys",
         tapdances: "Tap Dances",
         macros: "Macros",
-        qmk: "QMK",
+        qmk: "One-Shot Modifiers",
         special: "Special",
         mouse: "Mouse",
         combos: "Combos",

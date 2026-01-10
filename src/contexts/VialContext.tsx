@@ -20,6 +20,8 @@ interface VialContextType {
     loadKeyboard: () => Promise<void>;
     loadFromFile: (file: File) => Promise<void>;
     updateKey: (layer: number, row: number, col: number, keymask: number) => Promise<void>;
+    pollMatrix: () => Promise<boolean[][]>;
+    lastHeartbeat: number;
 }
 
 const VialContext = createContext<VialContextType | undefined>(undefined);
@@ -28,6 +30,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [keyboard, setKeyboard] = useState<KeyboardInfo | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [loadedFrom, setLoadedFrom] = useState<string | null>(null);
+    const [lastHeartbeat, setLastHeartbeat] = useState<number>(0);
     const isWebHIDSupported = VialService.isWebHIDSupported();
     useEffect(() => {
         console.log("keyboard changed", keyboard);
@@ -40,6 +43,12 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 { usagePage: 0xff60, usage: 0x62 },
             ];
             const success = await usbInstance.open(filters || defaultFilters);
+            if (success) {
+                usbInstance.onDisconnect = () => {
+                    console.log("Disconnect detected via listener");
+                    setIsConnected(false);
+                };
+            }
             setIsConnected(success);
             console.log("connected success:", success);
             return success;
@@ -53,8 +62,6 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             await usbInstance.close();
             setIsConnected(false);
-            setKeyboard(null);
-            setLoadedFrom(null);
         } catch (error) {
             console.error("Failed to disconnect:", error);
         }
@@ -90,6 +97,15 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
             throw error;
         }
     }, [isConnected]);
+
+    useEffect(() => {
+        if (isConnected) {
+            loadKeyboard().catch((error) => {
+                console.error("Failed to auto-load keyboard:", error);
+                setIsConnected(false);
+            });
+        }
+    }, [isConnected, loadKeyboard]);
 
     const loadFromFile = useCallback(async (file: File) => {
         try {
@@ -140,6 +156,13 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         [isConnected]
     );
 
+    const pollMatrix = useCallback(async () => {
+        if (!keyboard || !isConnected) return [];
+        const result = await vialService.pollMatrix(keyboard);
+        setLastHeartbeat(Date.now());
+        return result;
+    }, [keyboard, isConnected]);
+
     const value: VialContextType = {
         keyboard,
         setKeyboard,
@@ -151,6 +174,8 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loadKeyboard,
         loadFromFile,
         updateKey,
+        pollMatrix,
+        lastHeartbeat,
     };
 
     return <VialContext.Provider value={value}>{children}</VialContext.Provider>;

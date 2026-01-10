@@ -139,7 +139,7 @@ const BindingEditorContainer: FC<Props> = ({ shouldClose }) => {
     return (
         <div className={containerClasses}>
             <div className={panelClasses} onAnimationEnd={handleAnimationEnd}>
-                <div className={cn("flex flex-row w-full items-center pr-5 justify-between pt-2 pb-5", bindingTypeToEdit === "overrides" ? "pl-[44px]" : "pl-[84px]")}>
+                <div className={cn("flex flex-row w-full items-center pr-5 justify-between pt-2 pb-5 pl-[84px]")}>
                     <div className="flex flex-row items-center">
                         {renderHeaderIcon()}
                         <div className="pl-5 text-xl font-normal">

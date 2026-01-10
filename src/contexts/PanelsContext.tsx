@@ -56,7 +56,7 @@ export const PanelsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, [isMobile, setOpen, setOpenMobile]);
 
     useEffect(() => {
-        if (activePanel && !detailsOpen) {
+        if (activePanel && activePanel !== "matrixtester" && !detailsOpen) {
             openDetails();
         }
 

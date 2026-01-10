@@ -127,6 +127,7 @@ export interface USBSendOptions {
     bigendian?: boolean;
     slice?: number;
     bytes?: number;
+    validateInput?: (data: Uint8Array) => boolean;
 }
 
 export interface VialAPI {

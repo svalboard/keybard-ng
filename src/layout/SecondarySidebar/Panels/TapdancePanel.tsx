@@ -92,7 +92,6 @@ const TapdancePanel: React.FC = () => {
                                         !hasContent ? "bg-transparent border border-kb-gray-border" : "border-kb-gray"
                                     }
                                     headerClassName={!hasContent ? "hidden" : "bg-kb-sidebar-dark"}
-                                    disableHover
                                     onClick={() => handleEdit(i)}
                                 />
                             </div>

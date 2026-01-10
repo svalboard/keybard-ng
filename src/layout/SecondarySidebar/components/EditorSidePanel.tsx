@@ -1,4 +1,3 @@
-import KeyboardIcon from "@/components/icons/Keyboard";
 import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import MacrosIcon from "@/components/icons/MacrosIcon";
 import MouseIcon from "@/components/icons/Mouse";
@@ -7,25 +6,25 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import { FC } from "react";
 
-import { Cpu, Gamepad } from "lucide-react";
+import { Keyboard, Piano, SquareDot } from "lucide-react";
 
 export type PickerMode = "keyboard" | "layers" | "macros" | "qmk" | "special" | "mouse";
 
 const iconsToShow: { icon: React.ReactNode; panel: PickerMode; title: string }[] = [
     {
-        icon: <KeyboardIcon className="w-4 h-4" />,
+        icon: <Keyboard className="w-4 h-4" />,
         panel: "keyboard",
         title: "Keyboard",
     },
     {
-        icon: <Gamepad className="w-4 h-4" />,
+        icon: <Piano className="w-4 h-4" />,
         panel: "special",
         title: "Special",
     },
     {
-        icon: <Cpu className="w-4 h-4" />,
+        icon: <SquareDot className="w-4 h-4" />,
         panel: "qmk",
-        title: "QMK",
+        title: "One-Shot",
     },
     {
         icon: <LayersDefaultIcon className="w-4 h-4" />,

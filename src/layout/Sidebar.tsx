@@ -1,9 +1,9 @@
-import { ChevronsRight, Cpu, Gamepad, HelpCircle, LucideIcon, Settings } from "lucide-react";
+import { ChevronsRight, HelpCircle, Keyboard, LucideIcon, Piano, Settings, SquareDot, Unplug, Zap } from "lucide-react";
 import { useCallback } from "react";
 
 import ComboIcon from "@/components/ComboIcon";
 import GamepadDirectional from "@/components/icons/GamepadDirectional";
-import KeyboardIcon from "@/components/icons/Keyboard";
+
 import LayersDefaultIcon from "@/components/icons/LayersDefault";
 import MacrosIcon from "@/components/icons/MacrosIcon";
 import MouseIcon from "@/components/icons/Mouse";
@@ -21,6 +21,7 @@ import {
     useSidebar
 } from "@/components/ui/sidebar";
 import { usePanels } from "@/contexts/PanelsContext";
+import { useVial } from "@/contexts/VialContext";
 import { cn } from "@/lib/utils";
 
 // --- Constants ---
@@ -39,9 +40,9 @@ export type SidebarItem = {
 };
 
 export const primarySidebarItems: SidebarItem[] = [
-    { title: "Keyboard", url: "keyboard", icon: KeyboardIcon },
-    { title: "Special", url: "special", icon: Gamepad },
-    { title: "QMK", url: "qmk", icon: Cpu },
+    { title: "Keyboard", url: "keyboard", icon: Keyboard },
+    { title: "Special", url: "special", icon: Piano },
+    { title: "One-Shot", url: "qmk", icon: SquareDot },
     { title: "Layer Keys", url: "layers", icon: LayersDefaultIcon },
     { title: "Mouse", url: "mouse", icon: MouseIcon },
     { title: "Tap Dances", url: "tapdances", icon: TapdanceIcon },
@@ -95,7 +96,7 @@ const SidebarNavItem = ({
                 (alternativeHeader ? isPreviousPanel : isActive) ? "text-sidebar-foreground" : "text-gray-400"
             )}
         >
-            <button type="button" onClick={() => onClick(item)} className="flex w-full items-center justify-start">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onClick(item); }} className="flex w-full items-center justify-start">
                 <div className={cn(ICON_GUTTER_WIDTH, "h-full flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
                     <item.icon className="h-4 w-4 shrink-0" />
                 </div>
@@ -124,10 +125,25 @@ const AppSidebar = () => {
         setAlternativeHeader,
         open,
         handleCloseDetails,
+        setOpen,
     } = usePanels();
+
+    const { connect, isConnected } = useVial();
 
     const handleItemSelect = useCallback(
         (item: SidebarItem) => {
+            if (item.url === "matrixtester") {
+                if (activePanel === "matrixtester") {
+                    setActivePanel(null);
+                    return;
+                }
+                setOpen(false);
+                setActivePanel("matrixtester");
+                setPanelToGoBack(null);
+                setItemToEdit(null);
+                return;
+            }
+
             if (activePanel === item.url && open) {
                 handleCloseDetails();
             } else {
@@ -138,8 +154,12 @@ const AppSidebar = () => {
                 setItemToEdit(null);
             }
         },
-        [activePanel, open, handleCloseDetails, setActivePanel, openDetails, setPanelToGoBack, setAlternativeHeader, setItemToEdit]
+        [activePanel, open, handleCloseDetails, setActivePanel, openDetails, setPanelToGoBack, setAlternativeHeader, setItemToEdit, setOpen]
     );
+
+    const handleBackgroundClick = useCallback(() => {
+        handleCloseDetails();
+    }, [handleCloseDetails]);
 
     const activePrimaryIndex = primarySidebarItems.findIndex((item) => item.url === activePanel);
     const activeFeatureIndex = featureSidebarItems.findIndex((item) => item.url === activePanel);
@@ -158,22 +178,52 @@ const AppSidebar = () => {
     );
 
     return (
-        <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses}>
+        <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses} onClick={handleBackgroundClick}>
             <SidebarHeader className="p-0 py-4">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton asChild size="nav" className="hover:bg-transparent cursor-default">
-                            <div className="flex w-full items-center justify-start">
+                        <SidebarMenuButton asChild size="nav" className="transition-colors">
+                            <button
+                                type="button"
+                                className="flex w-full items-center justify-start"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+
+                                    const isPanelOpen = open;
+                                    const isMatrixTesterActive = activePanel === "matrixtester";
+
+                                    handleCloseDetails();
+                                    if (isMatrixTesterActive) {
+                                        setActivePanel(null);
+                                    }
+
+                                    if (!isCollapsed) {
+                                        toggleSidebar();
+                                    } else if (!isPanelOpen && !isMatrixTesterActive) {
+                                        toggleSidebar();
+                                    }
+                                }}
+                            >
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
                                     <Logo />
                                 </div>
                                 <span className="text-[22px] font-semibold truncate group-data-[state=collapsed]:hidden">keybard</span>
-                            </div>
+                            </button>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild size="nav" className="text-slate-600 transition-colors">
-                            <button type="button" onClick={() => toggleSidebar()} className="flex w-full items-center justify-start">
+                            <button type="button" onClick={(e) => { e.stopPropagation(); connect(); }} className="flex w-full items-center justify-start">
+                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
+                                    {isConnected ? <Zap className="h-4 w-4 shrink-0 fill-black text-black" /> : <Unplug className="h-4 w-4 shrink-0" />}
+                                </div>
+                                <span className="text-md font-medium truncate group-data-[state=collapsed]:hidden">{isConnected ? "Connected" : "Connect"}</span>
+                            </button>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild size="nav" className="text-slate-600 transition-colors">
+                            <button type="button" onClick={(e) => { e.stopPropagation(); toggleSidebar(); }} className="flex w-full items-center justify-start">
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
                                     <ChevronsRight className={cn("h-4 w-4 shrink-0 transition-transform", !isCollapsed ? "rotate-180" : "")} />
                                 </div>

@@ -12,8 +12,13 @@ const MacroEditor: FC = () => {
     const [actions, setActions] = useState<any[]>([]);
     const [focusIndex, setFocusIndex] = useState<number | null>(null);
     const { keyboard, setKeyboard } = useVial();
-    const { itemToEdit } = usePanels();
+    const { itemToEdit, setPanelToGoBack, setAlternativeHeader } = usePanels();
     const { selectComboKey: _selectComboKey, selectMacroKey, selectedTarget, clearSelection } = useKeyBinding();
+
+    useEffect(() => {
+        setPanelToGoBack("macros");
+        setAlternativeHeader(true);
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {

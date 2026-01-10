@@ -1,6 +1,6 @@
 import LayersActiveIcon from "@/components/icons/LayersActive";
 import LayersDefaultIcon from "@/components/icons/LayersDefault";
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, Unplug, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
@@ -18,6 +18,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { KEYMAP } from "@/constants/keygen";
+import { usePanels } from "@/contexts/PanelsContext";
 
 
 interface LayerSelectorProps {
@@ -117,7 +118,16 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
     ];
 
     // Layer Actions
-    const { isConnected } = useVial();
+    const { isConnected, connect, lastHeartbeat } = useVial();
+
+    const [isReceiving, setIsReceiving] = useState(false);
+    useEffect(() => {
+        if (lastHeartbeat) {
+            setIsReceiving(true);
+            const timer = setTimeout(() => setIsReceiving(false), 150);
+            return () => clearTimeout(timer);
+        }
+    }, [lastHeartbeat]);
 
     const handleCopyLayer = () => {
         if (!keyboard?.keymap) return;
@@ -223,6 +233,35 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
         }
         setKeyboard({ ...keyboard });
     };
+
+    const { activePanel } = usePanels();
+
+    if (activePanel === "matrixtester") {
+        return (
+            <div className="w-full flex data-[state=collapsed] flex-col pt-4" onClick={(e) => e.stopPropagation()}>
+                <div className="flex flex-col justify-start items-start px-5 py-2 relative mt-3">
+                    <span className="font-bold text-lg text-black">Matrix Tester</span>
+                    {!isConnected ? (
+                        <button
+                            onClick={() => connect()}
+                            className="mt-2 bg-black text-white px-4 py-1 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
+                        >
+                            <Unplug className="h-4 w-4" />
+                            Connect Keyboard
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => connect()}
+                            className="mt-2 bg-white text-black px-4 py-1 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
+                        >
+                            <Zap className="h-4 w-4 fill-black text-black" />
+                            Keyboard Connected
+                        </button>
+                    )}
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="w-full flex flex-col pt-4" onClick={(e) => e.stopPropagation()}>
@@ -355,10 +394,10 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onSelect={handleWipeDisable}>
-                            All Blank
+                            Make All Blank
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={handleWipeTransparent}>
-                            All Transparent
+                            Make All Transparent
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={handleChangeDisabledToTransparent}>
                             Switch Blank to Transparent

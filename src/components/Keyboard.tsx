@@ -214,18 +214,21 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
                             if (!displayKeycode && target?.type === 'keyboard' && typeof target?.row === 'number' && typeof target?.col === 'number') {
                                 displayKeycode = getKeycodeName(layerKeymap[(target.row * MATRIX_COLS) + target.col] || 0);
                             }
-
                             return (
                                 <div className="text-sm space-y-1">
                                     <p>
                                         <span className="font-bold">Keycode:</span> {displayKeycode || "?"}
                                     </p>
-                                    <p>
-                                        <span className="font-bold">Position:</span> Row {displayRow}, Col {displayCol}
-                                    </p>
-                                    <p>
-                                        <span className="font-bold">Matrix:</span> {displayMatrix}
-                                    </p>
+                                    {(target?.row !== -1 || target?.col !== -1) && (
+                                        <>
+                                            <p>
+                                                <span className="font-bold">Position:</span> Row {displayRow}, Col {displayCol}
+                                            </p>
+                                            <p>
+                                                <span className="font-bold">Matrix:</span> {displayMatrix}
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
                             );
                         })() : (

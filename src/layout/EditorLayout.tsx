@@ -18,6 +18,7 @@ import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useChanges } from "@/hooks/useChanges";
 import { Zap } from "lucide-react";
+import { MatrixTester } from "@/components/MatrixTester";
 
 const EditorLayout = () => {
     return (
@@ -34,19 +35,24 @@ const EditorLayout = () => {
 };
 
 const EditorLayoutInner = () => {
-    const { keyboard } = useVial();
+    const { keyboard, isConnected } = useVial();
     const { selectedLayer, setSelectedLayer } = useLayer();
     const { clearSelection } = useKeyBinding();
     const { keyVariant, setKeyVariant } = useLayoutSettings();
 
     const { getSetting } = useSettings();
-    const { getPendingCount, commit } = useChanges();
+    const { getPendingCount, commit, setInstant } = useChanges();
 
     const liveUpdating = getSetting("live-updating");
+
+    React.useEffect(() => {
+        setInstant(!!liveUpdating);
+    }, [liveUpdating, setInstant]);
+
     const hasChanges = getPendingCount() > 0;
 
     const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
-    const { isMobile, state } = usePanels();
+    const { isMobile, state, activePanel } = usePanels();
 
     const primaryOffset = primarySidebar.isMobile ? undefined : primarySidebar.state === "collapsed" ? "var(--sidebar-width-icon)" : "var(--sidebar-width-base)";
     const showDetailsSidebar = !isMobile && state === "expanded";
@@ -72,14 +78,18 @@ const EditorLayoutInner = () => {
                 <LayerSelector selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
                 <div className="flex-1 overflow-auto flex items-center overflow-x-auto max-w-full">
                     <div className={cn(showDetailsSidebar && "pr-[450px]")}>
-                        <Keyboard keyboard={keyboard!} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
+                        {activePanel === "matrixtester" ? (
+                            <MatrixTester />
+                        ) : (
+                            <Keyboard keyboard={keyboard!} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
+                        )}
                     </div>
                 </div>
 
 
                 <div className="absolute bottom-9 left-[37px] flex items-center gap-6">
                     {liveUpdating ? (
-                        <div className="flex items-center gap-2 text-sm font-medium animate-in fade-in zoom-in duration-300">
+                        <div className={cn("flex items-center gap-2 text-sm font-medium animate-in fade-in zoom-in duration-300", !isConnected && "opacity-30")}>
                             <Zap className="h-4 w-4 fill-black text-black" />
                             <span>Live Updating</span>
                         </div>
@@ -87,14 +97,16 @@ const EditorLayoutInner = () => {
                         <button
                             className={cn(
                                 "h-9 rounded-full px-4 text-sm font-medium transition-all shadow-sm flex items-center gap-2",
-                                hasChanges
+                                isConnected
                                     ? "bg-black text-white hover:bg-black/90 cursor-pointer animate-in fade-in zoom-in duration-300"
                                     : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                             )}
-                            disabled={!hasChanges}
+                            disabled={!isConnected}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                commit();
+                                if (hasChanges) {
+                                    commit();
+                                }
                             }}
                         >
                             Update Changes
@@ -110,10 +122,10 @@ const EditorLayoutInner = () => {
                                     setKeyVariant(variant);
                                 }}
                                 className={cn(
-                                    "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[4px] transition-all font-semibold",
+                                    "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[4px] transition-all font-semibold border",
                                     keyVariant === variant
-                                        ? "bg-white text-black shadow-sm border border-gray-200"
-                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-300/50"
+                                        ? "bg-black text-white shadow-sm border-black"
+                                        : "text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-300/50"
                                 )}
                                 title={`Set key size to ${variant}`}
                             >
