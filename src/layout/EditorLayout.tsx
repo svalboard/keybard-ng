@@ -17,8 +17,9 @@ import { LayoutSettingsProvider, useLayoutSettings } from "@/contexts/LayoutSett
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useChanges } from "@/hooks/useChanges";
-import { Zap } from "lucide-react";
+import { Zap, Unplug } from "lucide-react";
 import { MatrixTester } from "@/components/MatrixTester";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const EditorLayout = () => {
     return (
@@ -35,7 +36,7 @@ const EditorLayout = () => {
 };
 
 const EditorLayoutInner = () => {
-    const { keyboard, isConnected } = useVial();
+    const { keyboard, isConnected, connect } = useVial();
     const { selectedLayer, setSelectedLayer } = useLayer();
     const { clearSelection } = useKeyBinding();
     const { keyVariant, setKeyVariant } = useLayoutSettings();
@@ -89,10 +90,32 @@ const EditorLayoutInner = () => {
 
                 <div className="absolute bottom-9 left-[37px] flex items-center gap-6">
                     {liveUpdating ? (
-                        <div className={cn("flex items-center gap-2 text-sm font-medium animate-in fade-in zoom-in duration-300", !isConnected && "opacity-30")}>
-                            <Zap className="h-4 w-4 fill-black text-black" />
-                            <span>Live Updating</span>
-                        </div>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div
+                                    className={cn(
+                                        "flex items-center gap-2 text-sm font-medium animate-in fade-in zoom-in duration-300",
+                                        !isConnected && "opacity-30 cursor-pointer"
+                                    )}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!isConnected) {
+                                            connect();
+                                        }
+                                    }}
+                                >
+                                    {isConnected ? (
+                                        <Zap className="h-4 w-4 fill-black text-black" />
+                                    ) : (
+                                        <Unplug className="h-4 w-4" />
+                                    )}
+                                    <span>Live Updating</span>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                                <p>{isConnected ? "Changes are Automatically Applied" : "Connect to Apply changes"}</p>
+                            </TooltipContent>
+                        </Tooltip>
                     ) : (
                         <button
                             className={cn(
