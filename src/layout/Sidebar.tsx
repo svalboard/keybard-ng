@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 // --- Constants ---
 const ICON_GUTTER_WIDTH = "w-[43px]";
 const BASE_ICON_PADDING = "pl-[13px]";
-const LOGO_ICON_PADDING = "pl-[10px]";
+const LOGO_ICON_PADDING = "group-data-[state=collapsed]:pl-[10px]";
 const MENU_ITEM_GAP_PX = 42; // Matches Gap-4 (16px) + Button Height (26px)
 const DIVIDER_HEIGHT_PX = 17; // 1px + 2*8px (my-2)
 const FLEX_GAP_PX = 16; // Gap-4
@@ -98,7 +98,7 @@ const SidebarNavItem = ({
         >
             <button type="button" onClick={(e) => { e.stopPropagation(); onClick(item); }} className="flex w-full items-center justify-start">
                 <div className={cn(ICON_GUTTER_WIDTH, "h-full flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <item.icon className="h-4 w-4 shrink-0 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:ml-[2px]" />
                 </div>
                 <span className="truncate group-data-[state=collapsed]:hidden">
                     {item.title}

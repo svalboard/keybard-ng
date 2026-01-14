@@ -1,15 +1,5 @@
 import LayersActiveIcon from "@/components/icons/LayersActive";
 import LayersDefaultIcon from "@/components/icons/LayersDefault";
-import { Ellipsis, Unplug, Zap } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useKeyBinding } from "@/contexts/KeyBindingContext";
-import { useVial } from "@/contexts/VialContext";
-import { cn } from "@/lib/utils";
-import { svalService } from "@/services/sval.service";
-import { vialService } from "@/services/vial.service";
-import { colorClasses, layerColors } from "@/utils/colors";
-import { FC, useState, useRef, useEffect } from "react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,9 +7,18 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { KEYMAP } from "@/constants/keygen";
+import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { usePanels } from "@/contexts/PanelsContext";
-
+import { useVial } from "@/contexts/VialContext";
+import { cn } from "@/lib/utils";
+import { svalService } from "@/services/sval.service";
+import { vialService } from "@/services/vial.service";
+import { colorClasses, layerColors } from "@/utils/colors";
+import { Ellipsis, Unplug, Zap } from "lucide-react";
+import { FC, useEffect, useRef, useState } from "react";
 
 interface LayerSelectorProps {
     selectedLayer: number;
@@ -264,7 +263,7 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
                     <TooltipTrigger asChild>
                         <button
                             onClick={toggleShowLayers}
-                            className="hover:bg-gray-200 p-1.5 rounded-md transition-colors mr-2 text-black flex items-center justify-center"
+                            className="hover:bg-gray-200 p-1.5 rounded-md transition-colors mr-2 text-black flex items-center justify-center cursor-pointer"
                             aria-label={showAllLayers ? "Hide Blank Layers" : "Show All Layers"}
                         >
                             {showAllLayers ? <LayersDefaultIcon className="h-5 w-5" /> : <LayersActiveIcon className="h-5 w-5" />}
@@ -326,7 +325,7 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
                                 <button
                                     key={color.name}
                                     className={cn(
-                                        "w-6 h-6 rounded-full transition-all hover:scale-110 border-2",
+                                        "w-6 h-6 cursor-pointer rounded-full transition-all hover:scale-110 border-2",
                                         (keyboard.cosmetic?.layer_colors?.[selectedLayer] === color.name) ||
                                             (!keyboard.cosmetic?.layer_colors?.[selectedLayer] && color.name === "green")
                                             ? "border-black border-3"
