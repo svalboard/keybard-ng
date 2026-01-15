@@ -1,15 +1,17 @@
 import { useState } from "react";
 
-import SidebarItemRow from "@/layout/SecondarySidebar/components/SidebarItemRow";
 import { Button } from "@/components/ui/button";
+import { useChanges } from "@/contexts/ChangesContext";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useLayer } from "@/contexts/LayerContext";
 import { useVial } from "@/contexts/VialContext";
+import SidebarItemRow from "@/layout/SecondarySidebar/components/SidebarItemRow";
 import { cn } from "@/lib/utils";
 import { svalService } from "@/services/sval.service";
 import { KeyContent } from "@/types/vial.types";
 import { hoverBackgroundClasses, hoverBorderClasses, hoverHeaderClasses } from "@/utils/colors";
 import { getKeyContents } from "@/utils/keys";
+import { updateLayerColor } from "@/utils/layers";
 
 /**
  * Valid layer modifiers supported by the UI
@@ -38,6 +40,7 @@ const LayersPanel = ({ isPicker }: Props) => {
     const { keyboard, setKeyboard } = useVial();
     const { assignKeycode } = useKeyBinding();
     const { selectedLayer } = useLayer();
+    const { queue } = useChanges();
 
     if (!keyboard) return null;
 
@@ -46,11 +49,12 @@ const LayersPanel = ({ isPicker }: Props) => {
     const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
     const hoverHeaderClass = hoverHeaderClasses[layerColorName] || hoverHeaderClasses["primary"];
 
-    const handleColorChange = (index: number, colorName: string) => {
+    const handleColorChange = async (index: number, colorName: string) => {
         if (keyboard) {
             const cosmetic = JSON.parse(JSON.stringify(keyboard.cosmetic || { layer: {}, layer_colors: {} }));
             if (!cosmetic.layer_colors) cosmetic.layer_colors = {};
             cosmetic.layer_colors[index.toString()] = colorName;
+            await updateLayerColor(keyboard, index, colorName, queue);
             setKeyboard({ ...keyboard, cosmetic });
         }
     };

@@ -1,3 +1,4 @@
+import { svalService } from "@/services/sval.service";
 import { KEYMAP } from "../constants/keygen";
 import { keyService } from "../services/key.service";
 import type { KeyboardInfo } from "../types/vial.types";
@@ -11,10 +12,10 @@ export const colorsToHsv = {
     "cyan": { hue: 106, sat: 255, val: 255 },
     "pink": { hue: 234, sat: 255, val: 255 },
     "orange": { hue: 16, sat: 255, val: 94 },
-    "yellow": { hue: 43, sat: 255, val: 255 },
+    "yellow": { hue: 35, sat: 255, val: 255 },
     "grey": { hue: 180, sat: 100, val: 50 },
     "red": { hue: 0, sat: 255, val: 255 },
-    "brown": { hue: 0, sat: 255, val: 255 },
+    "brown": { hue: 25, sat: 198, val: 127 },
     "white": { hue: 0, sat: 0, val: 255 },
 }
 
@@ -211,3 +212,27 @@ export const getKeyLabel = (
 export const getKeycodeName = (keycode: number): string => {
     return keyService.stringify(keycode);
 };
+
+export const updateLayerColor = async (
+    keyboard: KeyboardInfo,
+    layer: number,
+    selectedColor: string,
+    queue: (key: string, fn: () => Promise<void>, meta: any) => Promise<void>
+) => {
+    if (keyboard.sval_proto && keyboard.sval_proto > 0) {
+        const hsv = colorsToHsv[selectedColor as keyof typeof colorsToHsv];
+        if (hsv) {
+            await queue(
+                `layer_${layer}_color_${selectedColor}`,
+                async () => {
+                    await svalService.setLayerColor(layer, hsv.hue, hsv.sat, hsv.val);
+                },
+                {
+                    type: "layer_color",
+                    layer: layer,
+                    layerColor: selectedColor
+                }
+            );
+        }
+    }
+}

@@ -1,20 +1,22 @@
 import { DialogClose, DialogContent, DialogFooter, DialogHeader } from "@/components/ui/dialog";
-import { FC, useState, useEffect } from "react";
+import { FC, useEffect, useState } from "react";
 
 import { useVial } from "@/contexts/VialContext";
+import { useChanges } from "@/hooks/useChanges";
+import { svalService } from "@/services/sval.service";
 import { layerColors } from "@/utils/colors";
+import { updateLayerColor } from "@/utils/layers";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { svalService } from "@/services/sval.service";
-import { colorsToHsv } from "@/utils/layers";
 
 interface Props {
     layer: number;
 }
 
 const EditLayer: FC<Props> = ({ layer }) => {
-    const { keyboard, setKeyboard, isConnected } = useVial();
+    const { keyboard, setKeyboard } = useVial();
+    const { queue } = useChanges();
     const currentName = keyboard ? svalService.getLayerName(keyboard, layer) : "";
     const currentColor = keyboard?.cosmetic?.layer_colors?.[layer.toString()] || "green";
 
@@ -29,7 +31,7 @@ const EditLayer: FC<Props> = ({ layer }) => {
     useEffect(() => {
         setSelectedColor(currentColor);
     }, [currentColor]);
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (keyboard) {
             // Deep clone cosmetic to avoid shared reference issues
             const cosmetic = JSON.parse(JSON.stringify(keyboard.cosmetic || { layer: {}, layer_colors: {} }));
@@ -43,15 +45,7 @@ const EditLayer: FC<Props> = ({ layer }) => {
 
             if (selectedColor) {
                 cosmetic.layer_colors[layer.toString()] = selectedColor;
-                
-                // Sync to physical keyboard if connected and supports Svalboard protocol
-                if (isConnected && keyboard.sval_proto && keyboard.sval_proto > 0) {
-                    const hsv = colorsToHsv[selectedColor as keyof typeof colorsToHsv];
-                    if (hsv) {
-                        svalService.setLayerColor(layer, hsv.hue, hsv.sat, hsv.val)
-                            .catch(error => console.error("Failed to sync layer color to keyboard:", error));
-                    }
-                }
+                await updateLayerColor(keyboard, layer, selectedColor, queue);
             }
 
             setKeyboard({

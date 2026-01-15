@@ -13,11 +13,12 @@ import { KEYMAP } from "@/constants/keygen";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
+import { useChanges } from "@/hooks/useChanges";
 import { cn } from "@/lib/utils";
 import { svalService } from "@/services/sval.service";
 import { vialService } from "@/services/vial.service";
 import { colorClasses, layerColors } from "@/utils/colors";
-import { colorsToHsv } from "@/utils/layers";
+import { updateLayerColor } from "@/utils/layers";
 import { Ellipsis, Unplug, Zap } from "lucide-react";
 import { FC, useEffect, useRef, useState } from "react";
 
@@ -33,6 +34,7 @@ interface LayerSelectorProps {
 const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer }) => {
     const { keyboard, setKeyboard } = useVial();
     const { clearSelection } = useKeyBinding();
+    const { queue } = useChanges();
 
 
     // UI state
@@ -92,21 +94,15 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
         setIsEditing(false);
     };
 
-    const handleSetColor = (colorName: string) => {
+    const handleSetColor = async (colorName: string) => {
         if (keyboard) {
+            // Update UI immediately for responsiveness
             const cosmetic = JSON.parse(JSON.stringify(keyboard.cosmetic || { layer: {}, layer_colors: {} }));
             if (!cosmetic.layer_colors) cosmetic.layer_colors = {};
             cosmetic.layer_colors[selectedLayer.toString()] = colorName;
-            setKeyboard({ ...keyboard, cosmetic });
             
-            // Sync to physical keyboard if connected and supports Svalboard protocol
-            if (isConnected && keyboard.sval_proto && keyboard.sval_proto > 0) {
-                const hsv = colorsToHsv[colorName as keyof typeof colorsToHsv];
-                if (hsv) {
-                    svalService.setLayerColor(selectedLayer, hsv.hue, hsv.sat, hsv.val)
-                        .catch(error => console.error("Failed to sync layer color to keyboard:", error));
-                }
-            }
+            await updateLayerColor(keyboard, selectedLayer, colorName, queue);
+            setKeyboard({ ...keyboard, cosmetic });
         }
         setIsColorPickerOpen(false);
     };
