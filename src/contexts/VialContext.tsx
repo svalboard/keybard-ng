@@ -88,6 +88,13 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.warn("Failed to load QMK settings:", error);
             }
 
+            // Sync layer colors from physical keyboard to frontend (overriding cosmetics if needed)
+            try {
+                svalService.syncPhysicalColorsToCosmetic(loadedInfo);
+            } catch (error) {
+                console.warn("Failed to sync layer colors:", error);
+            }
+
             setKeyboard(loadedInfo);
             // Set loadedFrom to device product name
             const deviceName = usbInstance.getDeviceName();

@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { svalService } from "@/services/sval.service";
 import { vialService } from "@/services/vial.service";
 import { colorClasses, layerColors } from "@/utils/colors";
+import { colorsToHsv } from "@/utils/layers";
 import { Ellipsis, Unplug, Zap } from "lucide-react";
 import { FC, useEffect, useRef, useState } from "react";
 
@@ -97,6 +98,15 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
             if (!cosmetic.layer_colors) cosmetic.layer_colors = {};
             cosmetic.layer_colors[selectedLayer.toString()] = colorName;
             setKeyboard({ ...keyboard, cosmetic });
+            
+            // Sync to physical keyboard if connected and supports Svalboard protocol
+            if (isConnected && keyboard.sval_proto && keyboard.sval_proto > 0) {
+                const hsv = colorsToHsv[colorName as keyof typeof colorsToHsv];
+                if (hsv) {
+                    svalService.setLayerColor(selectedLayer, hsv.hue, hsv.sat, hsv.val)
+                        .catch(error => console.error("Failed to sync layer color to keyboard:", error));
+                }
+            }
         }
         setIsColorPickerOpen(false);
     };

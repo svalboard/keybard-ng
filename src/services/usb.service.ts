@@ -416,7 +416,6 @@ export class VialUSB {
         [dynamicCmd, i],
         options
       );
-      console.log("data", data);
       entries.push(data);
     }
     return entries;

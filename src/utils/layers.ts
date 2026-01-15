@@ -3,6 +3,21 @@ import { keyService } from "../services/key.service";
 import type { KeyboardInfo } from "../types/vial.types";
 import { getKeyContents } from "./keys";
 // Convert HSV to RGB for CSS color
+
+export const colorsToHsv = {
+    "green": { hue: 85, sat: 255, val: 255 },
+    "blue": { hue: 140, sat: 255, val: 255 },
+    "purple": { hue: 200, sat: 255, val: 255 },
+    "cyan": { hue: 106, sat: 255, val: 255 },
+    "pink": { hue: 234, sat: 255, val: 255 },
+    "orange": { hue: 16, sat: 255, val: 94 },
+    "yellow": { hue: 43, sat: 255, val: 255 },
+    "grey": { hue: 180, sat: 100, val: 50 },
+    "red": { hue: 0, sat: 255, val: 255 },
+    "brown": { hue: 0, sat: 255, val: 255 },
+    "white": { hue: 0, sat: 0, val: 255 },
+}
+
 export const hsvToRgb = (h: number, s: number, v: number): string => {
     // HSV values are typically 0-255, normalize them
     h = (h / 255) * 360; // Convert to degrees
@@ -48,6 +63,105 @@ export const hsvToRgb = (h: number, s: number, v: number): string => {
     b = Math.round((b + m) * 255);
 
     return `rgb(${r}, ${g}, ${b})`;
+};
+
+// Convert RGB hex color to HSV for comparison
+export const rgbToHsv = (hex: string): { hue: number; sat: number; val: number } => {
+    // Remove # if present
+    const cleanHex = hex.replace('#', '');
+    
+    // Convert hex to RGB
+    const r = parseInt(cleanHex.substring(0, 2), 16) / 255;
+    const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
+    const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
+    
+    // Find max, min, and delta
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const delta = max - min;
+    
+    // Calculate value
+    const val = max * 255;
+    
+    // Calculate saturation
+    const sat = max === 0 ? 0 : (delta / max) * 255;
+    
+    // Calculate hue
+    let hue = 0;
+    if (delta !== 0) {
+        if (max === r) {
+            hue = ((g - b) / delta + (g < b ? 6 : 0)) * 60;
+        } else if (max === g) {
+            hue = ((b - r) / delta + 2) * 60;
+        } else {
+            hue = ((r - g) / delta + 4) * 60;
+        }
+    }
+    
+    // Convert to 0-255 range
+    return {
+        hue: Math.round((hue / 360) * 255),
+        sat: Math.round(sat),
+        val: Math.round(val)
+    };
+};
+
+// Calculate weighted distance between two HSV colors
+export const calculateHsvDistance = (hsv1: {h: number, s: number, v: number}, hsv2: {h: number, s: number, v: number}): number => {
+    const hueWeight = 2.0; // Hue is most perceptually important
+    const satWeight = 1.0;
+    const valWeight = 1.0;
+    
+    // Handle hue wraparound (0-255 circular)
+    let hueDiff = Math.abs(hsv1.h - hsv2.h);
+    if (hueDiff > 127.5) { // More than half the circle
+        hueDiff = 255 - hueDiff;
+    }
+    
+    const satDiff = Math.abs(hsv1.s - hsv2.s);
+    const valDiff = Math.abs(hsv1.v - hsv2.v);
+    
+    return Math.sqrt(
+        Math.pow(hueWeight * hueDiff, 2) +
+        Math.pow(satWeight * satDiff, 2) +
+        Math.pow(valWeight * valDiff, 2)
+    );
+};
+
+// Threshold for color synchronization (tune based on testing)
+const COLOR_SYNC_THRESHOLD = 30;
+
+// Check if color should be synced based on threshold
+export const shouldSyncColor = (physicalHsv: {h: number, s: number, v: number}, currentFrontendColor: string): boolean => {
+    const currentHsv = colorsToHsv[currentFrontendColor as keyof typeof colorsToHsv];
+    if (!currentHsv) return true; // Always sync if current color not in mapping
+    
+    const distance = calculateHsvDistance(physicalHsv, {
+        h: currentHsv.hue,
+        s: currentHsv.sat,
+        v: currentHsv.val
+    });
+    return distance > COLOR_SYNC_THRESHOLD;
+};
+
+// Find the closest frontend color for a given HSV color
+export const findClosestFrontendColor = (physicalHsv: {h: number, s: number, v: number}): string => {
+    let closestColor = "green"; // Default fallback
+    let minDistance = Infinity;
+    
+    for (const [colorName, colorHsv] of Object.entries(colorsToHsv)) {
+        const distance = calculateHsvDistance(physicalHsv, {
+            h: colorHsv.hue,
+            s: colorHsv.sat,
+            v: colorHsv.val
+        });
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestColor = colorName;
+        }
+    }
+    
+    return closestColor;
 };
 
 // Get layer color for current layer
