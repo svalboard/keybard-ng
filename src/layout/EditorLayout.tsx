@@ -14,11 +14,11 @@ import { LayerProvider, useLayer } from "@/contexts/LayerContext";
 
 import { LayoutSettingsProvider, useLayoutSettings } from "@/contexts/LayoutSettingsContext";
 
+import { MatrixTester } from "@/components/MatrixTester";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useChanges } from "@/hooks/useChanges";
 import { Zap } from "lucide-react";
-import { MatrixTester } from "@/components/MatrixTester";
 
 const EditorLayout = () => {
     return (
@@ -122,7 +122,7 @@ const EditorLayoutInner = () => {
                                     setKeyVariant(variant);
                                 }}
                                 className={cn(
-                                    "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[4px] transition-all font-semibold border",
+                                    "px-2 py-0.5 cursor-pointer text-[10px] uppercase tracking-wide rounded-[4px] transition-all font-semibold border",
                                     keyVariant === variant
                                         ? "bg-black text-white shadow-sm border-black"
                                         : "text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-300/50"

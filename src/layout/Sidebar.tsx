@@ -185,7 +185,7 @@ const AppSidebar = () => {
                         <SidebarMenuButton asChild size="nav" className="transition-colors">
                             <button
                                 type="button"
-                                className="flex w-full items-center justify-start"
+                                className="flex w-full items-center justify-start group-data-[state=expanded]:justify-center"
                                 onClick={(e) => {
                                     e.stopPropagation();
 
