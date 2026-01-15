@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { VialService, vialService } from "../services/vial.service";
 import { svalService } from "../services/sval.service";
+import { VialService, vialService } from "../services/vial.service";
 
 import { fileService } from "../services/file.service";
 import { keyService } from "../services/key.service";
@@ -20,6 +20,7 @@ interface VialContextType {
     loadKeyboard: () => Promise<void>;
     loadFromFile: (file: File) => Promise<void>;
     updateKey: (layer: number, row: number, col: number, keymask: number) => Promise<void>;
+    updateTapDance: (tdid: number, overrideKeyboard?: KeyboardInfo) => Promise<void>;
     pollMatrix: () => Promise<boolean[][]>;
     lastHeartbeat: number;
 }
@@ -163,6 +164,20 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         [isConnected]
     );
 
+    const updateTapDance = useCallback(
+        async (tdid: number, overrideKeyboard?: KeyboardInfo) => {
+            const kbToUse = overrideKeyboard || keyboard;
+            if (!isConnected || !kbToUse) {
+                 if (!isConnected) console.warn("Not connected, skipping hardware updateTapDance");
+                 if (!isConnected) return;
+            }
+            if (kbToUse) {
+                await vialService.updateTapdance(kbToUse, tdid);
+            }
+        },
+        [isConnected, keyboard]
+    );
+
     const pollMatrix = useCallback(async () => {
         if (!keyboard || !isConnected) return [];
         const result = await vialService.pollMatrix(keyboard);
@@ -181,6 +196,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loadKeyboard,
         loadFromFile,
         updateKey,
+        updateTapDance,
         pollMatrix,
         lastHeartbeat,
     };

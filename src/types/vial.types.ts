@@ -100,7 +100,7 @@ export interface TapdanceEntry {
     hold: string;
     doubletap: string;
     taphold: string;
-    tapping_term: number;
+    tapms: number;
 }
 
 export interface KeyOverrideEntry {

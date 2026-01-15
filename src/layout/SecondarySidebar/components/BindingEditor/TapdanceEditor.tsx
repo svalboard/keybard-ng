@@ -1,19 +1,19 @@
 import { FC, useEffect, useState } from "react";
 
+import { Key } from "@/components/Key";
 import { Input } from "@/components/ui/input";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
 import { getKeyContents } from "@/utils/keys";
 import { useDebounce } from "@uidotdev/usehooks";
-import { Key } from "@/components/Key";
 
 import { Trash2 } from "lucide-react";
 
 interface Props { }
 
 const TapdanceEditor: FC<Props> = () => {
-    const { keyboard, setKeyboard } = useVial();
+    const { keyboard, setKeyboard, updateTapDance } = useVial();
     const { setPanelToGoBack, setAlternativeHeader, itemToEdit } = usePanels();
     const currTapDance = (keyboard as any).tapdances?.[itemToEdit!];
     const { selectTapdanceKey, selectedTarget } = useKeyBinding();
@@ -51,6 +51,7 @@ const TapdanceEditor: FC<Props> = () => {
             }
             (updatedKeyboard as any).tapdances = tapdances;
             setKeyboard(updatedKeyboard);
+            updateTapDance(itemToEdit, updatedKeyboard);
         }
     };
     useEffect(() => {

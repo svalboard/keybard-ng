@@ -45,7 +45,7 @@ interface KeyBindingContextType {
 const KeyBindingContext = createContext<KeyBindingContextType | undefined>(undefined);
 
 export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { keyboard, setKeyboard, updateKey } = useVial();
+    const { keyboard, setKeyboard, updateKey, updateTapDance } = useVial();
     const { queue } = useChanges();
     const [selectedTarget, setSelectedTarget] = useState<BindingTarget | null>(null);
     const [hoveredKey, setHoveredKey] = useState<BindingTarget | null>(null);
@@ -300,6 +300,7 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         changeDesc,
                         async () => {
                             console.log(`Committing tapdance change: Tapdance ${tapdanceId}, ${tapdanceSlot} → ${keycodeName}`);
+                            await updateTapDance(tapdanceId, updatedKeyboard);
                         },
                         {
                             type: "tapdance",
