@@ -227,7 +227,6 @@ export class VialUSB {
   private parseResponse(data: ArrayBuffer, options: USBSendOptions & { uint32: true; index?: undefined }): Uint32Array;
   private parseResponse(data: ArrayBuffer, options: USBSendOptions): Uint8Array;
 
-  // Implementation signature
   private parseResponse(data: ArrayBuffer, options: USBSendOptions): Uint8Array | Uint16Array | Uint32Array | number | bigint | (number | bigint)[] {
     const dv = new DataView(data);
     const u8 = new Uint8Array(data);
@@ -245,6 +244,9 @@ export class VialUSB {
       // If index is specified, return single byte; otherwise return full array
       if (options.index !== undefined) {
         return u8[options.index];
+      }
+      if (options.slice !== undefined) {
+        return u8.slice(options.slice);
       }
       return u8;
     }
@@ -281,6 +283,9 @@ export class VialUSB {
       return u32Array;
     }
 
+    if (options.slice !== undefined) {
+      return u8.slice(options.slice);
+    }
     return u8;
   }
 
