@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 
 import PlusIcon from "@/components/icons/Plus";
 import { useChanges } from "@/contexts/ChangesContext";
@@ -17,6 +17,35 @@ const MacroEditor: FC = () => {
     const { itemToEdit, setPanelToGoBack, setAlternativeHeader } = usePanels();
     const { selectComboKey: _selectComboKey, selectMacroKey, selectedTarget, clearSelection } = useKeyBinding();
     const { queue } = useChanges();
+
+    // Track dirty state and latest keyboard for saving on cleanup
+    const isDirty = useRef(false);
+    const keyboardRef = useRef(keyboard);
+    const loadedRef = useRef(false);
+
+    // Keep keyboard ref updated
+    useEffect(() => {
+        keyboardRef.current = keyboard;
+    }, [keyboard]);
+
+    // Save changes when unmounting or switching macros
+    useEffect(() => {
+        return () => {
+            if (isDirty.current && keyboardRef.current) {
+                const currentKeyboard = keyboardRef.current;
+                queue(
+                    `Update Macro ${itemToEdit}`,
+                    async () => {
+                        await vialService.updateMacros(currentKeyboard);
+                    },
+                    {
+                        type: "macro",
+                    }
+                );
+                isDirty.current = false;
+            }
+        };
+    }, [itemToEdit, queue]);
 
     useEffect(() => {
         setPanelToGoBack("macros");
@@ -47,6 +76,12 @@ const MacroEditor: FC = () => {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [selectedTarget, actions, itemToEdit, clearSelection]);
 
+    // Reset dirty state when switching to a new item
+    useEffect(() => {
+        isDirty.current = false;
+        loadedRef.current = false;
+    }, [itemToEdit]);
+
     // Load macros
     useEffect(() => {
         if (!keyboard || itemToEdit === null) return;
@@ -56,7 +91,11 @@ const MacroEditor: FC = () => {
         // Only update local state if different from keyboard state
         if (JSON.stringify(newActions) !== JSON.stringify(actions)) {
             setActions(newActions);
+            if (loadedRef.current) {
+                isDirty.current = true;
+            }
         }
+        loadedRef.current = true;
     }, [itemToEdit, keyboard]);
 
     // Manual helper to update both local state and keyboard context
@@ -80,16 +119,7 @@ const MacroEditor: FC = () => {
             actions: newActions,
         };
         setKeyboard(updatedKeyboard);
-
-        queue(
-            `Update Macro ${itemToEdit}`,
-            async () => {
-                await vialService.updateMacros(updatedKeyboard);
-            },
-            {
-                type: "macro",
-            }
-        );
+        isDirty.current = true;
     };
 
     const handleAddItem = (type: string) => {
