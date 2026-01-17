@@ -1,9 +1,11 @@
 import { FC, useEffect, useState } from "react";
 
 import PlusIcon from "@/components/icons/Plus";
+import { useChanges } from "@/contexts/ChangesContext";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
+import { vialService } from "@/services/vial.service";
 import { ArrowDown } from "lucide-react";
 import MacroEditorKey from "./MacroEditorKey";
 import MacroEditorText from "./MacroEditorText";
@@ -14,6 +16,7 @@ const MacroEditor: FC = () => {
     const { keyboard, setKeyboard } = useVial();
     const { itemToEdit, setPanelToGoBack, setAlternativeHeader } = usePanels();
     const { selectComboKey: _selectComboKey, selectMacroKey, selectedTarget, clearSelection } = useKeyBinding();
+    const { queue } = useChanges();
 
     useEffect(() => {
         setPanelToGoBack("macros");
@@ -33,7 +36,7 @@ const MacroEditor: FC = () => {
                         e.preventDefault();
                         const newActions = [...actions];
                         newActions.splice(indexToDelete, 1);
-                        setActions(newActions);
+                        updateActions(newActions); // Use updateActions to ensure queueing
                         clearSelection();
                     }
                 }
@@ -77,6 +80,16 @@ const MacroEditor: FC = () => {
             actions: newActions,
         };
         setKeyboard(updatedKeyboard);
+
+        queue(
+            `Update Macro ${itemToEdit}`,
+            async () => {
+                await vialService.updateMacros(updatedKeyboard);
+            },
+            {
+                type: "macro",
+            }
+        );
     };
 
     const handleAddItem = (type: string) => {
