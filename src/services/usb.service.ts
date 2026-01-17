@@ -1,6 +1,6 @@
 // USB HID communication layer for Vial protocol
 import type { USBSendOptions } from "../types/vial.types";
-import { BE16, LE16, MSG_LEN } from "./utils";
+import { BE16, MSG_LEN } from "./utils";
 
 export class VialUSB {
   // Via+Vial command constants
@@ -384,16 +384,22 @@ export class VialUSB {
   ): Promise<void> {
     const buffer = new Uint8Array(data);
     let offset = 0;
-    let chunkOffset = 0;
+    const chunksize = 28;
 
     while (offset < size) {
-      const chunk = new Uint8Array(MSG_LEN - 4);
-      for (let i = 0; i < chunk.length && offset < size; i++) {
-        chunk[i] = buffer[offset++];
+      let sz = chunksize;
+      if (sz > size - offset) {
+        sz = size - offset;
       }
 
-      await this.send(cmd, [...LE16(chunkOffset), ...chunk], {});
-      chunkOffset += chunk.length;
+      // Slice the actual data for this chunk
+      const chunk = buffer.slice(offset, offset + sz);
+
+      // Matches Legacy: BE16(offset), sz, ...chunk
+      // The send method will pad the rest of the 32-byte message with zeros
+      await this.send(cmd, [...BE16(offset), sz, ...chunk], {});
+
+      offset += chunksize;
     }
   }
 
