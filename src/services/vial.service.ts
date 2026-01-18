@@ -1,5 +1,5 @@
-import { KleService } from "./kle.service";
 import { keyService } from "./key.service";
+import { KleService } from "./kle.service";
 import { VialUSB, usbInstance } from "./usb.service";
 import { LE32 } from "./utils";
 
@@ -186,11 +186,7 @@ export class VialService {
                 } else {
                     protocolDataOffset = 0;
                 }
-                // console.log("Definition Protocol Offset:", protocolDataOffset);
             }
-
-            // Copy data
-            // Available data length in this chunk
             const available = data.length - protocolDataOffset;
             const toCopy = Math.min(available, sz);
 
@@ -200,29 +196,6 @@ export class VialService {
                     dstOffset += 1;
                 }
             }
-
-            // NOTE: Vial protocol usually implies 32 bytes of DATA.
-            // If echo eats 2 bytes, we validly only got 30 bytes of data.
-            // We decrement 'sz' by actual copied amount.
-            // But 'block' increments by 1.
-            // Does 'block' map to 32-byte chunks or (32-offset)-byte chunks?
-            // Standard Vial firmware uses: `offset = block * 32`. 
-            // So if we lose 2 bytes, we have HOLES in our data. 
-            // HOWEVER, if the firmware echoes, it implies it's wrapping the response.
-            // If it's wrapping, a compliant firmware should probably shift the offset or we are doomed to corruption.
-            // Let's assume for now that if Echo exists, the firmware implementation handles `memcpy(buf+2, data + block*30, 30)` logic OR
-            // we are simply missing bytes.
-            // Given the user error "XZ decompression failed", it's possible we were getting data but it was corrupt.
-            // CORRECTION: corrupted likely means "Header bytes treated as data".
-            // So stripping headers is the correct first step. 
-            // If the buffer is then "short", we just process next block.
-            // IMPORTANT: If firmware uses `block * 32`, and we only read 30 bytes, we miss 2 bytes every chunk.
-            // THIS would be catastrophic for XZ.
-            // HOPEFULLY, 'Echo' implies 'No data loss' (packet size > 32?) or 'offset logic changed'.
-            // Or maybe 'get_definition' does NOT echo, even if 'get_size' did?
-            // The heuristic above (checking XZ magic at 0) handles the "Does not echo" case.
-            // If it DOES echo, we have to assume the data at [2..] is the valid stream continuation.
-
             sz = sz - toCopy;
             block += 1;
         }
