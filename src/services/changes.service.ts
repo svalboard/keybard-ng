@@ -3,7 +3,7 @@ export interface PendingChange {
     cb: () => Promise<void>;
     timestamp: number;
     // Metadata for UI display and tracking
-    type: "key" | "macro" | "combo" | "tapdance" | "override" | "layer_color";
+    type: "key" | "macro" | "combo" | "tapdance" | "override" | "layer_color" | "settings";
     layer?: number;
     row?: number;
     col?: number;
@@ -13,6 +13,7 @@ export interface PendingChange {
     tapdanceId?: number;
     tapdanceSlot?: "tap" | "hold" | "doubletap" | "taphold";
     layerColor?: string; // For layer_color changes - store the new color name
+    settingId?: number;
     previousValue?: number | string;
 }
 

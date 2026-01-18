@@ -2,7 +2,7 @@ import { VialUSB, usbInstance } from "./usb.service";
 
 // Svalboard-specific protocol service
 
-import { hsvToRgb, shouldSyncColor, findClosestFrontendColor, calculateHsvDistance, colorsToHsv } from "@/utils/layers";
+import { calculateHsvDistance, colorsToHsv, findClosestFrontendColor, shouldSyncColor } from "@/utils/layers";
 import type { KeyboardInfo } from "../types/vial.types";
 
 export class SvalService {
@@ -69,13 +69,11 @@ export class SvalService {
                     sat: hsv[1],
                     val: hsv[2],
                 };
-                console.log("rgb", hsvToRgb(hsv[0], hsv[1], hsv[2]));
             } catch (error) {
                 // Layer might not exist, continue
                 layer_colors[i] = { hue: 0, sat: 0, val: 0 };
             }
         }
-        console.log(layer_colors);
 
         kbinfo.layer_colors = layer_colors;
     }
@@ -135,16 +133,13 @@ export class SvalService {
      */
     syncPhysicalColorsToCosmetic(keyboard: KeyboardInfo): void {
         if (!keyboard.layer_colors || !keyboard.sval_proto) {
-            console.log("Skipping color sync - no layer colors or Svalboard protocol");
             return;
         }
         
         // Initialize cosmetic if not present
         if (!keyboard.cosmetic) keyboard.cosmetic = { layer: {}, layer_colors: {} };
         if (!keyboard.cosmetic.layer_colors) keyboard.cosmetic.layer_colors = {};
-        
-        console.log("Starting layer color synchronization...");
-        
+                
         for (let layerIndex = 0; layerIndex < keyboard.layer_colors.length; layerIndex++) {
             const physicalHsvRaw = keyboard.layer_colors[layerIndex];
             const physicalHsv = {
@@ -165,7 +160,6 @@ export class SvalService {
                     s: closestHsv.sat,
                     v: closestHsv.val
                 });
-                console.log(`Layer ${layerIndex}: Synced ${currentColor} → ${closestColor} (distance: ${distance.toFixed(1)})`);
             } else {
                 const currentHsv = colorsToHsv[currentColor as keyof typeof colorsToHsv];
                 const distance = calculateHsvDistance(physicalHsv, {
@@ -173,11 +167,9 @@ export class SvalService {
                     s: currentHsv.sat,
                     v: currentHsv.val
                 });
-                console.log(`Layer ${layerIndex}: No sync needed (${currentColor} already close, distance: ${distance.toFixed(1)})`);
             }
         }
         
-        console.log("Layer color synchronization completed");
     }
 }
 
