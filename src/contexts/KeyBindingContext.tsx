@@ -285,26 +285,6 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     // Update the value
                     macros[macroId].actions[macroIndex][1] = keycodeName;
 
-                    // Queue change? Macros might be complex to queue individually if the whole macro is an object.
-                    // For now, let's just update the keyboard state, similar to how MacroEditor handles it locally, but via queue if possible.
-                    // But here we are updating one action.
-
-                    // Note: MacroEditor saves the *entire* macro object. 
-                    // To be consistent with other bindings, we should queue it.
-                    // But the backend API probably expects the full macro definiton.
-
-                    // Let's assume queue() handles this or we just setKeyboard to trigger the save in MacroEditor?
-                    // Actually, if we use queue(), we need a way to commit it.
-                    // For now, let's stick to updating the local state and letting the UI react.
-                    // However, assigning a keycode is a "user action" that should probably persist.
-
-                    // Since MacroEditor has its own persistence logic (useEffect on actions), 
-                    // simply updating 'keyboard' here might be enough IF MacroEditor picks it up.
-                    // But wait, assignKeycode calls 'updateKey' for keyboard, but for others?
-                    // It seems the queue mechanics are specific.
-
-                    // Let's just update the keyboard object for now. The generic "setKeyboard" at the end triggers React updates.
-
                     break;
                 }
 
@@ -315,26 +295,12 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     const overrides = updatedKeyboard.key_overrides;
                     if (!overrides || !overrides[overrideId]) break;
 
-                    const previousValue = overrides[overrideId][overrideSlot];
+                    // const previousValue = overrides[overrideId][overrideSlot];
                     const keycodeName = typeof keycode === "string" ? keycode : `KC_${keycode}`;
                     overrides[overrideId][overrideSlot] = keycodeName;
 
-                    // Queue the change with callback
-                    const changeDesc = `override_${overrideId}_${overrideSlot}`;
-                    queue(
-                        changeDesc,
-                        async () => {
-                            console.log(`Committing override change: Override ${overrideId}, ${overrideSlot} → ${keycodeName}`);
-                        },
-                        {
-                            type: "override",
-                            overrideId,
-                            overrideSlot,
-                            keycode: keycodeValue,
-                            previousValue,
-                        } as any
-                    );
-
+                    // Update local state only. OverrideEditor handles queueing on close.
+                    
                     break;
                 }
             }
