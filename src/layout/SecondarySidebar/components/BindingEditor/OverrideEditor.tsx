@@ -33,7 +33,7 @@ const ENABLED_BIT = 1 << 7;
 const OverrideEditor: FC<Props> = () => {
     const { keyboard, setKeyboard } = useVial();
     const { itemToEdit, setPanelToGoBack, setAlternativeHeader } = usePanels();
-    const { selectOverrideKey, selectedTarget } = useKeyBinding();
+    const { selectOverrideKey, selectedTarget, clearSelection } = useKeyBinding();
     const [activeTab, setActiveTab] = useState<TabType>("Trigger");
     const { queue } = useChanges();
 
@@ -50,6 +50,10 @@ const OverrideEditor: FC<Props> = () => {
         selectOverrideKey(overrideIndex, "trigger");
         setPanelToGoBack("overrides");
         setAlternativeHeader(true);
+
+        return () => {
+            clearSelection();
+        };
     }, []);
 
     // Keep keyboard ref updated
@@ -245,8 +249,6 @@ const OverrideEditor: FC<Props> = () => {
 
     return (
         <div className="flex flex-col gap-4 py-8 pl-[84px] pr-5 pb-4">
-            {/* Active Switch */}
-            {/* Active Toggle */}
             <div className="flex flex-row items-center gap-0.5 bg-gray-200/50 p-0.5 rounded-md border border-gray-400/50 w-fit">
                 <button
                     onClick={() => updateOption(ENABLED_BIT, true)}
