@@ -9,16 +9,14 @@ interface SidebarLogoProps {
     activePanel?: string | null;
     setActivePanel: (panel: string | null) => void;
     handleCloseDetails: () => void;
-    ICON_GUTTER_WIDTH: string;
-    LOGO_ICON_PADDING: string;
 }
 
-const SidebarLogo = ({ toggleSidebar, isCollapsed, open, activePanel, setActivePanel, handleCloseDetails, ICON_GUTTER_WIDTH, LOGO_ICON_PADDING }: SidebarLogoProps) => (
+const SidebarLogo = ({ toggleSidebar, isCollapsed, open, activePanel, setActivePanel, handleCloseDetails }: SidebarLogoProps) => (
     <SidebarMenuItem>
         <SidebarMenuButton asChild size="nav" className="transition-colors">
             <button
                 type="button"
-                className="flex w-full items-center justify-start group-data-[state=expanded]:justify-center "
+                className="flex w-full items-center justify-center group-data-[state=expanded]:justify-center "
                 onClick={(e) => {
                     e.stopPropagation();
 
@@ -37,7 +35,7 @@ const SidebarLogo = ({ toggleSidebar, isCollapsed, open, activePanel, setActiveP
                     }
                 }}
             >
-                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
+                <div className={cn("h-4 flex items-center justify-center shrink-0")}>
                     <Logo />
                 </div>
                 <span className="text-[22px] font-semibold truncate group-data-[state=collapsed]:hidden">keybard</span>
