@@ -57,7 +57,39 @@ const EditorLayoutInner = () => {
 
     const primaryOffset = primarySidebar.isMobile ? undefined : primarySidebar.state === "collapsed" ? "var(--sidebar-width-icon)" : "var(--sidebar-width-base)";
     const showDetailsSidebar = !isMobile && state === "expanded";
-    const contentOffset = showDetailsSidebar ? `calc(${primaryOffset ?? "0px"} + ${DETAIL_SIDEBAR_WIDTH})` : primaryOffset ?? undefined;
+
+    // Modification: only offset the main container by the primary sidebar. 
+    // The secondary sidebar will be handled by an internal spacer.
+    const contentOffset = primaryOffset ?? undefined;
+
+    const SCROLL_BUFFER_SIZE = 1000;
+    const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+    // Initial scroll adjustment when sidebar opens/closes using useLayoutEffect to prevent visual jumps
+    React.useLayoutEffect(() => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+
+        if (showDetailsSidebar) {
+            // Sidebar appearing: Add buffer to scroll
+            // We force the scroll immediately to hide the buffer.
+            container.scrollLeft += SCROLL_BUFFER_SIZE;
+
+            // Double-check in next frame in case layout wasn't ready
+            requestAnimationFrame(() => {
+                if (container.scrollLeft < SCROLL_BUFFER_SIZE) {
+                    container.scrollLeft += SCROLL_BUFFER_SIZE;
+                }
+            });
+        } else {
+            // Sidebar disappearing: Remove buffer
+            container.scrollLeft = Math.max(0, container.scrollLeft - SCROLL_BUFFER_SIZE);
+        }
+    }, [showDetailsSidebar]);
+
+    // Modification: We still want smooth transitions for the primary sidebar offset if needed,
+    // though the Primary Sidebar usually handles its own layout context. 
+    // The key change here is REMOVING the DETAIL_SIDEBAR_WIDTH from this calculation.
     const contentStyle = React.useMemo<React.CSSProperties>(
         () => ({
             marginLeft: contentOffset,
@@ -65,6 +97,25 @@ const EditorLayoutInner = () => {
             willChange: "margin-left",
         }),
         [contentOffset]
+    );
+
+    const spacerStyle = React.useMemo<React.CSSProperties>(
+        () => ({
+            width: showDetailsSidebar ? DETAIL_SIDEBAR_WIDTH : 0,
+            minWidth: showDetailsSidebar ? DETAIL_SIDEBAR_WIDTH : 0,
+            transition: "width 320ms cubic-bezier(0.22, 1, 0.36, 1), min-width 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+            willChange: "width, min-width",
+        }),
+        [showDetailsSidebar]
+    );
+
+    const bufferStyle = React.useMemo<React.CSSProperties>(
+        () => ({
+            width: showDetailsSidebar ? SCROLL_BUFFER_SIZE : 0,
+            minWidth: showDetailsSidebar ? SCROLL_BUFFER_SIZE : 0,
+            display: showDetailsSidebar ? 'block' : 'none', // Optimization: hide completely when not needed
+        }),
+        [showDetailsSidebar]
     );
 
     return (
@@ -76,14 +127,26 @@ const EditorLayoutInner = () => {
                 style={contentStyle}
                 onClick={() => clearSelection()}
             >
-                <LayerSelector selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
-                <div className="flex-1 overflow-auto flex items-center overflow-x-auto max-w-full">
-                    <div className={cn(showDetailsSidebar && "pr-[450px]")}>
-                        {activePanel === "matrixtester" ? (
-                            <MatrixTester />
-                        ) : (
-                            <Keyboard keyboard={keyboard!} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
-                        )}
+                <div
+                    ref={scrollContainerRef}
+                    className="flex-1 overflow-auto flex items-start overflow-x-auto max-w-full"
+                    style={{ scrollBehavior: "auto" }} // CRITICAL: Prevent smooth scrolling from interfering with layout adjustments
+                >
+                    {/* Scroll Buffer: allows scrolling 'left' (panning right) past the Sidebar */}
+                    <div className="flex-shrink-0 h-full pointer-events-none" style={bufferStyle} />
+
+                    {/* Spacer to push content when sidebar is open */}
+                    <div className="flex-shrink-0 h-full pointer-events-none" style={spacerStyle} />
+
+                    <div className={cn("flex flex-col flex-1 h-full min-h-full", showDetailsSidebar && "pr-[450px]")} style={{ paddingRight: '100vw' }}>
+                        <LayerSelector selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
+                        <div className="flex-1 flex items-center min-h-[500px] py-8">
+                            {activePanel === "matrixtester" ? (
+                                <MatrixTester />
+                            ) : (
+                                <Keyboard keyboard={keyboard!} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} />
+                            )}
+                        </div>
                     </div>
                 </div>
 
