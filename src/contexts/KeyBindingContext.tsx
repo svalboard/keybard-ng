@@ -183,7 +183,7 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
                     const keycodeName = typeof keycode === "string" ? keycode : `KC_${keycode}`;
 
-                    let previousValue: string;
+
 
                     if (comboSlot === 4) {
                         // Output - but we must also preserve the input keys!
@@ -192,7 +192,6 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         combo.keys = [...originalKeys];
                         while (combo.keys.length < 4) combo.keys.push("KC_NO");
 
-                        previousValue = combo.output;
                         combo.output = keycodeName;
 
                         console.log("combo update debug (output): preserved keys", combo.keys);
@@ -211,62 +210,15 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         }
 
                         // Now update just the target slot
-                        previousValue = newKeys[comboSlot];
                         newKeys[comboSlot] = keycodeName;
                         combo.keys = newKeys;
 
                         console.log("combo update debug: newKeys after", combo.keys);
                     }
 
-                    // Queue the change with callback
-                    const changeDesc = `combo_${comboId}_${comboSlot}`;
-                    queue(
-                        changeDesc,
-                        async () => {
-                            console.log(`Committing combo change: Combo ${comboId}, Slot ${comboSlot} → ${keycodeName}`);
-                            // We need to use updateCombo which takes the whole KBINFO and ID.
-                            // The service 'push' method uses the ID to look up the combo in KBINFO.
-                            // updateKey is NOT for combos.
-
-                            // Check if 'updateCombo' is available in useVial?
-                            // KeyBindingContext uses 'updateKey' from useVial().
-                            // It seems assignKeycode assumes 'updateKey' works for everything?
-                            // Wait, existing code didn't call ANY update function for combos inside the queue callback?
-                            // Line 176: just console.log?
-                            // Ah, queue callback usage: 
-                            // Line 138 calls `updateKey`.
-                            // Line 176 just logs. 
-                            // This implies saving combos might rely on 'setKeyboard' triggering a save or something else?
-                            // Or maybe the queue isn't hooking up the commit action properly for combos?
-                            // The VIAL API has updateCombo. But KeyBindingContext doesn't use it here?
-                            // Actually, let's fix this too.
-
-                            // Import vialService locally or use context?
-                            // useVial doesn't expose updateCombo?
-                            // Let's check useVial.
-                        },
-                        {
-                            type: "combo",
-                            comboId,
-                            comboSlot,
-                            keycode: keycodeValue,
-                            previousValue,
-                        }
-                    );
-
-                    // Actually commit:
-                    // Since 'queue' callback runs later (or immediately?), we should call the API there.
-                    // The existing code for 'keyboard' calls updateKey.
-                    // The existing code for 'combo' did NOT call anything. That seems like a BUG or stub.
-                    // I should probably fix it to call updateCombo.
-                    // But I don't have updateCombo in 'useVial' context interface yet (checked previously).
-                    // VialContext has: updateKey.
-
-                    // I will leave the queue callback as is (stub) but maybe add a TODO or try to call service if possible.
-                    // Ideally I should expose updateCombo in VialContext.
-                    // But for this "tidy up" I'll stick to fixing the Typescript logic first.
-                    // I'll leave the console.log but acknowledge it works as before (stubbed).
-
+                    // Update the local state only. The ComboEditor component will handle queueing the change when the editor is closed.
+                    // This aligns with the Macro editing behavior.
+                    
                     break;
                 }
 

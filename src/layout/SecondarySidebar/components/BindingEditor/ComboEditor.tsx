@@ -1,14 +1,14 @@
-import { FC, useEffect, useRef } from "react";
-
+import { Key } from "@/components/Key";
+import { useChanges } from "@/contexts/ChangesContext";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
+import { useLayer } from "@/contexts/LayerContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
+import { vialService } from "@/services/vial.service";
+import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
 import { getKeyContents } from "@/utils/keys";
 import { ArrowRight, Trash2 } from "lucide-react";
-import { Key } from "@/components/Key";
-
-import { useLayer } from "@/contexts/LayerContext";
-import { hoverBackgroundClasses, hoverBorderClasses } from "@/utils/colors";
+import { FC, useEffect, useRef } from "react";
 
 interface Props { }
 
@@ -17,20 +17,94 @@ const ComboEditor: FC<Props> = () => {
     const { setPanelToGoBack, setAlternativeHeader, itemToEdit } = usePanels();
     const { selectComboKey, selectedTarget, assignKeycode } = useKeyBinding();
     const { selectedLayer } = useLayer();
+    const { queue } = useChanges();
     const hasAutoSelected = useRef(false);
+
+    // Track dirty state and latest keyboard for saving on cleanup
+    const isDirty = useRef(false);
+    const keyboardRef = useRef(keyboard);
+    // Track the current combo content stringified to detect real changes
+    const lastComboStringCheck = useRef<string>("");
 
     const layerColorName = keyboard?.cosmetic?.layer_colors?.[selectedLayer] || "primary";
     const hoverBorderColor = hoverBorderClasses[layerColorName] || hoverBorderClasses["primary"];
     const hoverBackgroundColor = hoverBackgroundClasses[layerColorName] || hoverBackgroundClasses["primary"];
 
     const currCombo = (keyboard as any).combos?.[itemToEdit!] as import("@/types/vial.types").ComboEntry;
+    
+    // Safely handle potentially undefined keys or just fill with KC_NO
+    const comboKeys = currCombo?.keys || ["KC_NO", "KC_NO", "KC_NO", "KC_NO"];
+    
     const keys = {
-        0: getKeyContents(keyboard!, currCombo.keys[0]),
-        1: getKeyContents(keyboard!, currCombo.keys[1]),
-        2: getKeyContents(keyboard!, currCombo.keys[2]),
-        3: getKeyContents(keyboard!, currCombo.keys[3]),
-        4: getKeyContents(keyboard!, currCombo.output),
+        0: getKeyContents(keyboard!, comboKeys[0] || "KC_NO"),
+        1: getKeyContents(keyboard!, comboKeys[1] || "KC_NO"),
+        2: getKeyContents(keyboard!, comboKeys[2] || "KC_NO"),
+        3: getKeyContents(keyboard!, comboKeys[3] || "KC_NO"),
+        4: getKeyContents(keyboard!, currCombo?.output || "KC_NO"),
     };
+
+    // Keep keyboard ref updated
+    useEffect(() => {
+        keyboardRef.current = keyboard;
+        
+        // Check if combo actually changed to set dirty flag
+        if (itemToEdit !== null && currCombo) {
+            const currentString = JSON.stringify({
+                keys: comboKeys,
+                output: currCombo.output
+            });
+            
+            // If we have a previous check and it's different, marks as dirty
+            if (lastComboStringCheck.current && lastComboStringCheck.current !== currentString) {
+                console.log("Combo changed, marking dirty", currentString);
+                isDirty.current = true;
+            }
+            
+            lastComboStringCheck.current = currentString;
+        }
+    }, [keyboard, itemToEdit, currCombo]);
+    
+    // Reset dirty state when switching items
+    useEffect(() => {
+        isDirty.current = false;
+        lastComboStringCheck.current = ""; // Reset check string
+        
+        // Load initial state string if possible
+        if (itemToEdit !== null && keyboardRef.current) {
+             const kb = keyboardRef.current as any;
+             const c = kb.combos?.[itemToEdit];
+             if (c) {
+                lastComboStringCheck.current = JSON.stringify({
+                    keys: c.keys,
+                    output: c.output
+                });
+             }
+        }
+    }, [itemToEdit]);
+
+    // Save changes when unmounting or switching
+    useEffect(() => {
+        return () => {
+            if (isDirty.current && keyboardRef.current && itemToEdit !== null) {
+                const currentKeyboard = keyboardRef.current;
+                const dirtyId = itemToEdit;
+                console.log("Queueing combo update for ID", dirtyId);
+                
+                queue(
+                    `Update Combo ${dirtyId}`,
+                    async () => {
+                        console.log(`Executing queued combo update for ${dirtyId}`);
+                        await vialService.updateCombo(currentKeyboard, dirtyId);
+                    },
+                    {
+                        type: "combo",
+                        comboId: dirtyId
+                    }
+                );
+                isDirty.current = false;
+            }
+        };
+    }, [itemToEdit, queue]);
 
     // Check if a specific combo slot is selected
     const isSlotSelected = (slot: number) => {
