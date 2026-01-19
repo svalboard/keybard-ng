@@ -11,6 +11,10 @@ export interface DragItem {
     height?: number;
     component?: "Key" | "EditorKey";
     props?: any;
+    // For main keys, we need coordinates to perform swap
+    row?: number;
+    col?: number;
+    layer?: number;
 }
 
 interface DragContextType {

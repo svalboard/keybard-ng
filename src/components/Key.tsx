@@ -17,6 +17,7 @@ interface KeyProps {
     label: string; // Display label for the key
     row: number; // Matrix row
     col: number; // Matrix column
+    layerIndex?: number; // Explicit layer index (for dragging/swapping)
     selected?: boolean;
     onClick?: (row: number, col: number) => void;
     keyContents?: KeyContent; // Additional key contents info
@@ -44,6 +45,7 @@ export const Key: React.FC<KeyProps> = ({
     label,
     row,
     col,
+    layerIndex = 0,
     layerColor = "primary",
     selected = false,
     onClick,
@@ -60,7 +62,7 @@ export const Key: React.FC<KeyProps> = ({
     const isSmall = variant === "small";
     const isMedium = variant === "medium";
     const currentUnitSize = isSmall ? 30 : isMedium ? 45 : UNIT_SIZE;
-    const { setHoveredKey, assignKeycode, selectKeyboardKey } = useKeyBinding();
+    const { setHoveredKey, assignKeycode, selectKeyboardKey, swapKeys } = useKeyBinding();
 
     // Drag and Drop Logic
     const { startDrag, dragSourceId, isDragging, draggedItem } = useDrag();
@@ -72,7 +74,8 @@ export const Key: React.FC<KeyProps> = ({
     const isDragSource = dragSourceId === uniqueId;
 
     // Can this key be a drag source? (Only sidebar keys / relative keys)
-    const canDrag = isRelative; // Assuming isRelative implies sidebar/panel key
+    // Update: Main keys can also be drag sources now (for swapping)
+    const canDrag = true;
 
     // Can this key be a drop target? (Only main keyboard keys)
     const canDrop = !isRelative && isDragging;
@@ -88,28 +91,7 @@ export const Key: React.FC<KeyProps> = ({
         if (canDrop) {
             setIsDragHover(true);
             // Auto-select the key under the drag to ensure assignment works
-            // This is "selecting" it for binding, effectively
-            selectKeyboardKey(parseInt(layerColor) || 0, row, col); // layerColor is string '0', '1' etc? or 'primary'?
-            // layerColor usually maps to a name, but Key component doesn't explicitly get layer index maybe?
-            // Props has 'layerColor', but not 'layerIndex'?
-            // Ah, Key props: x, y, ..., row, col, layerColor.
-            // Where do we get the actual layer number?
-            // Usually Key is rendered by Keyboard which has `selectedLayer`.
-            // But Key doesn't receive `layer` index.
-            // Wait, we need the layer index to select it.
-            // Let's assume the Key is on the *active* layer if it's visible?
-            // Or maybe use a context for current layer if possible? 
-            // In Keyboard.tsx it calls Key.
-            // We can't easily get layer index here if not passed.
-            // BUT, `onClick` calls `onClick(row, col)`. 
-            // `onClick` in Keyboard.tsx does `selectKeyboardKey(selectedLayer, r, c)`.
-            // So we should mimic that if we can.
-            // Key doesn't access selectKeyboardKey directly usually, it calls onClick.
-            // BUT here we are inside Key.
-            // If we have `onClick` prop, maybe we can just call it?
-            // But `onClick` expects a click event or just row/col?
-            // Key.tsx: onClick: (row: number, col: number) => void;
-            // So we can call onClick(row, col) to trigger selection!
+            selectKeyboardKey(layerIndex, row, col);
             if (onClick) onClick(row, col);
         }
 
@@ -167,14 +149,14 @@ export const Key: React.FC<KeyProps> = ({
                         keyContents,
                         isRelative: true, // Treat as relative for positioning in overlay
                         variant,
-                        className: "", // Reset positioning classes if any?
-                        // We want it to look like the source, so maybe keep some classes but remove absolute positioning ones?
-                        // Key component handles isRelative by not using absolute.
-                        // We might want to clear selection or specific source styles?
-                        // Use default style (not selected, not drag source)
+                        className: "",
                         selected: false,
-                        disableHover: true, // Don't trigger hover logic in ghost
-                    }
+                        disableHover: true,
+                    },
+                    // Add coords for swap logic if this is a main key
+                    row: isRelative ? undefined : row,
+                    col: isRelative ? undefined : col,
+                    layer: isRelative ? undefined : layerIndex
                 }, {
                     clientX: moveEvent.clientX,
                     clientY: moveEvent.clientY,
@@ -201,7 +183,24 @@ export const Key: React.FC<KeyProps> = ({
         if (canDrop && isDragHover && draggedItem) {
             // Drop Action
             console.log("Dropping", draggedItem, "onto", keycode);
-            assignKeycode(draggedItem.keycode);
+
+            // Swap Logic: If the dragged item is a main key, update IT with current key's code
+            if (draggedItem.row !== undefined && draggedItem.col !== undefined && draggedItem.layer !== undefined) {
+                // Check if it's the SAME key to avoid self-overwrite issues (though usually fine)
+                if (draggedItem.row === row && draggedItem.col === col && draggedItem.layer === layerIndex) {
+                    // Same key - do nothing (drag released on self)
+                } else {
+                    console.log("Swapping keys atomically");
+                    swapKeys(
+                        { type: "keyboard", row: draggedItem.row, col: draggedItem.col, layer: draggedItem.layer },
+                        { type: "keyboard", row, col, layer: layerIndex }
+                    );
+                }
+            } else {
+                // Standard assignment (Panel Element -> Keyboard Key)
+                assignKeycode(draggedItem.keycode);
+            }
+
             setIsDragHover(false); // Reset hover state
         }
     };

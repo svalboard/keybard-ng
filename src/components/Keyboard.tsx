@@ -176,6 +176,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
                             hoverBorderColor={keyHoverBorder}
                             hoverLayerColor={keyHoverLayerColor}
                             variant={keyVariant}
+                            layerIndex={selectedLayer}
                         />
                     );
                 })}
