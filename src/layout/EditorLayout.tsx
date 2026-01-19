@@ -1,7 +1,11 @@
 import * as React from "react";
 
+
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { PanelsProvider, usePanels } from "@/contexts/PanelsContext";
+import { DragProvider } from "@/contexts/DragContext";
+import { DragOverlay } from "@/components/DragOverlay";
+
 import SecondarySidebar from "./SecondarySidebar/SecondarySidebar";
 
 import { Keyboard } from "@/components/Keyboard";
@@ -35,7 +39,10 @@ const EditorLayout = () => {
             <PanelsProvider>
                 <LayoutSettingsProvider>
                     <LayerProvider>
-                        <EditorLayoutInner />
+                        <DragProvider>
+                            <EditorLayoutInner />
+                            <DragOverlay />
+                        </DragProvider>
                     </LayerProvider>
                 </LayoutSettingsProvider>
             </PanelsProvider>

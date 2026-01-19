@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
+import { useDrag } from "@/contexts/DragContext";
 import { showModMask } from "@/utils/keys";
 import { colorClasses, hoverContainerTextClasses } from "@/utils/colors";
 import { UNIT_SIZE } from "../constants/svalboard-layout";
@@ -59,8 +60,22 @@ export const Key: React.FC<KeyProps> = ({
     const isSmall = variant === "small";
     const isMedium = variant === "medium";
     const currentUnitSize = isSmall ? 30 : isMedium ? 45 : UNIT_SIZE;
-    const { setHoveredKey } = useKeyBinding();
+    const { setHoveredKey, assignKeycode, selectKeyboardKey } = useKeyBinding();
 
+    // Drag and Drop Logic
+    const { startDrag, dragSourceId, isDragging, draggedItem } = useDrag();
+    const uniqueId = React.useId();
+    const startPosRef = React.useRef<{ x: number, y: number } | null>(null);
+    const [isDragHover, setIsDragHover] = React.useState(false);
+
+    // Is this key the one being dragged?
+    const isDragSource = dragSourceId === uniqueId;
+
+    // Can this key be a drag source? (Only sidebar keys / relative keys)
+    const canDrag = isRelative; // Assuming isRelative implies sidebar/panel key
+
+    // Can this key be a drop target? (Only main keyboard keys)
+    const canDrop = !isRelative && isDragging;
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -70,6 +85,34 @@ export const Key: React.FC<KeyProps> = ({
     };
 
     const handleMouseEnter = () => {
+        if (canDrop) {
+            setIsDragHover(true);
+            // Auto-select the key under the drag to ensure assignment works
+            // This is "selecting" it for binding, effectively
+            selectKeyboardKey(parseInt(layerColor) || 0, row, col); // layerColor is string '0', '1' etc? or 'primary'?
+            // layerColor usually maps to a name, but Key component doesn't explicitly get layer index maybe?
+            // Props has 'layerColor', but not 'layerIndex'?
+            // Ah, Key props: x, y, ..., row, col, layerColor.
+            // Where do we get the actual layer number?
+            // Usually Key is rendered by Keyboard which has `selectedLayer`.
+            // But Key doesn't receive `layer` index.
+            // Wait, we need the layer index to select it.
+            // Let's assume the Key is on the *active* layer if it's visible?
+            // Or maybe use a context for current layer if possible? 
+            // In Keyboard.tsx it calls Key.
+            // We can't easily get layer index here if not passed.
+            // BUT, `onClick` calls `onClick(row, col)`. 
+            // `onClick` in Keyboard.tsx does `selectKeyboardKey(selectedLayer, r, c)`.
+            // So we should mimic that if we can.
+            // Key doesn't access selectKeyboardKey directly usually, it calls onClick.
+            // BUT here we are inside Key.
+            // If we have `onClick` prop, maybe we can just call it?
+            // But `onClick` expects a click event or just row/col?
+            // Key.tsx: onClick: (row: number, col: number) => void;
+            // So we can call onClick(row, col) to trigger selection!
+            if (onClick) onClick(row, col);
+        }
+
         if (disableHover) return;
         setHoveredKey({
             type: "keyboard",
@@ -81,10 +124,87 @@ export const Key: React.FC<KeyProps> = ({
     };
 
     const handleMouseLeave = () => {
+        if (canDrop) {
+            setIsDragHover(false);
+        }
+
         if (disableHover) return;
         setHoveredKey(null);
     };
 
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (!canDrag || e.button !== 0) return;
+
+        startPosRef.current = { x: e.clientX, y: e.clientY };
+
+        const checkDrag = (moveEvent: MouseEvent) => {
+            const start = startPosRef.current;
+            if (!start) return;
+
+            const dx = moveEvent.clientX - start.x;
+            const dy = moveEvent.clientY - start.y;
+
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                startDrag({
+                    keycode: keycode,
+                    label: label || displayLabel || keycode,
+                    type: keyContents?.type || "keyboard",
+                    extra: keyContents,
+                    sourceId: uniqueId,
+                    width: w * currentUnitSize,
+                    height: h * currentUnitSize,
+                    component: "Key",
+                    props: {
+                        x: 0, // Relative to overlay
+                        y: 0,
+                        w,
+                        h,
+                        keycode,
+                        label,
+                        row,
+                        col,
+                        layerColor,
+                        keyContents,
+                        isRelative: true, // Treat as relative for positioning in overlay
+                        variant,
+                        className: "", // Reset positioning classes if any?
+                        // We want it to look like the source, so maybe keep some classes but remove absolute positioning ones?
+                        // Key component handles isRelative by not using absolute.
+                        // We might want to clear selection or specific source styles?
+                        // Use default style (not selected, not drag source)
+                        selected: false,
+                        disableHover: true, // Don't trigger hover logic in ghost
+                    }
+                }, {
+                    clientX: moveEvent.clientX,
+                    clientY: moveEvent.clientY,
+                } as any);
+                cleanup();
+            }
+        };
+
+        const handleUp = () => {
+            cleanup();
+        };
+
+        const cleanup = () => {
+            startPosRef.current = null;
+            window.removeEventListener("mousemove", checkDrag);
+            window.removeEventListener("mouseup", handleUp);
+        };
+
+        window.addEventListener("mousemove", checkDrag);
+        window.addEventListener("mouseup", handleUp);
+    };
+
+    const handleMouseUp = () => {
+        if (canDrop && isDragHover && draggedItem) {
+            // Drop Action
+            console.log("Dropping", draggedItem, "onto", keycode);
+            assignKeycode(draggedItem.keycode);
+            setIsDragHover(false); // Reset hover state
+        }
+    };
 
     // Style for positioning and dimensions
     const boxStyle: React.CSSProperties = {
@@ -171,15 +291,19 @@ export const Key: React.FC<KeyProps> = ({
         "flex flex-col items-center justify-between cursor-pointer transition-all duration-200 ease-in-out uppercase group overflow-hidden",
         !isRelative && "absolute",
         isSmall ? "rounded-[5px] border" : isMedium ? "rounded-[5px] border-2" : "rounded-md border-2",
-        selected
+        // Conditional Styling for Drop Target (Red) and Drag Source (Blue/Fade)
+        (selected || isDragHover)
             ? "bg-red-500 text-white border-kb-gray"
-            : cn(
-                colorClass,
-                "border-kb-gray",
-                !disableHover && (hoverBorderColor || "hover:border-red-500"),
-                !disableHover && hoverBackgroundColor,
-                !disableHover && hoverContainerTextClass
-            ),
+            : isDragSource
+                ? "bg-blue-500/35 border-blue-500 text-transparent opacity-65"
+                : cn(
+                    colorClass,
+                    "border-kb-gray",
+                    !disableHover && (hoverBorderColor || "hover:border-red-500"),
+                    !disableHover && hoverBackgroundColor,
+                    !disableHover && hoverContainerTextClass
+                ),
+        "select-none", // Prevent text selection
         className
     );
 
@@ -193,6 +317,8 @@ export const Key: React.FC<KeyProps> = ({
                 onClick={handleClick}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
                 title={keycode}
             >
                 <span className={cn(
@@ -207,7 +333,7 @@ export const Key: React.FC<KeyProps> = ({
                 <div className={cn("flex flex-row h-full w-full items-center justify-center", isSmall ? "gap-1" : isMedium ? "gap-1.5" : "gap-2")}>
                     <div className={cn(
                         "text-center justify-center items-center flex font-semibold",
-                        isSmall ? "text-[13px]" : isMedium ? "text-[14px]" : (layerIndex.length === 1 ? "text-[16px]" : "text-[15px]")
+                        isSmall ? "text-[13px]" : (isMedium || layerIndex.length > 1) ? "text-[14px]" : "text-[16px]"
                     )}>
                         {layerIndex}
                     </div>
@@ -225,6 +351,8 @@ export const Key: React.FC<KeyProps> = ({
             onClick={handleClick}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
             title={keycode}
         >
             {topLabel && (
