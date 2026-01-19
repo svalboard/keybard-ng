@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { PanelsProvider, usePanels } from "@/contexts/PanelsContext";
-import SecondarySidebar, { DETAIL_SIDEBAR_WIDTH } from "./SecondarySidebar/SecondarySidebar";
+import SecondarySidebar from "./SecondarySidebar/SecondarySidebar";
 
 import { Keyboard } from "@/components/Keyboard";
 import { useVial } from "@/contexts/VialContext";
@@ -11,15 +11,22 @@ import LayerSelector from "./LayerSelector";
 import AppSidebar from "./Sidebar";
 
 import { LayerProvider, useLayer } from "@/contexts/LayerContext";
-
 import { LayoutSettingsProvider, useLayoutSettings } from "@/contexts/LayoutSettingsContext";
-
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useChanges } from "@/hooks/useChanges";
-import { Zap, Unplug } from "lucide-react";
 import { MatrixTester } from "@/components/MatrixTester";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+import { SidebarShield } from "./components/SidebarShield";
+import { BottomToolbar } from "./components/BottomToolbar";
+import {
+    DETAIL_SIDEBAR_WIDTH,
+    LAYOUT_TRANSITION_CURVE,
+    LAYOUT_TRANSITION_DURATION,
+    PANEL_PADDING_X,
+    PANELS_SUPPORTING_PICKER,
+    SCROLL_BUFFER_SIZE
+} from "./layout.constants";
 
 const EditorLayout = () => {
     return (
@@ -36,79 +43,66 @@ const EditorLayout = () => {
 };
 
 const EditorLayoutInner = () => {
+    // --- Context Hooks ---
     const { keyboard, isConnected, connect } = useVial();
     const { selectedLayer, setSelectedLayer } = useLayer();
     const { clearSelection } = useKeyBinding();
     const { keyVariant, setKeyVariant } = useLayoutSettings();
-
     const { getSetting } = useSettings();
     const { getPendingCount, commit, setInstant } = useChanges();
+    const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
+    const { isMobile, state, activePanel, itemToEdit } = usePanels();
 
+    // --- State & Settings ---
     const liveUpdating = getSetting("live-updating");
+    const hasChanges = getPendingCount() > 0;
 
     React.useEffect(() => {
         setInstant(!!liveUpdating);
     }, [liveUpdating, setInstant]);
 
-    const hasChanges = getPendingCount() > 0;
+    // --- Layout Calculations ---
+    const primaryOffset = primarySidebar.isMobile
+        ? undefined
+        : primarySidebar.state === "collapsed" ? "56px" : "calc(var(--sidebar-width-base) + 8px)";
 
-    const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
-    const { isMobile, state, activePanel } = usePanels();
-
-    const primaryOffset = primarySidebar.isMobile ? undefined : primarySidebar.state === "collapsed" ? "56px" : "calc(var(--sidebar-width-base) + 8px)";
     const showDetailsSidebar = !isMobile && state === "expanded" && !!activePanel;
+    const showPicker = itemToEdit !== null && (PANELS_SUPPORTING_PICKER as readonly string[]).includes(activePanel || "");
 
-    // Modification: only offset the main container by the primary sidebar. 
-    // The secondary sidebar will be handled by an internal spacer.
-    const contentOffset = primaryOffset ?? undefined;
-
-    const SCROLL_BUFFER_SIZE = 1000;
+    // --- Scroll Management ---
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
     const animationRef = React.useRef<number | null>(null);
 
-    // Identify if the key picker / editor is open (which hides keys)
-    const { itemToEdit } = usePanels();
-    const showPicker = itemToEdit !== null && ["tapdances", "combos", "macros", "overrides"].includes(activePanel || "");
-
-    // Initial scroll adjustment when picker opens/closes using useLayoutEffect to prevent visual jumps
+    // Initial scroll adjustment when picker opens/closes to prevent visual jumps
     React.useLayoutEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
-        // Cancel any existing animation
         if (animationRef.current !== null) {
             cancelAnimationFrame(animationRef.current);
             animationRef.current = null;
         }
 
         if (showPicker) {
-            // Picker appearing: Add buffer to scroll
-            // We force the scroll immediately to hide the buffer.
             container.scrollLeft += SCROLL_BUFFER_SIZE;
-
-            // Double-check in next frame in case layout wasn't ready
             requestAnimationFrame(() => {
                 if (container.scrollLeft < SCROLL_BUFFER_SIZE) {
                     container.scrollLeft += SCROLL_BUFFER_SIZE;
                 }
             });
         } else {
-            // Picker disappearing: ANIMATE back to position
             const startScroll = container.scrollLeft;
             const targetScroll = Math.max(0, startScroll - SCROLL_BUFFER_SIZE);
 
             if (startScroll === targetScroll) return;
 
-            const duration = 320;
+            const duration = parseInt(LAYOUT_TRANSITION_DURATION);
             const startTime = performance.now();
 
             const animate = (time: number) => {
                 const elapsed = time - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-
-                // cubic-bezier(0.22, 1, 0.36, 1) approximation
-                // This is a "Out Quart" or similar - very fast start, slow end.
-                const ease = 1 - Math.pow(1 - progress, 4);
+                const ease = 1 - Math.pow(1 - progress, 4); // Quart-Out
 
                 container.scrollLeft = startScroll + (targetScroll - startScroll) * ease;
 
@@ -122,69 +116,62 @@ const EditorLayoutInner = () => {
         }
 
         return () => {
-            if (animationRef.current !== null) {
-                cancelAnimationFrame(animationRef.current);
-            }
+            if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
         };
     }, [showPicker]);
 
-    // Modification: We still want smooth transitions for the primary sidebar offset if needed,
-    // though the Primary Sidebar usually handles its own layout context. 
-    // The key change here is REMOVING the DETAIL_SIDEBAR_WIDTH from this calculation.
+    // --- Styles & Transitions ---
+    const sharedTransition = `320ms ${LAYOUT_TRANSITION_CURVE}`;
+
     const contentStyle = React.useMemo<React.CSSProperties>(
         () => ({
-            marginLeft: contentOffset,
-            transition: "margin-left 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+            marginLeft: primaryOffset,
+            transition: `margin-left ${sharedTransition}`,
             willChange: "margin-left",
         }),
-        [contentOffset]
+        [primaryOffset, sharedTransition]
     );
 
     const spacerStyle = React.useMemo<React.CSSProperties>(
         () => ({
-            width: showDetailsSidebar ? `calc(${DETAIL_SIDEBAR_WIDTH} + 1.5rem)` : 0,
-            minWidth: showDetailsSidebar ? `calc(${DETAIL_SIDEBAR_WIDTH} + 1.5rem)` : 0,
-            transition: "width 320ms cubic-bezier(0.22, 1, 0.36, 1), min-width 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+            width: showDetailsSidebar ? `calc(${DETAIL_SIDEBAR_WIDTH} + ${PANEL_PADDING_X})` : 0,
+            minWidth: showDetailsSidebar ? `calc(${DETAIL_SIDEBAR_WIDTH} + ${PANEL_PADDING_X})` : 0,
+            transition: `width ${sharedTransition}, min-width ${sharedTransition}`,
             willChange: "width, min-width",
         }),
-        [showDetailsSidebar]
+        [showDetailsSidebar, sharedTransition]
     );
 
     const bufferStyle = React.useMemo<React.CSSProperties>(
         () => ({
             width: showPicker ? SCROLL_BUFFER_SIZE : 0,
             minWidth: showPicker ? SCROLL_BUFFER_SIZE : 0,
-            // We keep it visible during transition, but hide it if fully closed and not showPicker
             visibility: showPicker || animationRef.current !== null ? 'visible' : 'hidden',
-            transition: showPicker ? "none" : "width 320ms cubic-bezier(0.22, 1, 0.36, 1), min-width 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+            transition: showPicker ? "none" : `width ${sharedTransition}, min-width ${sharedTransition}`,
             willChange: "width, min-width",
         }),
-        [showPicker]
+        [showPicker, sharedTransition]
     );
 
     const bottomUiStyle = React.useMemo<React.CSSProperties>(
         () => ({
-            transform: showDetailsSidebar ? `translateX(calc(${DETAIL_SIDEBAR_WIDTH} + 1.5rem))` : "translateX(0)",
-            transition: "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+            transform: showDetailsSidebar ? `translateX(calc(${DETAIL_SIDEBAR_WIDTH} + ${PANEL_PADDING_X}))` : "translateX(0)",
+            transition: `transform ${sharedTransition}`,
             willChange: "transform",
         }),
-        [showDetailsSidebar]
+        [showDetailsSidebar, sharedTransition]
     );
 
     return (
         <div className={cn("flex h-screen max-w-screen p-0", showDetailsSidebar ? "bg-white" : "bg-kb-gray")}>
-            {/* Global Sidebar Shield: Unified 320ms transition to perfectly sync with the panel and workspace opening */}
-            <div
-                className={cn(
-                    "fixed inset-y-0 left-0 bg-white z-10 transition-all duration-320 ease-in-out",
-                    (showDetailsSidebar || showPicker)
-                        ? "translate-x-0"
-                        : "-translate-x-full"
-                )}
-                style={{ width: `calc(${primaryOffset} + 8px)` }}
+            <SidebarShield
+                isVisible={showDetailsSidebar || showPicker}
+                primaryOffset={primaryOffset}
             />
+
             <AppSidebar />
             <SecondarySidebar />
+
             <div
                 className="relative flex-1 px-4 h-screen max-h-screen flex flex-col max-w-full w-full overflow-hidden bg-kb-gray border-none"
                 style={contentStyle}
@@ -193,12 +180,9 @@ const EditorLayoutInner = () => {
                 <div
                     ref={scrollContainerRef}
                     className="flex-1 overflow-auto flex items-start overflow-x-auto max-w-full"
-                    style={{ scrollBehavior: "auto" }} // CRITICAL: Prevent smooth scrolling from interfering with layout adjustments
+                    style={{ scrollBehavior: "auto" }}
                 >
-                    {/* Scroll Buffer: allows scrolling 'left' (panning right) past the Sidebar */}
                     <div className="flex-shrink-0 h-full pointer-events-none" style={bufferStyle} />
-
-                    {/* Spacer to push content when sidebar is open */}
                     <div className="flex-shrink-0 h-full pointer-events-none" style={spacerStyle} />
 
                     <div className={cn("flex flex-col flex-1 h-full min-h-full", showDetailsSidebar && "pr-[450px]")} style={{ paddingRight: '100vw' }}>
@@ -213,82 +197,20 @@ const EditorLayoutInner = () => {
                     </div>
                 </div>
 
-
-                <div
-                    className="absolute bottom-9 left-[37px] flex items-center gap-6 z-20"
+                <BottomToolbar
+                    isConnected={isConnected}
+                    liveUpdating={!!liveUpdating}
+                    hasChanges={hasChanges}
+                    keyVariant={keyVariant}
+                    onConnect={connect}
+                    onCommit={commit}
+                    onSetKeyVariant={setKeyVariant}
                     style={bottomUiStyle}
-                >
-                    {liveUpdating ? (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <div
-                                    className={cn(
-                                        "flex items-center gap-2 text-sm font-medium animate-in fade-in zoom-in duration-300",
-                                        !isConnected && "opacity-30 cursor-pointer"
-                                    )}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!isConnected) {
-                                            connect();
-                                        }
-                                    }}
-                                >
-                                    {isConnected ? (
-                                        <Zap className="h-4 w-4 fill-black text-black" />
-                                    ) : (
-                                        <Unplug className="h-4 w-4" />
-                                    )}
-                                    <span>Live Updating</span>
-                                </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                                <p>{isConnected ? "Changes are Automatically Applied" : "Connect to Apply changes"}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    ) : (
-                        <button
-                            className={cn(
-                                "h-9 rounded-full px-4 text-sm font-medium transition-all shadow-sm flex items-center gap-2",
-                                isConnected
-                                    ? "bg-black text-white hover:bg-black/90 cursor-pointer animate-in fade-in zoom-in duration-300"
-                                    : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
-                            )}
-                            disabled={!isConnected}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (hasChanges) {
-                                    commit();
-                                }
-                            }}
-                        >
-                            Update Changes
-                        </button>
-                    )}
-
-                    <div className="flex flex-row items-center gap-0.5 bg-gray-200/50 p-0.5 rounded-md border border-gray-300/50 w-fit">
-                        {(['default', 'medium', 'small'] as const).map((variant) => (
-                            <button
-                                key={variant}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setKeyVariant(variant);
-                                }}
-                                className={cn(
-                                    "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[4px] transition-all font-semibold border",
-                                    keyVariant === variant
-                                        ? "bg-black text-white shadow-sm border-black"
-                                        : "text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-300/50"
-                                )}
-                                title={`Set key size to ${variant}`}
-                            >
-                                {variant === 'default' ? 'Normal' : variant}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                />
             </div>
         </div>
     );
 };
 
 export default EditorLayout;
+
