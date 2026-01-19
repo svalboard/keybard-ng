@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { KeyboardInfo } from "@/types/vial.types";
 
 import { MATRIX_COLS } from "@/constants/svalboard-layout";
 import { useChanges } from "@/contexts/ChangesContext";
@@ -121,7 +122,7 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const assignKeycodeTo = useCallback(
         (target: BindingTarget, keycode: number | string) => {
             if (!target || !keyboard) return;
-            const updatedKeyboard = JSON.parse(JSON.stringify(keyboard));
+            const updatedKeyboard: KeyboardInfo = JSON.parse(JSON.stringify(keyboard));
             console.log("assignKeycodeTo called with", keycode, "for target", target);
             // Convert keycode string to number using keyService
             const keycodeValue = typeof keycode === "string" ? keyService.parse(keycode) : keycode;
@@ -166,15 +167,15 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     const { comboId, comboSlot } = target;
                     if (comboId === undefined || comboSlot === undefined) break;
 
-                    // CRITICAL: Ensure combos array exists and is properly copied
-                    if (!(updatedKeyboard as any).combos) {
-                        (updatedKeyboard as any).combos = [];
+                    // Ensure combos array exists
+                    if (!updatedKeyboard.combos) {
+                        updatedKeyboard.combos = [];
                     }
 
                     // Create a defensive copy of the entire combos array to preserve all combos
-                    const originalCombos = (keyboard as any)?.combos || [];
-                    const combos = Array.isArray(originalCombos) ? [...originalCombos] : [];
-                    (updatedKeyboard as any).combos = combos;
+                    const originalCombos = keyboard.combos || [];
+                    const combos = [...originalCombos];
+                    updatedKeyboard.combos = combos;
 
                     // Get the ORIGINAL combo from the source keyboard to preserve existing values
                     const originalCombo = originalCombos[comboId];
@@ -187,7 +188,6 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
                     if (comboSlot === 4) {
                         // Output - but we must also preserve the input keys!
-                        // CRITICAL: Preserve the keys array from the original combo
                         const originalKeys = Array.isArray(originalCombo?.keys) ? originalCombo.keys : [];
                         combo.keys = [...originalKeys];
                         while (combo.keys.length < 4) combo.keys.push("KC_NO");
@@ -196,7 +196,6 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         combo.output = keycodeName;
                     } else {
                         // Input keys - preserve all existing values from the ORIGINAL keyboard state
-                        // CRITICAL: Check if keys is actually an array, not the prototype's keys() function
                         const originalKeys = Array.isArray(originalCombo?.keys) ? originalCombo.keys : [];
 
                         // Build a fresh 4-element array from the original state
@@ -235,9 +234,9 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     const { tapdanceId, tapdanceSlot } = target;
                     if (tapdanceId === undefined || tapdanceSlot === undefined) break;
 
-                    // tapdance is actually an array with objects having tap/hold/doubletap/taphold properties
-                    const tapdances = (updatedKeyboard as any).tapdances;
-                    if (!tapdances) break;
+                    const tapdances = updatedKeyboard.tapdances;
+                    if (!tapdances) break; // Should probably init if missing, but stricter check
+
                     if (!tapdances[tapdanceId]) {
                         tapdances[tapdanceId] = {
                             tap: "KC_NO",
@@ -323,12 +322,7 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 }
             }
             setKeyboard(updatedKeyboard);
-            // Ensure we don't clear selection if we are just assigning to a specific target without selecting? 
-            // Original code called clearSelection().
-            // If we are doing Swap, we probably don't want to clear selection abruptly if user has a selection.
-            // But usually assignKeycode ends the binding process.
-            // For explicitly swapping, maybe we shouldn't? 
-            // Let's keep it safe: if it matches selectedTarget, clear it.
+
             if (target === selectedTargetRef.current) {
                 clearSelection();
             }

@@ -1,14 +1,12 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { useKeyBinding } from "@/contexts/KeyBindingContext";
-import { useDrag } from "@/contexts/DragContext";
 import { showModMask } from "@/utils/keys";
 import { colorClasses, hoverContainerTextClasses } from "@/utils/colors";
-import { UNIT_SIZE } from "../constants/svalboard-layout";
 import { KeyContent } from "@/types/vial.types";
 import { getHeaderIcons, getCenterContent, getTypeIcon } from "@/utils/key-icons";
+import { useKeyDrag } from "@/hooks/useKeyDrag";
 
-interface KeyProps {
+export interface KeyProps {
     x: number; // X position in key units
     y: number; // Y position in key units
     w: number; // Width in key units
@@ -61,147 +59,38 @@ export const Key: React.FC<KeyProps> = ({
 }) => {
     const isSmall = variant === "small";
     const isMedium = variant === "medium";
-    const currentUnitSize = isSmall ? 30 : isMedium ? 45 : UNIT_SIZE;
-    const { setHoveredKey, assignKeycode, selectKeyboardKey, swapKeys } = useKeyBinding();
 
-    // Drag and Drop Logic
-    const { startDrag, dragSourceId, isDragging, draggedItem } = useDrag();
+    // Use custom hook for drag logic
     const uniqueId = React.useId();
-    const startPosRef = React.useRef<{ x: number, y: number } | null>(null);
-    const [isDragHover, setIsDragHover] = React.useState(false);
-
-    // Is this key the one being dragged?
-    const isDragSource = dragSourceId === uniqueId;
-
-    // Can this key be a drag source? (Only sidebar keys / relative keys)
-    // Update: Main keys can also be drag sources now (for swapping)
-    const canDrag = true;
-
-    // Can this key be a drop target? (Only main keyboard keys)
-    const canDrop = !isRelative && isDragging;
+    const {
+        isDragSource,
+        isDragHover,
+        handleMouseEnter,
+        handleMouseLeave,
+        handleMouseDown,
+        handleMouseUp,
+        currentUnitSize,
+    } = useKeyDrag({
+        uniqueId,
+        keycode,
+        label,
+        row,
+        col,
+        layerIndex,
+        layerColor,
+        isRelative,
+        keyContents,
+        w,
+        h,
+        variant,
+        onClick,
+        disableHover,
+    });
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (onClick) {
             onClick(row, col);
-        }
-    };
-
-    const handleMouseEnter = () => {
-        if (canDrop) {
-            setIsDragHover(true);
-            // Auto-select the key under the drag to ensure assignment works
-            selectKeyboardKey(layerIndex, row, col);
-            if (onClick) onClick(row, col);
-        }
-
-        if (disableHover) return;
-        setHoveredKey({
-            type: "keyboard",
-            row,
-            col,
-            keycode,
-            label,
-        });
-    };
-
-    const handleMouseLeave = () => {
-        if (canDrop) {
-            setIsDragHover(false);
-        }
-
-        if (disableHover) return;
-        setHoveredKey(null);
-    };
-
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (!canDrag || e.button !== 0) return;
-
-        startPosRef.current = { x: e.clientX, y: e.clientY };
-
-        const checkDrag = (moveEvent: MouseEvent) => {
-            const start = startPosRef.current;
-            if (!start) return;
-
-            const dx = moveEvent.clientX - start.x;
-            const dy = moveEvent.clientY - start.y;
-
-            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-                startDrag({
-                    keycode: keycode,
-                    label: label || displayLabel || keycode,
-                    type: keyContents?.type || "keyboard",
-                    extra: keyContents,
-                    sourceId: uniqueId,
-                    width: w * currentUnitSize,
-                    height: h * currentUnitSize,
-                    component: "Key",
-                    props: {
-                        x: 0, // Relative to overlay
-                        y: 0,
-                        w,
-                        h,
-                        keycode,
-                        label,
-                        row,
-                        col,
-                        layerColor,
-                        keyContents,
-                        isRelative: true, // Treat as relative for positioning in overlay
-                        variant,
-                        className: "",
-                        selected: false,
-                        disableHover: true,
-                    },
-                    // Add coords for swap logic if this is a main key
-                    row: isRelative ? undefined : row,
-                    col: isRelative ? undefined : col,
-                    layer: isRelative ? undefined : layerIndex
-                }, {
-                    clientX: moveEvent.clientX,
-                    clientY: moveEvent.clientY,
-                } as any);
-                cleanup();
-            }
-        };
-
-        const handleUp = () => {
-            cleanup();
-        };
-
-        const cleanup = () => {
-            startPosRef.current = null;
-            window.removeEventListener("mousemove", checkDrag);
-            window.removeEventListener("mouseup", handleUp);
-        };
-
-        window.addEventListener("mousemove", checkDrag);
-        window.addEventListener("mouseup", handleUp);
-    };
-
-    const handleMouseUp = () => {
-        if (canDrop && isDragHover && draggedItem) {
-            // Drop Action
-            console.log("Dropping", draggedItem, "onto", keycode);
-
-            // Swap Logic: If the dragged item is a main key, update IT with current key's code
-            if (draggedItem.row !== undefined && draggedItem.col !== undefined && draggedItem.layer !== undefined) {
-                // Check if it's the SAME key to avoid self-overwrite issues (though usually fine)
-                if (draggedItem.row === row && draggedItem.col === col && draggedItem.layer === layerIndex) {
-                    // Same key - do nothing (drag released on self)
-                } else {
-                    console.log("Swapping keys atomically");
-                    swapKeys(
-                        { type: "keyboard", row: draggedItem.row, col: draggedItem.col, layer: draggedItem.layer },
-                        { type: "keyboard", row, col, layer: layerIndex }
-                    );
-                }
-            } else {
-                // Standard assignment (Panel Element -> Keyboard Key)
-                assignKeycode(draggedItem.keycode);
-            }
-
-            setIsDragHover(false); // Reset hover state
         }
     };
 
@@ -294,7 +183,7 @@ export const Key: React.FC<KeyProps> = ({
         (selected || isDragHover)
             ? "bg-red-500 text-white border-kb-gray"
             : isDragSource
-                ? "bg-blue-500/35 border-blue-500 text-transparent opacity-65"
+                ? "bg-kb-light-grey border-kb-light-grey text-transparent opacity-65"
                 : cn(
                     colorClass,
                     "border-kb-gray",

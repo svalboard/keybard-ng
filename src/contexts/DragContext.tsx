@@ -1,16 +1,20 @@
 import React, { createContext, useContext, useState, useRef, useCallback } from "react";
 
+import { KeyProps } from "@/components/Key";
+import { EditorKeyProps } from "@/layout/SecondarySidebar/components/EditorKey";
+import { KeyContent } from "@/types/vial.types";
+
 export interface DragItem {
     keycode: string;
     label: string;
     type: string;
-    extra?: any;
+    extra?: KeyContent;
     // We might need to know the original source to apply styling
     sourceId?: string;
     width?: number;
     height?: number;
     component?: "Key" | "EditorKey";
-    props?: any;
+    props?: KeyProps | EditorKeyProps;
     // For main keys, we need coordinates to perform swap
     row?: number;
     col?: number;

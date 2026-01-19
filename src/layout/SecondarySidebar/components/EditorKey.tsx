@@ -3,7 +3,7 @@ import { FC, useRef, useId } from "react";
 import { useDrag } from "@/contexts/DragContext";
 import { cn } from "@/lib/utils";
 
-interface Props {
+export interface EditorKeyProps {
     label?: string;
     binding?: any;
     onClick?: () => void;
@@ -15,10 +15,10 @@ const classes = {
     emptyKey:
         "bg-kb-green text-white w-12 h-12 rounded-md cursor-pointer hover:border-2 border-2 border border-transparent hover:border-red-600 transition-all flex items-center justify-center text-wrap text-center text-xs flex-col select-none",
     selectedKey: "!bg-red-600 border-2 border-red-600 text-white",
-    dragSource: "!bg-blue-500/35 border-blue-500 text-transparent opacity-65 select-none", // "blue and faded 35%"
+    dragSource: "!bg-kb-light-grey border-kb-light-grey text-transparent opacity-65 select-none", // "light grey and faded"
 };
 
-const EditorKey: FC<Props> = ({ label, binding, onClick, selected }) => {
+const EditorKey: FC<EditorKeyProps> = ({ label, binding, onClick, selected }) => {
     const { startDrag, dragSourceId } = useDrag();
     const uniqueId = useId();
 
