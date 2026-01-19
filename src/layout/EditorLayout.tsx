@@ -55,7 +55,7 @@ const EditorLayoutInner = () => {
     const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
     const { isMobile, state, activePanel } = usePanels();
 
-    const primaryOffset = primarySidebar.isMobile ? undefined : primarySidebar.state === "collapsed" ? "var(--sidebar-width-icon)" : "var(--sidebar-width-base)";
+    const primaryOffset = primarySidebar.isMobile ? undefined : primarySidebar.state === "collapsed" ? "56px" : "calc(var(--sidebar-width-base) + 8px)";
     const showDetailsSidebar = !isMobile && state === "expanded";
 
     // Modification: only offset the main container by the primary sidebar. 
@@ -64,14 +64,25 @@ const EditorLayoutInner = () => {
 
     const SCROLL_BUFFER_SIZE = 1000;
     const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+    const animationRef = React.useRef<number | null>(null);
 
-    // Initial scroll adjustment when sidebar opens/closes using useLayoutEffect to prevent visual jumps
+    // Identify if the key picker / editor is open (which hides keys)
+    const { itemToEdit } = usePanels();
+    const showPicker = itemToEdit !== null && ["tapdances", "combos", "macros", "overrides"].includes(activePanel || "");
+
+    // Initial scroll adjustment when picker opens/closes using useLayoutEffect to prevent visual jumps
     React.useLayoutEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
-        if (showDetailsSidebar) {
-            // Sidebar appearing: Add buffer to scroll
+        // Cancel any existing animation
+        if (animationRef.current !== null) {
+            cancelAnimationFrame(animationRef.current);
+            animationRef.current = null;
+        }
+
+        if (showPicker) {
+            // Picker appearing: Add buffer to scroll
             // We force the scroll immediately to hide the buffer.
             container.scrollLeft += SCROLL_BUFFER_SIZE;
 
@@ -82,10 +93,40 @@ const EditorLayoutInner = () => {
                 }
             });
         } else {
-            // Sidebar disappearing: Remove buffer
-            container.scrollLeft = Math.max(0, container.scrollLeft - SCROLL_BUFFER_SIZE);
+            // Picker disappearing: ANIMATE back to position
+            const startScroll = container.scrollLeft;
+            const targetScroll = Math.max(0, startScroll - SCROLL_BUFFER_SIZE);
+
+            if (startScroll === targetScroll) return;
+
+            const duration = 320;
+            const startTime = performance.now();
+
+            const animate = (time: number) => {
+                const elapsed = time - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                // cubic-bezier(0.22, 1, 0.36, 1) approximation
+                // This is a "Out Quart" or similar - very fast start, slow end.
+                const ease = 1 - Math.pow(1 - progress, 4);
+
+                container.scrollLeft = startScroll + (targetScroll - startScroll) * ease;
+
+                if (progress < 1) {
+                    animationRef.current = requestAnimationFrame(animate);
+                } else {
+                    animationRef.current = null;
+                }
+            };
+            animationRef.current = requestAnimationFrame(animate);
         }
-    }, [showDetailsSidebar]);
+
+        return () => {
+            if (animationRef.current !== null) {
+                cancelAnimationFrame(animationRef.current);
+            }
+        };
+    }, [showPicker]);
 
     // Modification: We still want smooth transitions for the primary sidebar offset if needed,
     // though the Primary Sidebar usually handles its own layout context. 
@@ -111,15 +152,35 @@ const EditorLayoutInner = () => {
 
     const bufferStyle = React.useMemo<React.CSSProperties>(
         () => ({
-            width: showDetailsSidebar ? SCROLL_BUFFER_SIZE : 0,
-            minWidth: showDetailsSidebar ? SCROLL_BUFFER_SIZE : 0,
-            display: showDetailsSidebar ? 'block' : 'none', // Optimization: hide completely when not needed
+            width: showPicker ? SCROLL_BUFFER_SIZE : 0,
+            minWidth: showPicker ? SCROLL_BUFFER_SIZE : 0,
+            // We keep it visible during transition, but hide it if fully closed and not showPicker
+            visibility: showPicker || animationRef.current !== null ? 'visible' : 'hidden',
+            transition: showPicker ? "none" : "width 320ms cubic-bezier(0.22, 1, 0.36, 1), min-width 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+            willChange: "width, min-width",
+        }),
+        [showPicker]
+    );
+
+    const bottomUiStyle = React.useMemo<React.CSSProperties>(
+        () => ({
+            transform: showDetailsSidebar ? `translateX(${DETAIL_SIDEBAR_WIDTH})` : "translateX(0)",
+            transition: "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+            willChange: "transform",
         }),
         [showDetailsSidebar]
     );
 
     return (
-        <div className={cn("flex h-screen max-w-screen p-0", showDetailsSidebar && "bg-white")}>
+        <div className={cn("flex h-screen max-w-screen p-0", showDetailsSidebar ? "bg-white" : "bg-kb-gray")}>
+            {/* Global Sidebar Shield: Provisioned with a slower transition and delay to sink with the panel's animation curve */}
+            <div
+                className={cn(
+                    "fixed inset-y-0 left-0 bg-white z-10 transition-all duration-500 delay-[150ms] ease-in-out",
+                    (showDetailsSidebar || showPicker) ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+                )}
+                style={{ width: `calc(${primaryOffset} + 8px)` }}
+            />
             <AppSidebar />
             <SecondarySidebar />
             <div
@@ -151,7 +212,10 @@ const EditorLayoutInner = () => {
                 </div>
 
 
-                <div className="absolute bottom-9 left-[37px] flex items-center gap-6">
+                <div
+                    className="absolute bottom-9 left-[37px] flex items-center gap-6 z-20"
+                    style={bottomUiStyle}
+                >
                     {liveUpdating ? (
                         <Tooltip>
                             <TooltipTrigger asChild>

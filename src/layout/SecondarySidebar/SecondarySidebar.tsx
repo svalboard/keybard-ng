@@ -83,12 +83,12 @@ const AlternativeHeader = ({ onBack }: AlternativeHeaderProps) => {
  */
 const SecondarySidebar = () => {
     const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
-    const { activePanel, handleCloseDetails, state, alternativeHeader, itemToEdit, setItemToEdit } = usePanels();
+    const { activePanel, handleCloseDetails, alternativeHeader, itemToEdit, setItemToEdit } = usePanels();
 
     // Calculate dynamic offset based on primary sidebar state
     const primaryOffset = primarySidebar.state === "collapsed"
-        ? "calc(var(--sidebar-width-icon) + var(--spacing)*4)"
-        : "calc(var(--sidebar-width-base) + var(--spacing)*4)";
+        ? "56px"
+        : "calc(var(--sidebar-width-base) + 8px)";
 
     const handleClose = React.useCallback(() => {
         setItemToEdit(null);
@@ -151,12 +151,14 @@ const SecondarySidebar = () => {
             hideGap
             className="z-9 absolute"
             style={{
-                left: state === "collapsed" ? undefined : primaryOffset,
-                "--sidebar-width": DETAIL_SIDEBAR_WIDTH,
+                left: 0,
+                "--sidebar-width": `calc(${DETAIL_SIDEBAR_WIDTH} + ${primaryOffset} + 1.5rem)`,
             } as React.CSSProperties}
         >
-            <div className="absolute inset-0 bg-sidebar-background pointer-events-none" />
-            <SidebarHeader className="px-4 py-6 z-10 bg-sidebar-background">
+
+
+
+            <SidebarHeader className="py-6 z-10 bg-sidebar-background transition-[padding] duration-320 ease-out" style={{ paddingLeft: `calc(${primaryOffset} + 2.5rem)`, paddingRight: '1rem' }}>
                 {(alternativeHeader || showPicker) ? (
                     <AlternativeHeader />
                 ) : (
@@ -182,7 +184,8 @@ const SecondarySidebar = () => {
             <SidebarContent className="z-10 relative flex-1 overflow-visible">
                 <div
                     key={activePanel ?? "panel-placeholder"}
-                    className="panel-fade-bounce absolute inset-0 overflow-auto px-4 transition-all duration-300 ease-in-out"
+                    className="panel-fade-bounce relative h-full w-full overflow-auto transition-all duration-300 ease-in-out"
+                    style={{ paddingLeft: `calc(${primaryOffset} + 1.5rem)`, paddingRight: '1.5rem' }}
                 >
                     {renderContent()}
                 </div>
@@ -195,9 +198,10 @@ const SecondarySidebar = () => {
                     showPicker ? "translate-x-0 opacity-100" : "-translate-x-[120%] opacity-0 pointer-events-none"
                 )}
                 aria-hidden={!showPicker}
-                style={{ clipPath: "inset(-50px -300px -50px 0px)" }}
+                style={{ clipPath: "inset(-50px -300px -50px 0px)", paddingLeft: `calc(${primaryOffset} + 1.5rem)`, paddingRight: '1.5rem' }}
             >
-                <div className="px-4 py-6 bg-white shrink-0">
+
+                <div className="py-6 bg-white shrink-0 z-10">
                     <AlternativeHeader onBack={() => setIsClosingEditor(true)} />
                 </div>
 
