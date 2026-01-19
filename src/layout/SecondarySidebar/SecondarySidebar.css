@@ -1,18 +1,16 @@
 @keyframes panelFadeBounceIn {
     0% {
-        opacity: 0;
         transform: translateX(10px) scale(0.99);
     }
 
     60% {
-        opacity: 0.7;
         transform: scale(1);
     }
 }
 
 .panel-fade-bounce {
     animation: panelFadeBounceIn 130ms cubic-bezier(0.6, 1, 0.68, 1) both;
-    will-change: transform, opacity;
+    will-change: transform;
 }
 
 .sidebar-dotted-line {

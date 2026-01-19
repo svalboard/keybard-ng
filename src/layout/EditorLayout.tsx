@@ -56,7 +56,7 @@ const EditorLayoutInner = () => {
     const { isMobile, state, activePanel } = usePanels();
 
     const primaryOffset = primarySidebar.isMobile ? undefined : primarySidebar.state === "collapsed" ? "56px" : "calc(var(--sidebar-width-base) + 8px)";
-    const showDetailsSidebar = !isMobile && state === "expanded";
+    const showDetailsSidebar = !isMobile && state === "expanded" && !!activePanel;
 
     // Modification: only offset the main container by the primary sidebar. 
     // The secondary sidebar will be handled by an internal spacer.
@@ -142,8 +142,8 @@ const EditorLayoutInner = () => {
 
     const spacerStyle = React.useMemo<React.CSSProperties>(
         () => ({
-            width: showDetailsSidebar ? DETAIL_SIDEBAR_WIDTH : 0,
-            minWidth: showDetailsSidebar ? DETAIL_SIDEBAR_WIDTH : 0,
+            width: showDetailsSidebar ? `calc(${DETAIL_SIDEBAR_WIDTH} + 1.5rem)` : 0,
+            minWidth: showDetailsSidebar ? `calc(${DETAIL_SIDEBAR_WIDTH} + 1.5rem)` : 0,
             transition: "width 320ms cubic-bezier(0.22, 1, 0.36, 1), min-width 320ms cubic-bezier(0.22, 1, 0.36, 1)",
             willChange: "width, min-width",
         }),
@@ -164,7 +164,7 @@ const EditorLayoutInner = () => {
 
     const bottomUiStyle = React.useMemo<React.CSSProperties>(
         () => ({
-            transform: showDetailsSidebar ? `translateX(${DETAIL_SIDEBAR_WIDTH})` : "translateX(0)",
+            transform: showDetailsSidebar ? `translateX(calc(${DETAIL_SIDEBAR_WIDTH} + 1.5rem))` : "translateX(0)",
             transition: "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)",
             willChange: "transform",
         }),
@@ -173,11 +173,13 @@ const EditorLayoutInner = () => {
 
     return (
         <div className={cn("flex h-screen max-w-screen p-0", showDetailsSidebar ? "bg-white" : "bg-kb-gray")}>
-            {/* Global Sidebar Shield: Provisioned with a slower transition and delay to sink with the panel's animation curve */}
+            {/* Global Sidebar Shield: Unified 320ms transition to perfectly sync with the panel and workspace opening */}
             <div
                 className={cn(
-                    "fixed inset-y-0 left-0 bg-white z-10 transition-all duration-500 delay-[150ms] ease-in-out",
-                    (showDetailsSidebar || showPicker) ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+                    "fixed inset-y-0 left-0 bg-white z-10 transition-all duration-320 ease-in-out",
+                    (showDetailsSidebar || showPicker)
+                        ? "translate-x-0"
+                        : "-translate-x-full"
                 )}
                 style={{ width: `calc(${primaryOffset} + 8px)` }}
             />

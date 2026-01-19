@@ -27,7 +27,7 @@ export const DETAIL_SIDEBAR_WIDTH = "32rem";
  * Resolves the human-readable title for a given panel identifier.
  */
 const getPanelTitle = (panel: string | null | undefined): string => {
-    if (!panel) return "Details";
+    if (!panel) return "";
 
     const titles: Record<string, string> = {
         keyboard: "Keyboard",
@@ -43,7 +43,7 @@ const getPanelTitle = (panel: string | null | undefined): string => {
         about: "About",
     };
 
-    return titles[panel] ?? "Details";
+    return titles[panel] ?? "";
 };
 
 /**
@@ -116,11 +116,7 @@ const SecondarySidebar = () => {
 
     const renderContent = () => {
         if (!activePanel) {
-            return (
-                <div className="grid place-items-center h-full text-center text-sm text-muted-foreground px-6">
-                    Select a menu item to view contextual actions and key groups.
-                </div>
-            );
+            return null;
         }
 
         switch (activePanel) {
@@ -149,16 +145,15 @@ const SecondarySidebar = () => {
             defaultOpen={false}
             collapsible="offcanvas"
             hideGap
-            className="z-9 absolute"
+            className="z-9 absolute border-none shadow-none"
             style={{
-                left: 0,
                 "--sidebar-width": `calc(${DETAIL_SIDEBAR_WIDTH} + ${primaryOffset} + 1.5rem)`,
             } as React.CSSProperties}
         >
 
 
 
-            <SidebarHeader className="py-6 z-10 bg-sidebar-background transition-[padding] duration-320 ease-out" style={{ paddingLeft: `calc(${primaryOffset} + 2.5rem)`, paddingRight: '1rem' }}>
+            <SidebarHeader className="py-6 z-10 bg-sidebar-background transition-[padding] duration-320 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]" style={{ paddingLeft: `calc(${primaryOffset} + 2.5rem)`, paddingRight: '1rem' }}>
                 {(alternativeHeader || showPicker) ? (
                     <AlternativeHeader />
                 ) : (
@@ -184,7 +179,7 @@ const SecondarySidebar = () => {
             <SidebarContent className="z-10 relative flex-1 overflow-visible">
                 <div
                     key={activePanel ?? "panel-placeholder"}
-                    className="panel-fade-bounce relative h-full w-full overflow-auto transition-all duration-300 ease-in-out"
+                    className="panel-fade-bounce relative h-full w-full overflow-auto transition-all duration-[320ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
                     style={{ paddingLeft: `calc(${primaryOffset} + 1.5rem)`, paddingRight: '1.5rem' }}
                 >
                     {renderContent()}
@@ -194,8 +189,8 @@ const SecondarySidebar = () => {
             {/* Overlay Panel for Key Picker */}
             <div
                 className={cn(
-                    "absolute top-0 bottom-0 left-0 -right-[2px] bg-white shadow-[4px_0_16px_rgba(0,0,0,0.1)] z-20 transition-all duration-500 ease-in-out flex flex-col",
-                    showPicker ? "translate-x-0 opacity-100" : "-translate-x-[120%] opacity-0 pointer-events-none"
+                    "absolute top-0 bottom-0 left-0 -right-[2px] bg-white z-20 transition-all duration-[320ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] flex flex-col border-none shadow-none",
+                    showPicker ? "translate-x-0" : "-translate-x-[120%] pointer-events-none"
                 )}
                 aria-hidden={!showPicker}
                 style={{ clipPath: "inset(-50px -300px -50px 0px)", paddingLeft: `calc(${primaryOffset} + 1.5rem)`, paddingRight: '1.5rem' }}
@@ -219,7 +214,7 @@ const SecondarySidebar = () => {
                 </div>
             </div>
             {itemToEdit !== null ? <div className="z-[-1] absolute inset-y-0 right-0 h-full w-0"><BindingEditorContainer shouldClose={isClosingEditor} /></div> : null}
-        </Sidebar>
+        </Sidebar >
     );
 };
 
