@@ -19,6 +19,7 @@ import { MatrixTester } from "@/components/MatrixTester";
 
 import { SidebarShield } from "./components/SidebarShield";
 import { BottomToolbar } from "./components/BottomToolbar";
+import { ConnectionSyncDialog } from "@/components/ConnectionSyncDialog";
 import {
     DETAIL_SIDEBAR_WIDTH,
     LAYOUT_TRANSITION_CURVE,
@@ -44,18 +45,38 @@ const EditorLayout = () => {
 
 const EditorLayoutInner = () => {
     // --- Context Hooks ---
-    const { keyboard, isConnected, connect } = useVial();
+    const { keyboard, isConnected, connect, loadKeyboard } = useVial();
     const { selectedLayer, setSelectedLayer } = useLayer();
     const { clearSelection } = useKeyBinding();
     const { keyVariant, setKeyVariant } = useLayoutSettings();
     const { getSetting } = useSettings();
     const { getPendingCount, commit, setInstant } = useChanges();
+    const [isSyncDialogOpen, setIsSyncDialogOpen] = React.useState(false);
     const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
     const { isMobile, state, activePanel, itemToEdit } = usePanels();
 
     // --- State & Settings ---
     const liveUpdating = getSetting("live-updating");
     const hasChanges = getPendingCount() > 0;
+
+    const handleConnect = React.useCallback(async () => {
+        const success = await connect();
+        if (success) {
+            if (!liveUpdating) {
+                setIsSyncDialogOpen(true);
+            } else {
+                await loadKeyboard();
+            }
+        }
+    }, [connect, liveUpdating, loadKeyboard]);
+
+    const handleLoadFromKeyboard = React.useCallback(async () => {
+        await loadKeyboard();
+    }, [loadKeyboard]);
+
+    const handleUpdateKeyboard = React.useCallback(async () => {
+        await commit();
+    }, [commit]);
 
     React.useEffect(() => {
         setInstant(!!liveUpdating);
@@ -202,12 +223,18 @@ const EditorLayoutInner = () => {
                     liveUpdating={!!liveUpdating}
                     hasChanges={hasChanges}
                     keyVariant={keyVariant}
-                    onConnect={connect}
+                    onConnect={handleConnect}
                     onCommit={commit}
                     onSetKeyVariant={setKeyVariant}
                     style={bottomUiStyle}
                 />
             </div>
+            <ConnectionSyncDialog
+                isOpen={isSyncDialogOpen}
+                onClose={() => setIsSyncDialogOpen(false)}
+                onLoadFromKeyboard={handleLoadFromKeyboard}
+                onUpdateKeyboard={handleUpdateKeyboard}
+            />
         </div>
     );
 };

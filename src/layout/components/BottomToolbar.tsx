@@ -2,6 +2,9 @@ import * as React from "react";
 import { Zap, Unplug } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useVial } from "@/contexts/VialContext";
+import { useLayer } from "@/contexts/LayerContext";
+import { layerColors, getColorByName } from "@/utils/colors";
 
 interface BottomToolbarProps {
     isConnected: boolean;
@@ -27,6 +30,15 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
     onSetKeyVariant,
     style,
 }) => {
+    const { keyboard } = useVial();
+    const { selectedLayer } = useLayer();
+    const [isPressed, setIsPressed] = React.useState(false);
+
+    // Get the cosmetic color name (e.g., "green", "blue") or default to "green"
+    const cosmeticColorName = keyboard?.cosmetic?.layer_colors?.[selectedLayer] || "green";
+    // Find the hex value for that color name
+    const layerColor = getColorByName(cosmeticColorName)?.hex || "#099e7c";
+
     return (
         <div
             className="absolute bottom-9 left-[37px] flex items-center gap-6 z-20"
@@ -58,21 +70,42 @@ export const BottomToolbar: React.FC<BottomToolbarProps> = ({
                     </TooltipContent>
                 </Tooltip>
             ) : (
-                <button
-                    className={cn(
-                        "h-9 rounded-full px-4 text-sm font-medium transition-all shadow-sm flex items-center gap-2",
-                        isConnected
-                            ? "bg-black text-white hover:bg-black/90 cursor-pointer animate-in fade-in zoom-in duration-300"
-                            : "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="cursor-pointer">
+                            <button
+                                className={cn(
+                                    "h-9 rounded-full px-4 text-sm font-medium transition-all shadow-sm flex items-center gap-2",
+                                    isConnected
+                                        ? "bg-black text-white hover:bg-black/90 animate-in fade-in zoom-in duration-300"
+                                        : "bg-muted text-muted-foreground opacity-50 hover:bg-muted/80"
+                                )}
+                                style={{
+                                    backgroundColor: isPressed ? layerColor : undefined,
+                                }}
+                                onMouseDown={() => setIsPressed(true)}
+                                onMouseUp={() => setIsPressed(false)}
+                                onMouseLeave={() => setIsPressed(false)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isConnected) {
+                                        if (hasChanges) onCommit();
+                                    } else {
+                                        onConnect();
+                                    }
+                                }}
+                            >
+                                {!isConnected && <Unplug className="h-4 w-4" />}
+                                Update Changes
+                            </button>
+                        </div>
+                    </TooltipTrigger>
+                    {!isConnected && (
+                        <TooltipContent side="top">
+                            <p>Connect to Apply Changes</p>
+                        </TooltipContent>
                     )}
-                    disabled={!isConnected}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (hasChanges) onCommit();
-                    }}
-                >
-                    Update Changes
-                </button>
+                </Tooltip>
             )}
 
             <div className="flex flex-row items-center gap-0.5 bg-gray-200/50 p-0.5 rounded-md border border-gray-300/50 w-fit">

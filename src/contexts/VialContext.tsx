@@ -98,14 +98,15 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [isConnected]);
 
-    useEffect(() => {
-        if (isConnected) {
-            loadKeyboard().catch((error) => {
-                console.error("Failed to auto-load keyboard:", error);
-                setIsConnected(false);
-            });
-        }
-    }, [isConnected, loadKeyboard]);
+    // Auto-load removed to allow UI to decide when to sync
+    // useEffect(() => {
+    //     if (isConnected) {
+    //         loadKeyboard().catch((error) => {
+    //             console.error("Failed to auto-load keyboard:", error);
+    //             setIsConnected(false);
+    //         });
+    //     }
+    // }, [isConnected, loadKeyboard]);
 
     const loadFromFile = useCallback(async (file: File) => {
         try {
