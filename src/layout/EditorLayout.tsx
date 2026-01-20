@@ -34,12 +34,26 @@ import {
 } from "./layout.constants";
 
 const EditorLayout = () => {
+    const { assignKeycodeTo } = useKeyBinding();
+
+    const handleUnhandledDrop = React.useCallback((item: any) => {
+        if (item.row !== undefined && item.col !== undefined && item.layer !== undefined) {
+            console.log("Unhandled drop for keyboard key, assigning KC_NO", item);
+            assignKeycodeTo({
+                type: "keyboard",
+                row: item.row,
+                col: item.col,
+                layer: item.layer
+            }, "KC_NO");
+        }
+    }, [assignKeycodeTo]);
+
     return (
         <SidebarProvider defaultOpen={false}>
             <PanelsProvider>
                 <LayoutSettingsProvider>
                     <LayerProvider>
-                        <DragProvider>
+                        <DragProvider onUnhandledDrop={handleUnhandledDrop}>
                             <EditorLayoutInner />
                             <DragOverlay />
                         </DragProvider>

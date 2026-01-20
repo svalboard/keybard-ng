@@ -183,7 +183,7 @@ export const Key: React.FC<KeyProps> = ({
         (selected || isDragHover)
             ? "bg-red-500 text-white border-kb-gray"
             : isDragSource
-                ? "bg-kb-light-grey border-kb-light-grey text-transparent opacity-65"
+                ? cn(colorClass, "bg-kb-light-grey border-kb-light-grey opacity-60")
                 : cn(
                     colorClass,
                     "border-kb-gray",

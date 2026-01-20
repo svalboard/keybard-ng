@@ -37,7 +37,7 @@ export const useKeyDrag = ({
     onClick,
     disableHover,
 }: UseKeyDragProps) => {
-    const { startDrag, dragSourceId, isDragging, draggedItem } = useDrag();
+    const { startDrag, dragSourceId, isDragging, draggedItem, markDropConsumed } = useDrag();
     const { assignKeycode, selectKeyboardKey, swapKeys, setHoveredKey } = useKeyBinding();
     const startPosRef = useRef<{ x: number; y: number } | null>(null);
     const [isDragHover, setIsDragHover] = useState(false);
@@ -152,6 +152,7 @@ export const useKeyDrag = ({
     const handleMouseUp = () => {
         if (canDrop && isDragHover && draggedItem) {
             console.log("Dropping", draggedItem, "onto", keycode);
+            markDropConsumed();
 
             // Swap Logic
             if (draggedItem.row !== undefined && draggedItem.col !== undefined && draggedItem.layer !== undefined) {

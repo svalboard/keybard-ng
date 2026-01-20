@@ -27,11 +27,17 @@ interface DragContextType {
     dragPosition: { x: number; y: number };
     startDrag: (item: DragItem, event: React.MouseEvent | MouseEvent) => void;
     dragSourceId: string | null;
+    markDropConsumed: () => void;
 }
 
 const DragContext = createContext<DragContextType | undefined>(undefined);
 
-export const DragProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface DragProviderProps {
+    children: React.ReactNode;
+    onUnhandledDrop?: (item: DragItem) => void;
+}
+
+export const DragProvider: React.FC<DragProviderProps> = ({ children, onUnhandledDrop }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
     const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
@@ -40,6 +46,11 @@ export const DragProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // To avoid stale closures in event listeners
     const dragItemRef = useRef<DragItem | null>(null);
     const isDraggingRef = useRef(false);
+    const dropConsumedRef = useRef(false);
+
+    const markDropConsumed = useCallback(() => {
+        dropConsumedRef.current = true;
+    }, []);
 
     const updatePosition = (x: number, y: number) => {
         setDragPosition({ x, y });
@@ -52,17 +63,23 @@ export const DragProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const handleMouseUp = useCallback(() => {
         if (isDraggingRef.current) {
+            // Check if drop was consumed by a target
+            if (!dropConsumedRef.current && onUnhandledDrop && dragItemRef.current) {
+                onUnhandledDrop(dragItemRef.current);
+            }
+
             setIsDragging(false);
             setDraggedItem(null);
             setDragSourceId(null);
             dragItemRef.current = null;
             isDraggingRef.current = false;
+            dropConsumedRef.current = false;
         }
 
         // Remove listeners
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("mouseup", handleMouseUp);
-    }, [handleMouseMove]);
+    }, [handleMouseMove, onUnhandledDrop]);
 
     const startDrag = useCallback((item: DragItem, event: React.MouseEvent | MouseEvent) => {
         if (isDraggingRef.current) return;
@@ -73,16 +90,10 @@ export const DragProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setDragSourceId(item.sourceId);
         }
 
+        dropConsumedRef.current = false;
+
         // Initial position
         updatePosition(event.clientX, event.clientY);
-
-        // We only "officially" start dragging after a small threshold or immediately?
-        // The user requirement says: "appears as soon as you drag the mouse off the clicked key".
-        // For simplicity, let's start "logical" dragging immediately but we might visually handle the "off-key" check elsewhere,
-        // or just start immediately. 
-        // User said: "create a new key called dragKey ... it appears as soon as you drag the mouse off the clicked key"
-        // This implies we might need a threshold. 
-        // But typically, a small movement threshold (e.g. 5px) is good. 
 
         setIsDragging(true);
         isDraggingRef.current = true;
@@ -96,7 +107,8 @@ export const DragProvider: React.FC<{ children: React.ReactNode }> = ({ children
         draggedItem,
         dragPosition,
         startDrag,
-        dragSourceId
+        dragSourceId,
+        markDropConsumed
     };
 
     return <DragContext.Provider value={value}>{children}</DragContext.Provider>;
