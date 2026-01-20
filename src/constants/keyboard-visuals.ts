@@ -27,9 +27,9 @@ export const CLUSTER_BACKGROUNDS_DATA: ClusterBackground[] = [
     { x: 10.7, y: 6.2, w: 1.2, h: 1.2, label: "Inner Bottom" }, // "6"
 
     // Right Cluster
-    { x: 13.1, y: 4.9, w: 1.2, h: 1.2, label: "Inner Top" }, // "7"
-    { x: 13.1, y: 6.2, w: 1.2, h: 1.2, label: "Inner Bottom" }, // "0"
-    { x: 14.4, y: 4.9, w: 1.2, h: 2.5, continuous: true, label: "Middle" }, // "8" & "."
-    { x: 15.7, y: 4.9, w: 1.2, h: 1.2, label: "Outer Top" }, // "9" - Narrowed
-    { x: 15.7, y: 6.2, w: 2.2, h: 1.2, label: "Outer Bottom" }, // "HOME" - Wide
+    { x: 12.4, y: 4.9, w: 1.2, h: 1.2, label: "Inner Top" }, // "7"
+    { x: 12.4, y: 6.2, w: 1.2, h: 1.2, label: "Inner Bottom" }, // "0"
+    { x: 13.7, y: 4.9, w: 1.2, h: 2.5, continuous: true, label: "Middle" }, // "8" & "."
+    { x: 15.0, y: 4.9, w: 1.2, h: 1.2, label: "Outer Top" }, // "9" - Narrowed
+    { x: 15.0, y: 6.2, w: 2.2, h: 1.2, label: "Outer Bottom" }, // "HOME" - Wide
 ];
