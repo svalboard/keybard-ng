@@ -157,9 +157,7 @@ const AppSidebar = () => {
         [activePanel, open, handleCloseDetails, setActivePanel, openDetails, setPanelToGoBack, setAlternativeHeader, setItemToEdit, setOpen]
     );
 
-    const handleBackgroundClick = useCallback(() => {
-        handleCloseDetails();
-    }, [handleCloseDetails]);
+
 
     const activePrimaryIndex = primarySidebarItems.findIndex((item) => item.url === activePanel);
     const activeFeatureIndex = featureSidebarItems.findIndex((item) => item.url === activePanel);
@@ -178,7 +176,7 @@ const AppSidebar = () => {
     );
 
     return (
-        <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses} onClick={handleBackgroundClick}>
+        <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses}>
             <SidebarHeader className="p-0 py-4">
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -221,7 +219,7 @@ const AppSidebar = () => {
                             </button>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
-                    <SidebarMenuItem>
+                    <SidebarMenuItem className="hidden">
                         <SidebarMenuButton asChild size="nav" className="text-slate-600 transition-colors">
                             <button type="button" onClick={(e) => { e.stopPropagation(); toggleSidebar(); }} className="flex w-full items-center justify-start">
                                 <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>

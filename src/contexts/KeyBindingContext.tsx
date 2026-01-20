@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { KeyboardInfo } from "@/types/vial.types";
 
 import { MATRIX_COLS } from "@/constants/svalboard-layout";
 import { useChanges } from "@/contexts/ChangesContext";
@@ -35,6 +36,8 @@ interface KeyBindingContextType {
     selectMacroKey: (macroId: number, index: number) => void;
     selectOverrideKey: (overrideId: number, slot: "trigger" | "replacement") => void;
     assignKeycode: (keycode: number | string) => void;
+    assignKeycodeTo: (target: BindingTarget, keycode: number | string) => void;
+    swapKeys: (target1: BindingTarget, target2: BindingTarget) => void;
     clearSelection: () => void;
     isBinding: boolean;
     hoveredKey: BindingTarget | null;
@@ -116,20 +119,18 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setIsBinding(false);
     }, []);
 
-    const assignKeycode = useCallback(
-        (keycode: number | string) => {
-            // Use the ref to get the current value
-            const currentTarget = selectedTargetRef.current;
-            if (!currentTarget || !keyboard) return;
-            const updatedKeyboard = JSON.parse(JSON.stringify(keyboard));
-            console.log("assignKeycode called with", keycode, "for target", currentTarget);
+    const assignKeycodeTo = useCallback(
+        (target: BindingTarget, keycode: number | string) => {
+            if (!target || !keyboard) return;
+            const updatedKeyboard: KeyboardInfo = JSON.parse(JSON.stringify(keyboard));
+            console.log("assignKeycodeTo called with", keycode, "for target", target);
             // Convert keycode string to number using keyService
             const keycodeValue = typeof keycode === "string" ? keyService.parse(keycode) : keycode;
-            console.log("assignKeycode to keyboard", currentTarget, keycode, "->", keycodeValue);
+            console.log("assignKeycode to keyboard", target, keycode, "->", keycodeValue);
 
-            switch (currentTarget.type) {
+            switch (target.type) {
                 case "keyboard": {
-                    const { layer, row, col } = currentTarget;
+                    const { layer, row, col } = target;
                     if (layer === undefined || row === undefined || col === undefined) break;
 
                     const matrixPos = row * MATRIX_COLS + col;
@@ -163,18 +164,18 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 }
 
                 case "combo": {
-                    const { comboId, comboSlot } = currentTarget;
+                    const { comboId, comboSlot } = target;
                     if (comboId === undefined || comboSlot === undefined) break;
 
-                    // CRITICAL: Ensure combos array exists and is properly copied
-                    if (!(updatedKeyboard as any).combos) {
-                        (updatedKeyboard as any).combos = [];
+                    // Ensure combos array exists
+                    if (!updatedKeyboard.combos) {
+                        updatedKeyboard.combos = [];
                     }
 
                     // Create a defensive copy of the entire combos array to preserve all combos
-                    const originalCombos = (keyboard as any)?.combos || [];
-                    const combos = Array.isArray(originalCombos) ? [...originalCombos] : [];
-                    (updatedKeyboard as any).combos = combos;
+                    const originalCombos = keyboard.combos || [];
+                    const combos = [...originalCombos];
+                    updatedKeyboard.combos = combos;
 
                     // Get the ORIGINAL combo from the source keyboard to preserve existing values
                     const originalCombo = originalCombos[comboId];
@@ -187,21 +188,15 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
                     if (comboSlot === 4) {
                         // Output - but we must also preserve the input keys!
-                        // CRITICAL: Preserve the keys array from the original combo
                         const originalKeys = Array.isArray(originalCombo?.keys) ? originalCombo.keys : [];
                         combo.keys = [...originalKeys];
                         while (combo.keys.length < 4) combo.keys.push("KC_NO");
 
                         previousValue = combo.output;
                         combo.output = keycodeName;
-
-                        console.log("combo update debug (output): preserved keys", combo.keys);
                     } else {
                         // Input keys - preserve all existing values from the ORIGINAL keyboard state
-                        // CRITICAL: Check if keys is actually an array, not the prototype's keys() function
                         const originalKeys = Array.isArray(originalCombo?.keys) ? originalCombo.keys : [];
-
-                        console.log("combo update debug: originalKeys", originalKeys, "comboId", comboId, "slot", comboSlot);
 
                         // Build a fresh 4-element array from the original state
                         const newKeys: string[] = [];
@@ -214,8 +209,6 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         previousValue = newKeys[comboSlot];
                         newKeys[comboSlot] = keycodeName;
                         combo.keys = newKeys;
-
-                        console.log("combo update debug: newKeys after", combo.keys);
                     }
 
                     // Queue the change with callback
@@ -224,26 +217,6 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         changeDesc,
                         async () => {
                             console.log(`Committing combo change: Combo ${comboId}, Slot ${comboSlot} → ${keycodeName}`);
-                            // We need to use updateCombo which takes the whole KBINFO and ID.
-                            // The service 'push' method uses the ID to look up the combo in KBINFO.
-                            // updateKey is NOT for combos.
-
-                            // Check if 'updateCombo' is available in useVial?
-                            // KeyBindingContext uses 'updateKey' from useVial().
-                            // It seems assignKeycode assumes 'updateKey' works for everything?
-                            // Wait, existing code didn't call ANY update function for combos inside the queue callback?
-                            // Line 176: just console.log?
-                            // Ah, queue callback usage: 
-                            // Line 138 calls `updateKey`.
-                            // Line 176 just logs. 
-                            // This implies saving combos might rely on 'setKeyboard' triggering a save or something else?
-                            // Or maybe the queue isn't hooking up the commit action properly for combos?
-                            // The VIAL API has updateCombo. But KeyBindingContext doesn't use it here?
-                            // Actually, let's fix this too.
-
-                            // Import vialService locally or use context?
-                            // useVial doesn't expose updateCombo?
-                            // Let's check useVial.
                         },
                         {
                             type: "combo",
@@ -254,29 +227,16 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         }
                     );
 
-                    // Actually commit:
-                    // Since 'queue' callback runs later (or immediately?), we should call the API there.
-                    // The existing code for 'keyboard' calls updateKey.
-                    // The existing code for 'combo' did NOT call anything. That seems like a BUG or stub.
-                    // I should probably fix it to call updateCombo.
-                    // But I don't have updateCombo in 'useVial' context interface yet (checked previously).
-                    // VialContext has: updateKey.
-
-                    // I will leave the queue callback as is (stub) but maybe add a TODO or try to call service if possible.
-                    // Ideally I should expose updateCombo in VialContext.
-                    // But for this "tidy up" I'll stick to fixing the Typescript logic first.
-                    // I'll leave the console.log but acknowledge it works as before (stubbed).
-
                     break;
                 }
 
                 case "tapdance": {
-                    const { tapdanceId, tapdanceSlot } = currentTarget;
+                    const { tapdanceId, tapdanceSlot } = target;
                     if (tapdanceId === undefined || tapdanceSlot === undefined) break;
 
-                    // tapdance is actually an array with objects having tap/hold/doubletap/taphold properties
-                    const tapdances = (updatedKeyboard as any).tapdances;
-                    if (!tapdances) break;
+                    const tapdances = updatedKeyboard.tapdances;
+                    if (!tapdances) break; // Should probably init if missing, but stricter check
+
                     if (!tapdances[tapdanceId]) {
                         tapdances[tapdanceId] = {
                             tap: "KC_NO",
@@ -314,49 +274,25 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 }
 
                 case "macro": {
-                    const { macroId, macroIndex } = currentTarget;
+                    const { macroId, macroIndex } = target;
                     if (macroId === undefined || macroIndex === undefined) break;
 
                     const macros = updatedKeyboard.macros;
                     if (!macros || !macros[macroId]) break;
 
-                    // macros[macroId].actions is an array of [type, value]
-                    // e.g. ["down", "KC_A"]
-                    // We only support assigning keycodes to tap/down/up actions
                     const action = macros[macroId].actions[macroIndex];
                     if (!action || !["tap", "down", "up"].includes(action[0])) break;
 
-                    // const previousValue = action[1];
                     const keycodeName = typeof keycode === "string" ? keycode : `KC_${keycode}`;
 
                     // Update the value
                     macros[macroId].actions[macroIndex][1] = keycodeName;
 
-                    // Queue change? Macros might be complex to queue individually if the whole macro is an object.
-                    // For now, let's just update the keyboard state, similar to how MacroEditor handles it locally, but via queue if possible.
-                    // But here we are updating one action.
-
-                    // Note: MacroEditor saves the *entire* macro object. 
-                    // To be consistent with other bindings, we should queue it.
-                    // But the backend API probably expects the full macro definiton.
-
-                    // Let's assume queue() handles this or we just setKeyboard to trigger the save in MacroEditor?
-                    // Actually, if we use queue(), we need a way to commit it.
-                    // For now, let's stick to updating the local state and letting the UI react.
-                    // However, assigning a keycode is a "user action" that should probably persist.
-
-                    // Since MacroEditor has its own persistence logic (useEffect on actions), 
-                    // simply updating 'keyboard' here might be enough IF MacroEditor picks it up.
-                    // But wait, assignKeycode calls 'updateKey' for keyboard, but for others?
-                    // It seems the queue mechanics are specific.
-
-                    // Let's just update the keyboard object for now. The generic "setKeyboard" at the end triggers React updates.
-
                     break;
                 }
 
                 case "override": {
-                    const { overrideId, overrideSlot } = currentTarget;
+                    const { overrideId, overrideSlot } = target;
                     if (overrideId === undefined || overrideSlot === undefined) break;
 
                     const overrides = updatedKeyboard.key_overrides;
@@ -386,9 +322,100 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                 }
             }
             setKeyboard(updatedKeyboard);
-            clearSelection();
+
+            if (target === selectedTargetRef.current) {
+                clearSelection();
+            }
         },
         [keyboard, setKeyboard, clearSelection, queue]
+    );
+
+    const swapKeys = useCallback(
+        (target1: BindingTarget, target2: BindingTarget) => {
+            if (!keyboard) return;
+
+            // Only support keyboard swaps for now, but structure allows extension
+            if (target1.type !== "keyboard" || target2.type !== "keyboard") return;
+
+            const { layer: layer1, row: row1, col: col1 } = target1;
+            const { layer: layer2, row: row2, col: col2 } = target2;
+
+            if (
+                layer1 === undefined || row1 === undefined || col1 === undefined ||
+                layer2 === undefined || row2 === undefined || col2 === undefined
+            ) return;
+
+            // Clone state ONCE
+            const updatedKeyboard = JSON.parse(JSON.stringify(keyboard));
+            if (!updatedKeyboard.keymap) updatedKeyboard.keymap = [];
+
+            // Ensure layers exist
+            if (!updatedKeyboard.keymap[layer1]) updatedKeyboard.keymap[layer1] = [];
+            if (!updatedKeyboard.keymap[layer2]) updatedKeyboard.keymap[layer2] = [];
+
+            const matrixPos1 = row1 * MATRIX_COLS + col1;
+            const matrixPos2 = row2 * MATRIX_COLS + col2;
+
+            // Get values from CLONED state (or original, same thing at start)
+            const val1 = updatedKeyboard.keymap[layer1][matrixPos1] || 0;
+            const val2 = updatedKeyboard.keymap[layer2][matrixPos2] || 0;
+
+            console.log(`Swapping keys: [${layer1},${row1},${col1}](${val1}) <-> [${layer2},${row2},${col2}](${val2})`);
+
+            // Swap values
+            updatedKeyboard.keymap[layer1][matrixPos1] = val2;
+            updatedKeyboard.keymap[layer2][matrixPos2] = val1;
+
+            // Queue changes
+            // Change 1: Target 1 gets Val 2
+            queue(
+                `key_${layer1}_${row1}_${col1}`,
+                async () => {
+                    console.log(`Committing swap change 1: Layer ${layer1}, Key [${row1},${col1}] → ${val2}`);
+                    updateKey(layer1, row1, col1, val2);
+                },
+                {
+                    type: "key",
+                    layer: layer1,
+                    row: row1,
+                    col: col1,
+                    keycode: val2,
+                    previousValue: val1,
+                }
+            );
+
+            // Change 2: Target 2 gets Val 1
+            queue(
+                `key_${layer2}_${row2}_${col2}`,
+                async () => {
+                    console.log(`Committing swap change 2: Layer ${layer2}, Key [${row2},${col2}] → ${val1}`);
+                    updateKey(layer2, row2, col2, val1);
+                },
+                {
+                    type: "key",
+                    layer: layer2,
+                    row: row2,
+                    col: col2,
+                    keycode: val1,
+                    previousValue: val2,
+                }
+            );
+
+            setKeyboard(updatedKeyboard);
+            // Optionally clear selection if involved?
+            // If dragging, we might want to clear.
+            clearSelection();
+        },
+        [keyboard, setKeyboard, queue, clearSelection, updateKey]
+    );
+
+    const assignKeycode = useCallback(
+        (keycode: number | string) => {
+            if (selectedTargetRef.current) {
+                assignKeycodeTo(selectedTargetRef.current, keycode);
+            }
+        },
+        [assignKeycodeTo]
     );
 
     const { getSetting } = useSettings();
@@ -426,6 +453,9 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         selectMacroKey,
         selectOverrideKey,
         assignKeycode,
+        // Add assignKeycodeTo to interface
+        assignKeycodeTo,
+        swapKeys,
         clearSelection,
         isBinding,
         hoveredKey,
