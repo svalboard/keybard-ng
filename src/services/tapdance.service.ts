@@ -36,12 +36,12 @@ export class TapdanceService {
         for (const td of toPush) {
             await this.usb.sendVial(VialUSB.CMD_VIAL_DYNAMIC_ENTRY_OP, [
                 VialUSB.DYNAMIC_VIAL_TAP_DANCE_SET,
-                td.idx,
+                td.idx || 0,
                 ...this.LE16(keyService.parse(td.tap)),
                 ...this.LE16(keyService.parse(td.hold)),
                 ...this.LE16(keyService.parse(td.doubletap)),
                 ...this.LE16(keyService.parse(td.taphold)),
-                td.tapping_term,
+                td.tapping_term || 0,
             ]);
         }
     }

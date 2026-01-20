@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVial } from "@/contexts/VialContext";
 import { useLayer } from "@/contexts/LayerContext";
-import { layerColors, getColorByName } from "@/utils/colors";
+import { getColorByName } from "@/utils/colors";
 
 interface BottomToolbarProps {
     isConnected: boolean;
