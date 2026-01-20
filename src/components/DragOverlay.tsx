@@ -31,16 +31,14 @@ export const DragOverlay: React.FC = () => {
         transform: 'translate(-50%, -50%)',
         pointerEvents: "none",
         zIndex: 9999,
-        // Add drop shadow as requested: "subtle dropshadow"
-        filter: "drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.3))"
     };
 
     const renderContent = () => {
         if (draggedItem.component === "Key" && draggedItem.props) {
-            return <Key {...draggedItem.props} />;
+            return <Key {...draggedItem.props as any} />;
         }
         if (draggedItem.component === "EditorKey" && draggedItem.props) {
-            return <EditorKey {...draggedItem.props} />;
+            return <EditorKey {...draggedItem.props as any} />;
         }
 
         // Fallback for any other items or legacy path
@@ -49,7 +47,7 @@ export const DragOverlay: React.FC = () => {
         const keyClass = displayText !== "" ? classes.emptyKey : classes.key;
 
         return (
-            <div className={cn(keyClass, "border-red-600 !w-full !h-full")}>
+            <div className={cn(keyClass, "border-red-600 !w-full !h-full shadow-none")}>
                 {isMacro && <MacrosIcon className="mt-2 h-8" />}
                 {displayText && <span style={{ whiteSpace: "pre-line" }}>{displayText}</span>}
             </div>
@@ -57,7 +55,7 @@ export const DragOverlay: React.FC = () => {
     };
 
     return (
-        <div style={style}>
+        <div style={style} className="shadow-lg rounded-md bg-white">
             {renderContent()}
         </div>
     );

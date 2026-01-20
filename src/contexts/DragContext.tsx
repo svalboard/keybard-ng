@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useRef, useCallback } from "react";
-
 import { KeyProps } from "@/components/Key";
 import { EditorKeyProps } from "@/layout/SecondarySidebar/components/EditorKey";
 import { KeyContent } from "@/types/vial.types";
@@ -9,13 +8,11 @@ export interface DragItem {
     label: string;
     type: string;
     extra?: KeyContent;
-    // We might need to know the original source to apply styling
     sourceId?: string;
     width?: number;
     height?: number;
     component?: "Key" | "EditorKey";
     props?: KeyProps | EditorKeyProps;
-    // For main keys, we need coordinates to perform swap
     row?: number;
     col?: number;
     layer?: number;
@@ -37,13 +34,15 @@ interface DragProviderProps {
     onUnhandledDrop?: (item: DragItem) => void;
 }
 
+/**
+ * Provides dragging state and handlers for global drag-and-drop operations.
+ */
 export const DragProvider: React.FC<DragProviderProps> = ({ children, onUnhandledDrop }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
     const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
     const [dragSourceId, setDragSourceId] = useState<string | null>(null);
 
-    // To avoid stale closures in event listeners
     const dragItemRef = useRef<DragItem | null>(null);
     const isDraggingRef = useRef(false);
     const dropConsumedRef = useRef(false);
@@ -52,18 +51,17 @@ export const DragProvider: React.FC<DragProviderProps> = ({ children, onUnhandle
         dropConsumedRef.current = true;
     }, []);
 
-    const updatePosition = (x: number, y: number) => {
+    const updatePosition = useCallback((x: number, y: number) => {
         setDragPosition({ x, y });
-    };
+    }, []);
 
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!isDraggingRef.current) return;
         updatePosition(e.clientX, e.clientY);
-    }, []);
+    }, [updatePosition]);
 
     const handleMouseUp = useCallback(() => {
         if (isDraggingRef.current) {
-            // Check if drop was consumed by a target
             if (!dropConsumedRef.current && onUnhandledDrop && dragItemRef.current) {
                 onUnhandledDrop(dragItemRef.current);
             }
@@ -76,7 +74,6 @@ export const DragProvider: React.FC<DragProviderProps> = ({ children, onUnhandle
             dropConsumedRef.current = false;
         }
 
-        // Remove listeners
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("mouseup", handleMouseUp);
     }, [handleMouseMove, onUnhandledDrop]);
@@ -86,13 +83,9 @@ export const DragProvider: React.FC<DragProviderProps> = ({ children, onUnhandle
 
         dragItemRef.current = item;
         setDraggedItem(item);
-        if (item.sourceId) {
-            setDragSourceId(item.sourceId);
-        }
+        if (item.sourceId) setDragSourceId(item.sourceId);
 
         dropConsumedRef.current = false;
-
-        // Initial position
         updatePosition(event.clientX, event.clientY);
 
         setIsDragging(true);
@@ -100,7 +93,7 @@ export const DragProvider: React.FC<DragProviderProps> = ({ children, onUnhandle
 
         window.addEventListener("mousemove", handleMouseMove);
         window.addEventListener("mouseup", handleMouseUp);
-    }, [handleMouseMove, handleMouseUp]);
+    }, [handleMouseMove, handleMouseUp, updatePosition]);
 
     const value = {
         isDragging,

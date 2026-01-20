@@ -20,16 +20,16 @@ export const THUMB_OFFSET_U = 0.3;
 
 export const CLUSTER_BACKGROUNDS_DATA: ClusterBackground[] = [
     // Left Cluster
-    { x: 7.1, y: 4.9, w: 2.2, h: 1.2, label: "Outer Top" }, // Enter
-    { x: 7.1, y: 6.2, w: 2.2, h: 1.2, label: "Outer Bottom" }, // MO 14
-    { x: 9.4, y: 4.9, w: 1.2, h: 2.5, continuous: true, label: "Middle" }, // Caps/Shift
-    { x: 10.7, y: 4.9, w: 1.2, h: 1.2, label: "Inner Top" }, // Tab
-    { x: 10.7, y: 6.2, w: 1.2, h: 1.2, label: "Inner Bottom" }, // Ctrl
+    { x: 8.1, y: 4.9, w: 1.2, h: 1.2, label: "Outer Top" }, // "1" - Narrowed
+    { x: 7.1, y: 6.2, w: 2.2, h: 1.2, label: "Outer Bottom" }, // "4" - Wide
+    { x: 9.4, y: 4.9, w: 1.2, h: 2.5, continuous: true, label: "Middle" }, // "2" & "5"
+    { x: 10.7, y: 4.9, w: 1.2, h: 1.2, label: "Inner Top" }, // "3"
+    { x: 10.7, y: 6.2, w: 1.2, h: 1.2, label: "Inner Bottom" }, // "6"
 
     // Right Cluster
-    { x: 13.1, y: 4.9, w: 1.2, h: 1.2, label: "Inner Top" }, // Backsp
-    { x: 13.1, y: 6.2, w: 1.2, h: 1.2, label: "Inner Bottom" }, // Alt
-    { x: 14.4, y: 4.9, w: 1.2, h: 2.5, continuous: true, label: "Middle" }, // MO 5/MO 4
-    { x: 15.7, y: 4.9, w: 2.2, h: 1.2, label: "Outer Top" }, // Space
-    { x: 15.7, y: 6.2, w: 2.2, h: 1.2, label: "Outer Bottom" }, // MO 2
+    { x: 13.1, y: 4.9, w: 1.2, h: 1.2, label: "Inner Top" }, // "7"
+    { x: 13.1, y: 6.2, w: 1.2, h: 1.2, label: "Inner Bottom" }, // "0"
+    { x: 14.4, y: 4.9, w: 1.2, h: 2.5, continuous: true, label: "Middle" }, // "8" & "."
+    { x: 15.7, y: 4.9, w: 1.2, h: 1.2, label: "Outer Top" }, // "9" - Narrowed
+    { x: 15.7, y: 6.2, w: 2.2, h: 1.2, label: "Outer Bottom" }, // "HOME" - Wide
 ];

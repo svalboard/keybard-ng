@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo, useCallback } from "react";
 import { DragItem, useDrag } from "@/contexts/DragContext";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { KeyContent } from "@/types/vial.types";
@@ -21,69 +21,54 @@ export interface UseKeyDragProps {
     disableHover?: boolean;
 }
 
-export const useKeyDrag = ({
-    uniqueId,
-    keycode,
-    label,
-    row,
-    col,
-    layerIndex,
-    layerColor,
-    isRelative,
-    keyContents,
-    w,
-    h,
-    variant,
-    onClick,
-    disableHover,
-}: UseKeyDragProps) => {
+/**
+ * Custom hook to handle drag and drop logic for a single key.
+ */
+export const useKeyDrag = (props: UseKeyDragProps) => {
+    const {
+        uniqueId, keycode, label, row, col, layerIndex, layerColor,
+        isRelative, keyContents, w, h, variant, onClick, disableHover
+    } = props;
+
     const { startDrag, dragSourceId, isDragging, draggedItem, markDropConsumed } = useDrag();
     const { assignKeycode, selectKeyboardKey, swapKeys, setHoveredKey } = useKeyBinding();
+
     const startPosRef = useRef<{ x: number; y: number } | null>(null);
     const [isDragHover, setIsDragHover] = useState(false);
 
-    const isSmall = variant === "small";
-    const isMedium = variant === "medium";
-    const currentUnitSize = isSmall ? 30 : isMedium ? 45 : UNIT_SIZE;
+    const currentUnitSize = useMemo(() => {
+        if (variant === "small") return 30;
+        if (variant === "medium") return 45;
+        return UNIT_SIZE;
+    }, [variant]);
 
-    // Is this key the one being dragged?
     const isDragSource = dragSourceId === uniqueId;
-
-    // Can this key be a drag source?
-    const canDrag = true;
-
-    // Can this key be a drop target? (Only main keyboard keys)
     const canDrop = !isRelative && isDragging;
 
-    const handleMouseEnter = () => {
+    const handleMouseEnter = useCallback(() => {
         if (canDrop) {
             setIsDragHover(true);
-            // Auto-select the key under the drag to ensure assignment works
             selectKeyboardKey(layerIndex, row, col);
-            if (onClick) onClick(row, col);
+            onClick?.(row, col);
         }
 
-        if (disableHover) return;
-        setHoveredKey({
-            type: "keyboard",
-            row,
-            col,
-            keycode,
-            label,
-        });
-    };
+        if (!disableHover) {
+            setHoveredKey({ type: "keyboard", row, col, keycode, label });
+        }
+    }, [canDrop, selectKeyboardKey, layerIndex, row, col, onClick, disableHover, setHoveredKey, keycode, label]);
 
-    const handleMouseLeave = () => {
+    const handleMouseLeave = useCallback(() => {
         if (canDrop) {
             setIsDragHover(false);
         }
 
-        if (disableHover) return;
-        setHoveredKey(null);
-    };
+        if (!disableHover) {
+            setHoveredKey(null);
+        }
+    }, [canDrop, disableHover, setHoveredKey]);
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (!canDrag || e.button !== 0) return;
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        if (e.button !== 0) return;
 
         startPosRef.current = { x: e.clientX, y: e.clientY };
 
@@ -96,7 +81,7 @@ export const useKeyDrag = ({
 
             if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
                 const dragPayload: DragItem = {
-                    keycode: keycode,
+                    keycode,
                     label: label || keycode,
                     type: keyContents?.type || "keyboard",
                     extra: keyContents,
@@ -105,39 +90,21 @@ export const useKeyDrag = ({
                     height: h * currentUnitSize,
                     component: "Key",
                     props: {
-                        x: 0,
-                        y: 0,
-                        w,
-                        h,
-                        keycode,
-                        label,
-                        row,
-                        col,
-                        layerColor,
-                        keyContents,
-                        isRelative: true,
-                        variant,
-                        className: "",
-                        selected: false,
-                        disableHover: true,
+                        x: 0, y: 0, w, h, keycode, label, row, col,
+                        layerColor, keyContents, isRelative: true,
+                        variant, className: "", selected: false, disableHover: true
                     },
-                    // Add coords for swap logic if this is a main key
                     row: isRelative ? undefined : row,
                     col: isRelative ? undefined : col,
                     layer: isRelative ? undefined : layerIndex
                 };
 
-                startDrag(dragPayload, {
-                    clientX: moveEvent.clientX,
-                    clientY: moveEvent.clientY,
-                } as any);
+                startDrag(dragPayload, moveEvent);
                 cleanup();
             }
         };
 
-        const handleUp = () => {
-            cleanup();
-        };
+        const handleUp = () => cleanup();
 
         const cleanup = () => {
             startPosRef.current = null;
@@ -147,32 +114,26 @@ export const useKeyDrag = ({
 
         window.addEventListener("mousemove", checkDrag);
         window.addEventListener("mouseup", handleUp);
-    };
+    }, [keycode, label, keyContents, uniqueId, w, currentUnitSize, h, row, col, layerColor, variant, isRelative, layerIndex, startDrag]);
 
-    const handleMouseUp = () => {
+    const handleMouseUp = useCallback(() => {
         if (canDrop && isDragHover && draggedItem) {
-            console.log("Dropping", draggedItem, "onto", keycode);
             markDropConsumed();
 
-            // Swap Logic
             if (draggedItem.row !== undefined && draggedItem.col !== undefined && draggedItem.layer !== undefined) {
-                if (draggedItem.row === row && draggedItem.col === col && draggedItem.layer === layerIndex) {
-                    // Same key - do nothing
-                } else {
-                    console.log("Swapping keys atomically");
+                if (draggedItem.row !== row || draggedItem.col !== col || draggedItem.layer !== layerIndex) {
                     swapKeys(
                         { type: "keyboard", row: draggedItem.row, col: draggedItem.col, layer: draggedItem.layer },
                         { type: "keyboard", row, col, layer: layerIndex }
                     );
                 }
             } else {
-                // Standard assignment
                 assignKeycode(draggedItem.keycode);
             }
 
             setIsDragHover(false);
         }
-    };
+    }, [canDrop, isDragHover, draggedItem, markDropConsumed, row, col, layerIndex, swapKeys, assignKeycode]);
 
     return {
         isDragSource,
@@ -184,3 +145,4 @@ export const useKeyDrag = ({
         currentUnitSize,
     };
 };
+

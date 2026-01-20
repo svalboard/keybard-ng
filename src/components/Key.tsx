@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { showModMask } from "@/utils/keys";
 import { colorClasses, hoverContainerTextClasses } from "@/utils/colors";
@@ -7,18 +7,18 @@ import { getHeaderIcons, getCenterContent, getTypeIcon } from "@/utils/key-icons
 import { useKeyDrag } from "@/hooks/useKeyDrag";
 
 export interface KeyProps {
-    x: number; // X position in key units
-    y: number; // Y position in key units
-    w: number; // Width in key units
-    h: number; // Height in key units
-    keycode: string; // The keycode (e.g., "KC_A", "MO(2)")
-    label: string; // Display label for the key
-    row: number; // Matrix row
-    col: number; // Matrix column
-    layerIndex?: number; // Explicit layer index (for dragging/swapping)
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    keycode: string;
+    label: string;
+    row: number;
+    col: number;
+    layerIndex?: number;
     selected?: boolean;
     onClick?: (row: number, col: number) => void;
-    keyContents?: KeyContent; // Additional key contents info
+    keyContents?: KeyContent;
     layerColor?: string;
     isRelative?: boolean;
     className?: string;
@@ -31,199 +31,131 @@ export interface KeyProps {
 }
 
 /**
- * Key component representing a single physical or virtual key on the keyboard.
- * Handles different key types (layer, macro, tapdance, etc.) and visual styles.
+ * Renders a single key in the keyboard layout.
  */
-export const Key: React.FC<KeyProps> = ({
-    x,
-    y,
-    w,
-    h,
-    keycode,
-    label,
-    row,
-    col,
-    layerIndex = 0,
-    layerColor = "primary",
-    selected = false,
-    onClick,
-    keyContents,
-    isRelative = false,
-    className = "",
-    headerClassName = "bg-black/30",
-    variant = "default",
-    hoverBorderColor,
-    hoverBackgroundColor,
-    hoverLayerColor,
-    disableHover = false,
-}) => {
+export const Key: React.FC<KeyProps> = (props) => {
+    const {
+        x, y, w, h, keycode, label, row, col, layerIndex = 0, layerColor = "primary",
+        selected = false, onClick, keyContents, isRelative = false, className = "",
+        headerClassName = "bg-black/30", variant = "default", hoverBorderColor,
+        hoverBackgroundColor, hoverLayerColor, disableHover = false,
+    } = props;
+
+    const uniqueId = React.useId();
+    const drag = useKeyDrag({
+        uniqueId, keycode, label, row, col, layerIndex, layerColor,
+        isRelative, keyContents, w, h, variant, onClick, disableHover
+    });
+
     const isSmall = variant === "small";
     const isMedium = variant === "medium";
 
-    // Use custom hook for drag logic
-    const uniqueId = React.useId();
-    const {
-        isDragSource,
-        isDragHover,
-        handleMouseEnter,
-        handleMouseLeave,
-        handleMouseDown,
-        handleMouseUp,
-        currentUnitSize,
-    } = useKeyDrag({
-        uniqueId,
-        keycode,
-        label,
-        row,
-        col,
-        layerIndex,
-        layerColor,
-        isRelative,
-        keyContents,
-        w,
-        h,
-        variant,
-        onClick,
-        disableHover,
-    });
+    // --- Data processing ---
+    const keyData = useMemo(() => {
+        let displayLabel = label;
+        let bottomStr = "";
+        let topLabel: React.ReactNode = "";
+
+        if (keyContents?.type === "modmask") {
+            const show = showModMask(keyContents.modids);
+            const keysArr = keyContents.str?.split("\n") || [];
+            const keyStr = keysArr[0] || "";
+
+            if (!label || label === keycode) {
+                const modStr = keyContents.top || "";
+                displayLabel = modStr + (keyStr === "" || keyStr === "KC_NO" ? " (kc)" : ` ${keyStr}`);
+            }
+            bottomStr = show;
+        } else if (keyContents?.type === "tapdance") {
+            displayLabel = keyContents.tdid?.toString() || "";
+        } else if (keyContents?.type === "macro") {
+            displayLabel = keyContents.top?.replace("M", "") || "";
+        } else if (keyContents?.type === "user") {
+            displayLabel = keyContents.str || "";
+        } else if (keyContents?.type === "OSM") {
+            topLabel = "OSM";
+            displayLabel = keyContents.str || "";
+        }
+
+        if (displayLabel === "KC_NO") displayLabel = "";
+
+        const { icons, isMouse } = getHeaderIcons(keycode, displayLabel);
+        if (icons.length > 0) {
+            topLabel = <div className="flex items-center justify-center gap-1">{icons}</div>;
+        }
+
+        const centerContent = getCenterContent(displayLabel, keycode, isMouse);
+        return { displayLabel, bottomStr, topLabel, centerContent };
+    }, [label, keyContents, keycode]);
+
+    // --- Styling logic ---
+    const styles = useMemo(() => {
+        const boxStyle: React.CSSProperties = {
+            left: isRelative ? undefined : `${x * drag.currentUnitSize}px`,
+            top: isRelative ? undefined : `${y * drag.currentUnitSize}px`,
+            width: `${w * drag.currentUnitSize}px`,
+            height: `${h * drag.currentUnitSize}px`,
+        };
+
+        const shouldShrinkText = ["user", "OSM"].includes(keyContents?.type || "") ||
+            (typeof keyData.centerContent === "string" && (keyData.centerContent.length > 5 || (keyData.centerContent.length === 5 && keyData.centerContent.toUpperCase().includes("W"))));
+
+        const textStyle: React.CSSProperties = shouldShrinkText ? { whiteSpace: "pre-line", fontSize: "0.6rem", wordWrap: "break-word" } : {};
+        const bottomTextStyle: React.CSSProperties = keyData.bottomStr.length > 4 ? { whiteSpace: "pre-line", fontSize: "0.6rem", wordWrap: "break-word" } : {};
+
+        const colorClass = colorClasses[layerColor] || colorClasses["primary"];
+        const effectiveHoverColor = hoverLayerColor || layerColor;
+        const hoverTextClass = hoverContainerTextClasses[effectiveHoverColor] || hoverContainerTextClasses["primary"];
+
+        const containerClasses = cn(
+            "flex flex-col items-center justify-between cursor-pointer transition-all duration-200 ease-in-out uppercase group overflow-hidden select-none",
+            !isRelative && "absolute",
+            isSmall ? "rounded-[5px] border" : isMedium ? "rounded-[5px] border-2" : "rounded-md border-2",
+            (selected || drag.isDragHover)
+                ? "bg-red-500 text-white border-kb-gray"
+                : drag.isDragSource
+                    ? cn(colorClass, "bg-kb-light-grey border-kb-light-grey opacity-60")
+                    : cn(
+                        colorClass, "border-kb-gray",
+                        !disableHover && (hoverBorderColor || "hover:border-red-500"),
+                        !disableHover && hoverBackgroundColor,
+                        !disableHover && hoverTextClass
+                    ),
+            className
+        );
+
+        return { boxStyle, textStyle, bottomTextStyle, containerClasses };
+    }, [x, y, w, h, drag, isRelative, isSmall, isMedium, keyContents, keyData, layerColor, hoverLayerColor, selected, disableHover, hoverBorderColor, hoverBackgroundColor, className]);
+
+    const headerClass = cn(
+        "whitespace-nowrap w-full text-center font-semibold py-0 transition-colors duration-200 text-white",
+        isSmall ? "text-[10px] rounded-t-[4px]" : isMedium ? "text-[11px] rounded-t-[4px]" : "text-sm rounded-t-sm",
+        headerClassName
+    );
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (onClick) {
-            onClick(row, col);
-        }
+        onClick?.(row, col);
     };
 
-    // Style for positioning and dimensions
-    const boxStyle: React.CSSProperties = {
-        left: isRelative ? undefined : `${x * currentUnitSize}px`,
-        top: isRelative ? undefined : `${y * currentUnitSize}px`,
-        width: `${w * currentUnitSize}px`,
-        height: `${h * currentUnitSize}px`,
-    };
-
-    // Pre-process label and logic
-    let displayLabel = label;
-    let bottomStr = "";
-    let topLabel: React.ReactNode = "";
-
-    const hasModifiers = keyContents?.type === "modmask";
-
-    if (hasModifiers && keyContents) {
-        const show = showModMask(keyContents.modids);
-        const keysArr = keyContents.str?.split("\n") || [];
-        const keyStr = keysArr[0] || "";
-
-        if (!label || label === keycode) {
-            // Main keyboard case: label equals keycode (e.g., "LCTL(kc)")
-            // Need to construct a display label like "LCTL (kc)" to match panel
-            if (keyStr === "" || keyStr === "KC_NO") {
-                // It's a placeholder - show modifier + (kc) in center
-                const modStr = keyContents.top || "";
-                displayLabel = `${modStr} (kc)`;
-            } else {
-                // It has an actual key - show modifier + key
-                const modStr = keyContents.top || "";
-                displayLabel = `${modStr} ${keyStr}`;
-            }
-        }
-        // else: QMK panel case - label already has proper format like "LCTL (kc)"
-
-        bottomStr = show;
-    }
-
-    if (keyContents?.type === "tapdance") {
-        displayLabel = keyContents.tdid?.toString() || "";
-    } else if (keyContents?.type === "macro") {
-        displayLabel = keyContents.top?.replace("M", "") || "";
-    } else if (keyContents?.type === "user") {
-        displayLabel = keyContents.str || "";
-    } else if (keyContents?.type === "OSM") {
-        topLabel = "OSM";
-        displayLabel = keyContents.str || "";
-    }
-
-    if (displayLabel === "KC_NO") {
-        displayLabel = "";
-    }
-
-    // Icon logic
-    const { icons, isMouse } = getHeaderIcons(keycode, displayLabel);
-    if (icons.length > 0) {
-        topLabel = <div className="flex items-center justify-center gap-1">{icons}</div>;
-    }
-
-    const centerContent = getCenterContent(displayLabel, keycode, isMouse);
-
-    // Determine styling for long text
-    const shouldShrinkText =
-        ["user", "OSM"].includes(keyContents?.type || "") ||
-        (typeof centerContent === "string" &&
-            (centerContent.length > 5 || (centerContent.length === 5 && centerContent.toUpperCase().includes("W"))));
-
-    const textStyle: React.CSSProperties = shouldShrinkText
-        ? { whiteSpace: "pre-line", fontSize: "0.6rem", wordWrap: "break-word" }
-        : {};
-    const bottomTextStyle: React.CSSProperties =
-        bottomStr.length > 4 ? { whiteSpace: "pre-line", fontSize: "0.6rem", wordWrap: "break-word" } : {};
-
-    // Get the base color classes
-    const colorClass = colorClasses[layerColor] || colorClasses["primary"];
-
-    // Determine hover color - use hoverLayerColor if provided, otherwise default to current layer
-    const effectiveHoverColorName = hoverLayerColor || layerColor;
-    const hoverContainerTextClass = hoverContainerTextClasses[effectiveHoverColorName] || hoverContainerTextClasses["primary"];
-
-    // Common container classes
-    const containerClasses = cn(
-        "flex flex-col items-center justify-between cursor-pointer transition-all duration-200 ease-in-out uppercase group overflow-hidden",
-        !isRelative && "absolute",
-        isSmall ? "rounded-[5px] border" : isMedium ? "rounded-[5px] border-2" : "rounded-md border-2",
-        // Conditional Styling for Drop Target (Red) and Drag Source (Blue/Fade)
-        (selected || isDragHover)
-            ? "bg-red-500 text-white border-kb-gray"
-            : isDragSource
-                ? cn(colorClass, "bg-kb-light-grey border-kb-light-grey opacity-60")
-                : cn(
-                    colorClass,
-                    "border-kb-gray",
-                    !disableHover && (hoverBorderColor || "hover:border-red-500"),
-                    !disableHover && hoverBackgroundColor,
-                    !disableHover && hoverContainerTextClass
-                ),
-        "select-none", // Prevent text selection
-        className
-    );
-
-    // Specific rendering for Layer keys
+    // --- Sub-renderer for layer keys ---
     if (keyContents?.type === "layer") {
-        const layerIndex = keyContents?.top?.split("(")[1]?.replace(")", "") || "";
+        const targetLayer = keyContents?.top?.split("(")[1]?.replace(")", "") || "";
         return (
             <div
-                className={containerClasses}
-                style={boxStyle}
+                className={styles.containerClasses}
+                style={styles.boxStyle}
                 onClick={handleClick}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
+                onMouseEnter={drag.handleMouseEnter}
+                onMouseLeave={drag.handleMouseLeave}
+                onMouseDown={drag.handleMouseDown}
+                onMouseUp={drag.handleMouseUp}
                 title={keycode}
             >
-                <span className={cn(
-                    "whitespace-nowrap w-full text-center font-semibold py-0 transition-colors duration-200",
-                    isSmall ? "text-[10px] rounded-t-[4px]" : isMedium ? "text-[11px] rounded-t-[4px]" : "text-sm rounded-t-sm",
-                    "text-white",
-                    headerClassName
-                )}>
-                    {keyContents?.layertext}
-                </span>
-
+                <span className={headerClass}>{keyContents?.layertext}</span>
                 <div className={cn("flex flex-row h-full w-full items-center justify-center", isSmall ? "gap-1" : isMedium ? "gap-1.5" : "gap-2")}>
-                    <div className={cn(
-                        "text-center justify-center items-center flex font-semibold",
-                        isSmall ? "text-[13px]" : (isMedium || layerIndex.length > 1) ? "text-[14px]" : "text-[16px]"
-                    )}>
-                        {layerIndex}
+                    <div className={cn("text-center justify-center items-center flex font-semibold", isSmall ? "text-[13px]" : (isMedium || targetLayer.length > 1) ? "text-[14px]" : "text-[16px]")}>
+                        {targetLayer}
                     </div>
                     {getTypeIcon("layer", variant)}
                 </div>
@@ -231,54 +163,38 @@ export const Key: React.FC<KeyProps> = ({
         );
     }
 
-    // Default rendering for all other keys
     return (
         <div
-            className={containerClasses}
-            style={boxStyle}
+            className={styles.containerClasses}
+            style={styles.boxStyle}
             onClick={handleClick}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
+            onMouseEnter={drag.handleMouseEnter}
+            onMouseLeave={drag.handleMouseLeave}
+            onMouseDown={drag.handleMouseDown}
+            onMouseUp={drag.handleMouseUp}
             title={keycode}
         >
-            {topLabel && (
-                <span className={cn(
-                    "whitespace-nowrap w-full text-center font-semibold py-0 flex items-center justify-center transition-colors duration-200",
-                    isSmall ? "text-[8px] min-h-[10px] rounded-t-[4px]" : isMedium ? "text-[10px] min-h-[14px] rounded-t-[4px]" : "text-sm min-h-[1.2rem] rounded-t-sm",
-                    "text-white",
-                    headerClassName
-                )}>
-                    {topLabel}
+            {keyData.topLabel && (
+                <span className={cn(headerClass, "flex items-center justify-center", isSmall ? "text-[8px] min-h-[10px]" : isMedium ? "text-[10px] min-h-[14px]" : "min-h-[1.2rem]")}>
+                    {keyData.topLabel}
                 </span>
             )}
 
             {keyContents && getTypeIcon(keyContents.type || "", variant)}
 
             <div
-                className={cn(
-                    "text-center w-full h-full justify-center items-center flex font-semibold",
-                    isSmall ? "text-[10px] px-0.5" : isMedium ? "text-[12px] px-1" : (typeof centerContent === 'string' && centerContent.length === 1 ? "text-[16px]" : "text-[15px]")
-                )}
-                style={textStyle}
+                className={cn("text-center w-full h-full justify-center items-center flex font-semibold", isSmall ? "text-[10px] px-0.5" : isMedium ? "text-[12px] px-1" : (typeof keyData.centerContent === 'string' && keyData.centerContent.length === 1 ? "text-[16px]" : "text-[15px]"))}
+                style={styles.textStyle}
             >
-                {centerContent}
+                {keyData.centerContent}
             </div>
 
-            {bottomStr !== "" && (
-                <span
-                    className={cn(
-                        "font-semibold items-center flex justify-center whitespace-nowrap w-full text-center py-0 transition-colors duration-200",
-                        isSmall ? "text-[8px] min-h-[10px] rounded-b-[4px]" : isMedium ? "text-[10px] min-h-[14px] rounded-b-[4px]" : "text-sm min-h-5 rounded-b-sm",
-                        "text-white",
-                        headerClassName
-                    )}
-                    style={bottomTextStyle}
-                >
-                    {bottomStr}
+            {keyData.bottomStr !== "" && (
+                <span className={cn(headerClass, "flex items-center justify-center", isSmall ? "text-[8px] min-h-[10px] rounded-b-[4px]" : isMedium ? "text-[10px] min-h-[14px] rounded-b-[4px]" : "min-h-5 rounded-b-sm")} style={styles.bottomTextStyle}>
+                    {keyData.bottomStr}
                 </span>
             )}
         </div>
     );
 };
+
