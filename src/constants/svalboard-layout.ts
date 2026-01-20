@@ -19,11 +19,11 @@ export const UNIT_SIZE = 60;
 // Positions are in key units (1u = 40px)
 export const SVALBOARD_LAYOUT: Record<number, KeyLayout> = {
     // Row 0
-    0: { row: 0, col: 0, x: 10.6, y: 6, w: 1.5, h: 1 }, // KC_LCTRL
-    1: { row: 0, col: 1, x: 10.6, y: 5, w: 1.5, h: 1 }, // KC_TAB
+    0: { row: 0, col: 0, x: 10.8, y: 6, w: 1, h: 1 }, // KC_LCTRL
+    1: { row: 0, col: 1, x: 10.8, y: 5, w: 1, h: 1 }, // KC_TAB
     2: { row: 0, col: 2, x: 9.5, y: 6, w: 1, h: 1 }, // KC_LSHIFT
-    3: { row: 0, col: 3, x: 7.9, y: 5, w: 1.5, h: 1 }, // KC_ENTER
-    4: { row: 0, col: 4, x: 7.4, y: 6, w: 2, h: 1 }, // MO(14)
+    3: { row: 0, col: 3, x: 8.2, y: 5, w: 1, h: 1 }, // KC_ENTER
+    4: { row: 0, col: 4, x: 8.2, y: 6, w: 1, h: 1 }, // MO(14)
     5: { row: 0, col: 5, x: 9.5, y: 5, w: 1, h: 1 }, // KC_CAPSLOCK
 
     // Row 1
@@ -55,11 +55,11 @@ export const SVALBOARD_LAYOUT: Record<number, KeyLayout> = {
     28: { row: 4, col: 4, x: 0, y: 2.5, w: 1, h: 1 }, // KC_DELETE
 
     // Row 5 (thumb cluster left)
-    30: { row: 5, col: 0, x: 12.9, y: 6, w: 1.5, h: 1 }, // KC_LALT
-    31: { row: 5, col: 1, x: 12.9, y: 5, w: 1.5, h: 1 }, // KC_BSPACE
+    30: { row: 5, col: 0, x: 13.2, y: 6, w: 1, h: 1 }, // KC_LALT
+    31: { row: 5, col: 1, x: 13.2, y: 5, w: 1, h: 1 }, // KC_BSPACE
     32: { row: 5, col: 2, x: 14.5, y: 6, w: 1, h: 1 }, // MO(4)
-    33: { row: 5, col: 3, x: 15.6, y: 5, w: 1.5, h: 1 }, // KC_SPACE
-    34: { row: 5, col: 4, x: 15.6, y: 6, w: 2, h: 1 }, // MO(2)
+    33: { row: 5, col: 3, x: 15.8, y: 5, w: 1, h: 1 }, // KC_SPACE
+    34: { row: 5, col: 4, x: 15.8, y: 6, w: 1, h: 1 }, // MO(2)
     35: { row: 5, col: 5, x: 14.5, y: 5, w: 1, h: 1 }, // MO(5)
 
     // Row 6

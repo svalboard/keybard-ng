@@ -61,6 +61,10 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
     const { internationalLayout, keyVariant } = useLayoutSettings();
     const currentUnitSize = keyVariant === 'small' ? 30 : keyVariant === 'medium' ? 45 : UNIT_SIZE;
 
+    // Use a unit-based offset for the thumb cluster so it scales with key size
+    // 12px at 40px/unit = 0.3u
+    const THUMB_OFFSET_U = 0.3;
+
     const layerColor = keyboard.cosmetic?.layer_colors?.[selectedLayer] || "primary";
     const headerClass = headerClasses[layerColor] || headerClasses["primary"];
     const hoverHeaderClass = hoverHeaderClasses[layerColor] || hoverHeaderClasses["primary"];
@@ -104,19 +108,36 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [selectedTarget, selectedLayer, assignKeycode]);
 
+    const CLUSTER_BACKGROUNDS = [
+        // Left Cluster
+        { x: 7.1, y: 4.9, w: 2.2, h: 1.2 }, // Outer Top (Key 1)
+        { x: 7.1, y: 6.2, w: 2.2, h: 1.2 }, // Outer Bottom (Key 2)
+        { x: 9.4, y: 4.9, w: 1.2, h: 2.5 }, // Middle (Key 3/4 - Continuous)
+        { x: 10.7, y: 4.9, w: 1.2, h: 1.2 }, // Inner Top (Key 5)
+        { x: 10.7, y: 6.2, w: 1.2, h: 1.2 }, // Inner Bottom (Key 6)
+
+        // Right Cluster
+        { x: 13.1, y: 4.9, w: 1.2, h: 1.2 }, // Inner Top (Key 5)
+        { x: 13.1, y: 6.2, w: 1.2, h: 1.2 }, // Inner Bottom (Key 6)
+        { x: 14.4, y: 4.9, w: 1.2, h: 2.5 }, // Middle (Key 3/4 - Continuous)
+        { x: 15.7, y: 4.9, w: 2.2, h: 1.2 }, // Outer Top (Key 1)
+        { x: 15.7, y: 6.2, w: 2.2, h: 1.2 }, // Outer Bottom (Key 2)
+    ];
+
     // Calculate the keyboard dimensions for the container
     const calculateKeyboardSize = () => {
         let maxX = 0;
         let maxY = 0;
 
         Object.values(SVALBOARD_LAYOUT).forEach((key) => {
+            const yPos = key.y >= 6 ? key.y + THUMB_OFFSET_U : key.y;
             maxX = Math.max(maxX, key.x + key.w);
-            maxY = Math.max(maxY, key.y + key.h);
+            maxY = Math.max(maxY, yPos + key.h);
         });
 
         return {
             width: maxX * currentUnitSize,
-            height: maxY * currentUnitSize,
+            height: maxY * currentUnitSize + 20,
         };
     };
 
@@ -125,6 +146,21 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
     return (
         <div className="flex flex-col items-center justify-center p-4">
             <div className="keyboard-layout" style={{ width: `${width}px`, height: `${height}px` }}>
+                {/* Cluster Backgrounds */}
+                {CLUSTER_BACKGROUNDS.map((bg: any, j) => (
+                    <div
+                        key={`bg-${j}`}
+                        className="absolute bg-[#E6E6E3]"
+                        style={{
+                            left: `${bg.x * currentUnitSize}px`,
+                            top: `${bg.y * currentUnitSize}px`,
+                            width: `${bg.w * currentUnitSize}px`,
+                            height: `${bg.h * currentUnitSize}px`,
+                            borderRadius: `${10 * (currentUnitSize / UNIT_SIZE)}px`,
+                            zIndex: 0
+                        }}
+                    />
+                ))}
                 {Object.entries(SVALBOARD_LAYOUT).map(([matrixPos, layout]) => {
                     const pos = Number(matrixPos);
                     const row = Math.floor(pos / MATRIX_COLS);
@@ -156,11 +192,13 @@ export const Keyboard: React.FC<KeyboardProps> = ({ keyboard, selectedLayer }) =
                         keyHoverLayerColor = layerColor;
                     }
 
+                    const yPos = layout.y >= 6 ? layout.y + THUMB_OFFSET_U : layout.y;
+
                     return (
                         <Key
                             key={`${row}-${col}`}
                             x={layout.x}
-                            y={layout.y}
+                            y={yPos}
                             w={layout.w}
                             h={layout.h}
                             keycode={keycodeName}
