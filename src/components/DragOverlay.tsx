@@ -1,9 +1,9 @@
-import { Key } from "@/components/Key";
-import EditorKey from "@/layout/SecondarySidebar/components/EditorKey";
-import React from "react";
-import { useDrag } from "@/contexts/DragContext";
 import MacrosIcon from "@/components/icons/MacrosIcon";
+import { Key } from "@/components/Key";
+import { useDrag } from "@/contexts/DragContext";
+import EditorKey from "@/layout/SecondarySidebar/components/EditorKey";
 import { cn } from "@/lib/utils";
+import React from "react";
 
 // Reusing styles from EditorKey roughly to ensure it looks identical
 const classes = {
@@ -14,7 +14,6 @@ const classes = {
 
 export const DragOverlay: React.FC = () => {
     const { isDragging, draggedItem, dragPosition } = useDrag();
-
     if (!isDragging || !draggedItem) return null;
 
     // Use dimensions if provided (Key.tsx provides exact pixel dimensions), otherwise default (EditorKey 48px)
