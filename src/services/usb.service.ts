@@ -1,6 +1,6 @@
 // USB HID communication layer for Vial protocol
 import type { USBSendOptions } from "../types/vial.types";
-import { BE16, LE16, MSG_LEN } from "./utils";
+import { BE16, MSG_LEN } from "./utils";
 
 export class VialUSB {
   // Via+Vial command constants
@@ -227,7 +227,6 @@ export class VialUSB {
   private parseResponse(data: ArrayBuffer, options: USBSendOptions & { uint32: true; index?: undefined }): Uint32Array;
   private parseResponse(data: ArrayBuffer, options: USBSendOptions): Uint8Array;
 
-  // Implementation signature
   private parseResponse(data: ArrayBuffer, options: USBSendOptions): Uint8Array | Uint16Array | Uint32Array | number | bigint | (number | bigint)[] {
     const dv = new DataView(data);
     const u8 = new Uint8Array(data);
@@ -245,6 +244,9 @@ export class VialUSB {
       // If index is specified, return single byte; otherwise return full array
       if (options.index !== undefined) {
         return u8[options.index];
+      }
+      if (options.slice !== undefined) {
+        return u8.slice(options.slice);
       }
       return u8;
     }
@@ -281,6 +283,9 @@ export class VialUSB {
       return u32Array;
     }
 
+    if (options.slice !== undefined) {
+      return u8.slice(options.slice);
+    }
     return u8;
   }
 
@@ -379,16 +384,22 @@ export class VialUSB {
   ): Promise<void> {
     const buffer = new Uint8Array(data);
     let offset = 0;
-    let chunkOffset = 0;
+    const chunksize = 28;
 
     while (offset < size) {
-      const chunk = new Uint8Array(MSG_LEN - 4);
-      for (let i = 0; i < chunk.length && offset < size; i++) {
-        chunk[i] = buffer[offset++];
+      let sz = chunksize;
+      if (sz > size - offset) {
+        sz = size - offset;
       }
 
-      await this.send(cmd, [...LE16(chunkOffset), ...chunk], {});
-      chunkOffset += chunk.length;
+      // Slice the actual data for this chunk
+      const chunk = buffer.slice(offset, offset + sz);
+
+      // Matches Legacy: BE16(offset), sz, ...chunk
+      // The send method will pad the rest of the 32-byte message with zeros
+      await this.send(cmd, [...BE16(offset), sz, ...chunk], {});
+
+      offset += chunksize;
     }
   }
 
@@ -416,7 +427,6 @@ export class VialUSB {
         [dynamicCmd, i],
         options
       );
-      console.log("data", data);
       entries.push(data);
     }
     return entries;

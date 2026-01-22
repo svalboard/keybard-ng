@@ -46,43 +46,46 @@ export class ImportService {
         }
 
         // 2. Sync Macros
-        // Macros are tricky because we only have 'push' which pushes ALL macros.
-        // We really should just check if ANY macro changed and push all if so.
-        // Or if the service allows pushing single macro?
-        // macro.service.ts has `push(kbinfo)` which dumps ALL macros.
-        // So we just queue one big "Update Macros" task if macros differ.
+        // We use the NEW macros content, but the CURRENT board's size limits.
         if (JSON.stringify(newKb.macros) !== JSON.stringify(currentKb.macros)) {
             await queue(
                 "Update All Macros",
                 async () => {
-                    // We must update the CURRENT kbinfo object with new macros before pushing
-                    // But wait, if we update 'currentKb' in place here, React might catch it?
-                    // The 'cb' runs later. We should ensure 'currentKb' (which is the main state)
-                    // has the new macros when this runs.
-                    // Actually, the caller 'SettingsPanel' sets keyboard state *immediately* after calling sync.
-                    // So when this queue callback runs, 'vialContext.keyboard' will already be 'newKb'.
-                    // Wait, if we queue it, we pass 'newKb' to the update function?
-                    // updateMacros takes (kbinfo).
-                    await services.vialService.updateMacros(newKb);
+                    // Create a hybrid object for the update call
+                    const macroUpdateInfo = {
+                        ...newKb,
+                        // CRITICAL: Use the connected board's memory limits
+                        macros_size: currentKb.macros_size,
+                        macro_count: currentKb.macro_count
+                    };
+                    await services.vialService.updateMacros(macroUpdateInfo);
                 },
                 { type: "macro" }
             );
         }
 
         // 3. Sync Combos
-        // combos is a direct array of combo data
-        // Check both combos and combos.entries just in case, but prefer array
         const newCombos = newKb.combos;
         const currentCombos = currentKb.combos;
 
         if (newCombos && currentCombos) {
-            newCombos.forEach(async (combo: any, idx: number) => {
+            // Only iterate up to the board's supported count
+            const maxCombos = currentKb.combo_count || 0;
+            newCombos.slice(0, maxCombos).forEach(async (combo: any, idx: number) => {
                 const oldCombo = currentCombos[idx];
                 if (JSON.stringify(combo) !== JSON.stringify(oldCombo)) {
                     await queue(
                         `Update Combo ${idx}`,
                         async () => {
-                            await services.vialService.updateCombo(newKb, idx);
+                            // Ensure the update uses the proper index and object
+                            // updateCombo typically reads from the passed kbinfo at index `idx`
+                            // So we need to ensure 'newKb' has the combo at that index.
+                            // Since we are iterating newCombos, it should be there.
+                            if (idx < maxCombos) {
+                                // CRITICAL: Ensure the combo has the correct ID
+                                combo.cmbid = idx;
+                                await services.vialService.updateCombo(newKb, idx);
+                            }
                         },
                         { type: "combo", comboId: idx }
                     );
@@ -91,18 +94,22 @@ export class ImportService {
         }
 
         // 4. Sync Tapdances
-        // Handle both 'tapdance' and 'tapdances' property names
         const newTds = newKb.tapdances;
         const oldTds = currentKb.tapdances;
 
         if (newTds && oldTds) {
-            newTds.forEach(async (td: any, idx: number) => {
+             const maxTd = currentKb.tapdance_count || 0;
+             newTds.slice(0, maxTd).forEach(async (td: any, idx: number) => {
                 const oldTd = oldTds[idx];
                 if (JSON.stringify(td) !== JSON.stringify(oldTd)) {
                     await queue(
                         `Update Tapdance ${idx}`,
                         async () => {
-                            await services.vialService.updateTapdance(newKb, idx);
+                             if (idx < maxTd) {
+                                // CRITICAL: Ensure the tapdance has the correct ID
+                                td.idx = idx;
+                                await services.vialService.updateTapdance(newKb, idx);
+                             }
                         },
                         { type: "tapdance", tapdanceId: idx }
                     );
@@ -115,13 +122,18 @@ export class ImportService {
         const currentOverrides = currentKb.key_overrides;
 
         if (newOverrides && currentOverrides) {
-            newOverrides.forEach(async (ko: any, idx: number) => {
+             const maxKo = currentKb.key_override_count || 0;
+             newOverrides.slice(0, maxKo).forEach(async (ko: any, idx: number) => {
                 const oldKo = currentOverrides[idx];
                 if (JSON.stringify(ko) !== JSON.stringify(oldKo)) {
                     await queue(
                         `Update Key Override ${idx}`,
                         async () => {
-                            await services.vialService.updateKeyoverride(newKb, idx);
+                             if (idx < maxKo) {
+                                // CRITICAL: Ensure the override has the correct ID
+                                ko.koid = idx;
+                                await services.vialService.updateKeyoverride(newKb, idx);
+                             }
                         },
                         { type: "override" }
                     );
@@ -130,7 +142,6 @@ export class ImportService {
         }
 
         // 6. Sync QMK Settings
-        // qmk.service.ts: push(kbinfo, qsid)
         if (newKb.settings && currentKb.settings) {
             Object.keys(newKb.settings).forEach(async (key) => {
                 const qsid = parseInt(key);
@@ -143,7 +154,7 @@ export class ImportService {
                         async () => {
                             await services.vialService.updateQMKSetting(newKb, qsid);
                         },
-                        { type: "key" } // Reuse key or add new type
+                        { type: "settings", settingId: qsid } 
                     );
                 }
             });

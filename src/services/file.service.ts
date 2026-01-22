@@ -353,7 +353,7 @@ export class FileService {
                 hold: td[1],
                 doubletap: td[2],
                 taphold: td[3],
-                tapping_term: td[4]
+                tapms: td[4]
             };
         });
 

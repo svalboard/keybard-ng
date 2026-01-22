@@ -1,13 +1,15 @@
-import { FC, useState, useEffect } from "react";
 import { ArrowRight, Trash2 } from "lucide-react";
+import { FC, useEffect, useRef, useState } from "react";
 
 import { Key } from "@/components/Key";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useChanges } from "@/contexts/ChangesContext";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
 import { cn } from "@/lib/utils";
+import { vialService } from "@/services/vial.service";
 import { getKeyContents } from "@/utils/keys";
 
 import OverrideModifierSelector from "./OverrideModifierSelector";
@@ -31,8 +33,15 @@ const ENABLED_BIT = 1 << 7;
 const OverrideEditor: FC<Props> = () => {
     const { keyboard, setKeyboard } = useVial();
     const { itemToEdit, setPanelToGoBack, setAlternativeHeader } = usePanels();
-    const { selectOverrideKey, selectedTarget } = useKeyBinding();
+    const { selectOverrideKey, selectedTarget, clearSelection } = useKeyBinding();
     const [activeTab, setActiveTab] = useState<TabType>("Trigger");
+    const { queue } = useChanges();
+
+    // Track dirty state and latest keyboard for saving on cleanup
+    const isDirty = useRef(false);
+    const keyboardRef = useRef(keyboard);
+    // Track the current override content stringified to detect real changes
+    const lastOverrideStringCheck = useRef<string>("");
 
     const overrideIndex = itemToEdit!;
     const override = keyboard?.key_overrides?.[overrideIndex];
@@ -41,7 +50,73 @@ const OverrideEditor: FC<Props> = () => {
         selectOverrideKey(overrideIndex, "trigger");
         setPanelToGoBack("overrides");
         setAlternativeHeader(true);
+
+        return () => {
+            clearSelection();
+        };
     }, []);
+
+    // Keep keyboard ref updated
+    useEffect(() => {
+        keyboardRef.current = keyboard;
+
+        // Check if override actually changed to set dirty flag
+        if (itemToEdit !== null && override) {
+            const currentString = JSON.stringify(override);
+
+            // If we have a previous check and it's different, marks as dirty
+            // We need to ignore the initial load where lastOverrideStringCheck is empty but we don't want to mark dirty yet?
+            // ComboEditor logic:
+            // if (lastComboStringCheck.current && lastComboStringCheck.current !== currentString) { isDirty.current = true; }
+            // lastComboStringCheck.current = currentString;
+
+            if (lastOverrideStringCheck.current && lastOverrideStringCheck.current !== currentString) {
+                console.log("Override changed, marking dirty");
+                isDirty.current = true;
+            }
+
+            lastOverrideStringCheck.current = currentString;
+        }
+    }, [keyboard, itemToEdit, override]);
+
+    // Reset dirty state when switching items
+    useEffect(() => {
+        isDirty.current = false;
+        lastOverrideStringCheck.current = "";
+
+        // Load initial state string if possible
+        if (itemToEdit !== null && keyboardRef.current) {
+            const kb = keyboardRef.current as any;
+            const ovr = kb.key_overrides?.[itemToEdit];
+            if (ovr) {
+                lastOverrideStringCheck.current = JSON.stringify(ovr);
+            }
+        }
+    }, [itemToEdit]);
+
+    // Save changes when unmounting or switching
+    useEffect(() => {
+        return () => {
+            if (isDirty.current && keyboardRef.current && itemToEdit !== null) {
+                const currentKeyboard = keyboardRef.current;
+                const dirtyId = itemToEdit;
+                console.log("Queueing override update for ID", dirtyId);
+
+                queue(
+                    `Update Override ${dirtyId}`,
+                    async () => {
+                        console.log(`Executing queued override update for ${dirtyId}`);
+                        await vialService.updateKeyoverride(currentKeyboard, dirtyId);
+                    },
+                    {
+                        type: "override",
+                        overrideId: dirtyId
+                    } as any
+                );
+                isDirty.current = false;
+            }
+        };
+    }, [itemToEdit, queue]);
 
     const isSlotSelected = (slot: "trigger" | "replacement") => {
         return (
@@ -174,13 +249,11 @@ const OverrideEditor: FC<Props> = () => {
 
     return (
         <div className="flex flex-col gap-4 py-8 pl-[84px] pr-5 pb-4">
-            {/* Active Switch */}
-            {/* Active Toggle */}
             <div className="flex flex-row items-center gap-0.5 bg-gray-200/50 p-0.5 rounded-md border border-gray-400/50 w-fit">
                 <button
                     onClick={() => updateOption(ENABLED_BIT, true)}
                     className={cn(
-                        "px-3 py-1 text-xs uppercase tracking-wide rounded-[4px] transition-all font-bold border",
+                        "px-3 py-1 text-xs uppercase cursor-pointer tracking-wide rounded-[4px] transition-all font-bold border",
                         isEnabled
                             ? "bg-black text-white shadow-sm border-black"
                             : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"
@@ -191,7 +264,7 @@ const OverrideEditor: FC<Props> = () => {
                 <button
                     onClick={() => updateOption(ENABLED_BIT, false)}
                     className={cn(
-                        "px-3 py-1 text-xs uppercase tracking-wide rounded-[4px] transition-all font-bold border",
+                        "px-3 py-1 text-xs uppercase cursor-pointer tracking-wide rounded-[4px] transition-all font-bold border",
                         !isEnabled
                             ? "bg-black text-white shadow-sm border-black"
                             : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"

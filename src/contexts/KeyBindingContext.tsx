@@ -1,5 +1,5 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { KeyboardInfo } from "@/types/vial.types";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import { MATRIX_COLS } from "@/constants/svalboard-layout";
 import { useChanges } from "@/contexts/ChangesContext";
@@ -48,7 +48,7 @@ interface KeyBindingContextType {
 const KeyBindingContext = createContext<KeyBindingContextType | undefined>(undefined);
 
 export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { keyboard, setKeyboard, updateKey } = useVial();
+    const { keyboard, setKeyboard, updateKey, updateTapDance } = useVial();
     const { queue } = useChanges();
     const [selectedTarget, setSelectedTarget] = useState<BindingTarget | null>(null);
     const [hoveredKey, setHoveredKey] = useState<BindingTarget | null>(null);
@@ -184,7 +184,7 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
                     const keycodeName = typeof keycode === "string" ? keycode : `KC_${keycode}`;
 
-                    let previousValue: string;
+
 
                     if (comboSlot === 4) {
                         // Output - but we must also preserve the input keys!
@@ -192,7 +192,6 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         combo.keys = [...originalKeys];
                         while (combo.keys.length < 4) combo.keys.push("KC_NO");
 
-                        previousValue = combo.output;
                         combo.output = keycodeName;
                     } else {
                         // Input keys - preserve all existing values from the ORIGINAL keyboard state
@@ -206,27 +205,13 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         }
 
                         // Now update just the target slot
-                        previousValue = newKeys[comboSlot];
                         newKeys[comboSlot] = keycodeName;
                         combo.keys = newKeys;
                     }
 
-                    // Queue the change with callback
-                    const changeDesc = `combo_${comboId}_${comboSlot}`;
-                    queue(
-                        changeDesc,
-                        async () => {
-                            console.log(`Committing combo change: Combo ${comboId}, Slot ${comboSlot} → ${keycodeName}`);
-                        },
-                        {
-                            type: "combo",
-                            comboId,
-                            comboSlot,
-                            keycode: keycodeValue,
-                            previousValue,
-                        }
-                    );
-
+                    // Update the local state only. The ComboEditor component will handle queueing the change when the editor is closed.
+                    // This aligns with the Macro editing behavior.
+                    
                     break;
                 }
 
@@ -260,6 +245,7 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                         changeDesc,
                         async () => {
                             console.log(`Committing tapdance change: Tapdance ${tapdanceId}, ${tapdanceSlot} → ${keycodeName}`);
+                            await updateTapDance(tapdanceId, updatedKeyboard);
                         },
                         {
                             type: "tapdance",
@@ -298,26 +284,12 @@ export const KeyBindingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     const overrides = updatedKeyboard.key_overrides;
                     if (!overrides || !overrides[overrideId]) break;
 
-                    const previousValue = overrides[overrideId][overrideSlot];
+                    // const previousValue = overrides[overrideId][overrideSlot];
                     const keycodeName = typeof keycode === "string" ? keycode : `KC_${keycode}`;
                     overrides[overrideId][overrideSlot] = keycodeName;
 
-                    // Queue the change with callback
-                    const changeDesc = `override_${overrideId}_${overrideSlot}`;
-                    queue(
-                        changeDesc,
-                        async () => {
-                            console.log(`Committing override change: Override ${overrideId}, ${overrideSlot} → ${keycodeName}`);
-                        },
-                        {
-                            type: "override",
-                            overrideId,
-                            overrideSlot,
-                            keycode: keycodeValue,
-                            previousValue,
-                        } as any
-                    );
-
+                    // Update local state only. OverrideEditor handles queueing on close.
+                    
                     break;
                 }
             }

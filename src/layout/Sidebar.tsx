@@ -1,4 +1,4 @@
-import { ChevronsRight, HelpCircle, Keyboard, LucideIcon, Piano, Settings, SquareDot, Unplug, Zap } from "lucide-react";
+import { HelpCircle, Keyboard, LucideIcon, Piano, Settings, SquareDot } from "lucide-react";
 import { useCallback } from "react";
 
 import ComboIcon from "@/components/ComboIcon";
@@ -9,7 +9,6 @@ import MacrosIcon from "@/components/icons/MacrosIcon";
 import MouseIcon from "@/components/icons/Mouse";
 import OverridesIcon from "@/components/icons/Overrides";
 import TapdanceIcon from "@/components/icons/Tapdance";
-import Logo from "@/components/Logo";
 import {
     Sidebar,
     SidebarContent,
@@ -23,15 +22,9 @@ import {
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
 import { cn } from "@/lib/utils";
-
-// --- Constants ---
-const ICON_GUTTER_WIDTH = "w-[43px]";
-const BASE_ICON_PADDING = "pl-[13px]";
-const LOGO_ICON_PADDING = "group-data-[state=collapsed]:pl-[10px]";
-const MENU_ITEM_GAP_PX = 42; // Matches Gap-4 (16px) + Button Height (26px)
-const DIVIDER_HEIGHT_PX = 17; // 1px + 2*8px (my-2)
-const FLEX_GAP_PX = 16; // Gap-4
-const FEATURE_SECTION_OFFSET = DIVIDER_HEIGHT_PX + FLEX_GAP_PX;
+import { ConnectButton, ExpandSidebarButton } from "./Sidebar/SidebarAdditionalButtons";
+import SidebarLogo from "./Sidebar/SidebarLogo";
+import { BASE_ICON_PADDING, FEATURE_SECTION_OFFSET, ICON_GUTTER_WIDTH, LOGO_ICON_PADDING, MENU_ITEM_GAP_PX } from "./utils";
 
 export type SidebarItem = {
     title: string;
@@ -93,10 +86,11 @@ const SidebarNavItem = ({
             size="nav"
             className={cn(
                 "transition-colors",
-                (alternativeHeader ? isPreviousPanel : isActive) ? "text-sidebar-foreground" : "text-gray-400"
+                (alternativeHeader ? isPreviousPanel : isActive) ? "text-sidebar-foreground" : "text-gray-400",
+                "group-data-[state=collapsed]:w-full flex items-center"
             )}
         >
-            <button type="button" onClick={(e) => { e.stopPropagation(); onClick(item); }} className="flex w-full items-center justify-start">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onClick(item); }} className="flex w-full items-center group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:mr-[3px]">
                 <div className={cn(ICON_GUTTER_WIDTH, "h-full flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
                     <item.icon className="h-4 w-4 shrink-0 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:ml-[2px]" />
                 </div>
@@ -179,56 +173,9 @@ const AppSidebar = () => {
         <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses}>
             <SidebarHeader className="p-0 py-4">
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild size="nav" className="transition-colors">
-                            <button
-                                type="button"
-                                className="flex w-full items-center justify-start"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-
-                                    const isPanelOpen = open;
-                                    const isMatrixTesterActive = activePanel === "matrixtester";
-
-                                    handleCloseDetails();
-                                    if (isMatrixTesterActive) {
-                                        setActivePanel(null);
-                                    }
-
-                                    if (!isCollapsed) {
-                                        toggleSidebar();
-                                    } else if (!isPanelOpen && !isMatrixTesterActive) {
-                                        toggleSidebar();
-                                    }
-                                }}
-                            >
-                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", LOGO_ICON_PADDING)}>
-                                    <Logo />
-                                </div>
-                                <span className="text-[22px] font-semibold truncate group-data-[state=collapsed]:hidden">keybard</span>
-                            </button>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton asChild size="nav" className="text-slate-600 transition-colors">
-                            <button type="button" onClick={(e) => { e.stopPropagation(); connect(); }} className="flex w-full items-center justify-start">
-                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
-                                    {isConnected ? <Zap className="h-4 w-4 shrink-0 fill-black text-black" /> : <Unplug className="h-4 w-4 shrink-0" />}
-                                </div>
-                                <span className="text-md font-medium truncate group-data-[state=collapsed]:hidden">{isConnected ? "Connected" : "Connect"}</span>
-                            </button>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem className="hidden">
-                        <SidebarMenuButton asChild size="nav" className="text-slate-600 transition-colors">
-                            <button type="button" onClick={(e) => { e.stopPropagation(); toggleSidebar(); }} className="flex w-full items-center justify-start">
-                                <div className={cn(ICON_GUTTER_WIDTH, "h-4 flex items-center justify-start shrink-0", BASE_ICON_PADDING)}>
-                                    <ChevronsRight className={cn("h-4 w-4 shrink-0 transition-transform", !isCollapsed ? "rotate-180" : "")} />
-                                </div>
-                                <span className="text-md font-medium truncate group-data-[state=collapsed]:hidden">Hide Menu</span>
-                            </button>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarLogo toggleSidebar={toggleSidebar} isCollapsed={isCollapsed} open={open} activePanel={activePanel} setActivePanel={setActivePanel} handleCloseDetails={handleCloseDetails} ICON_GUTTER_WIDTH={ICON_GUTTER_WIDTH} LOGO_ICON_PADDING={LOGO_ICON_PADDING} />
+                    <ConnectButton connect={connect} isConnected={isConnected} />
+                    <ExpandSidebarButton toggleSidebar={toggleSidebar} isCollapsed={isCollapsed} />
                 </SidebarMenu>
             </SidebarHeader>
 

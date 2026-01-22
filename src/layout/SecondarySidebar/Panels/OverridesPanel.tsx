@@ -1,15 +1,17 @@
-import React from "react";
 import { ArrowRight } from "lucide-react";
+import React from "react";
 
-import SidebarItemRow from "@/layout/SecondarySidebar/components/SidebarItemRow";
+import { Key } from "@/components/Key";
+import { useChanges } from "@/contexts/ChangesContext";
 import { useLayer } from "@/contexts/LayerContext";
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
+import SidebarItemRow from "@/layout/SecondarySidebar/components/SidebarItemRow";
+import { cn } from "@/lib/utils";
+import { vialService } from "@/services/vial.service";
+import { KeyContent } from "@/types/vial.types";
 import { hoverBackgroundClasses, hoverBorderClasses, hoverHeaderClasses } from "@/utils/colors";
 import { getKeyContents } from "@/utils/keys";
-import { Key } from "@/components/Key";
-import { KeyContent } from "@/types/vial.types";
-import { cn } from "@/lib/utils";
 
 const ENABLED_BIT = 1 << 7;
 
@@ -21,6 +23,7 @@ const OverridesPanel: React.FC = () => {
         setBindingTypeToEdit,
         setAlternativeHeader,
     } = usePanels();
+    const { queue } = useChanges();
 
     if (!keyboard) return null;
 
@@ -47,6 +50,18 @@ const OverridesPanel: React.FC = () => {
             updatedKeyboard.key_overrides[index].options = options;
         }
         setKeyboard(updatedKeyboard);
+
+        // Queue update immediately
+        queue(
+            `Update Override ${index} Option`,
+            async () => {
+                await vialService.updateKeyoverride(updatedKeyboard, index);
+            },
+            {
+                type: "override",
+                overrideId: index
+            } as any
+        );
     };
 
     return (
@@ -94,7 +109,7 @@ const OverridesPanel: React.FC = () => {
                                 <button
                                     onClick={() => updateOverrideOption(i, ENABLED_BIT, true)}
                                     className={cn(
-                                        "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[3px] transition-all font-bold border",
+                                        "px-2 py-0.5 cursor-pointer text-[10px] uppercase tracking-wide rounded-[3px] transition-all font-bold border",
                                         isEnabled
                                             ? "bg-black text-white shadow-sm border-black"
                                             : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"
@@ -105,7 +120,7 @@ const OverridesPanel: React.FC = () => {
                                 <button
                                     onClick={() => updateOverrideOption(i, ENABLED_BIT, false)}
                                     className={cn(
-                                        "px-2 py-0.5 text-[10px] uppercase tracking-wide rounded-[3px] transition-all font-bold border",
+                                        "px-2 py-0.5 cursor-pointer text-[10px] uppercase tracking-wide rounded-[3px] transition-all font-bold border",
                                         !isEnabled
                                             ? "bg-black text-white shadow-sm border-black"
                                             : "text-gray-500 border-transparent hover:text-black hover:bg-white hover:shadow-sm"

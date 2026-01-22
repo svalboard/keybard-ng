@@ -1,6 +1,8 @@
 import { VialUSB, usbInstance } from "./usb.service";
 
 // Svalboard-specific protocol service
+
+import { calculateHsvDistance, colorsToHsv, findClosestFrontendColor, shouldSyncColor } from "@/utils/layers";
 import type { KeyboardInfo } from "../types/vial.types";
 
 export class SvalService {
@@ -122,6 +124,52 @@ export class SvalService {
             return kbinfo.cosmetic.layer[layerIndex.toString()];
         }
         return `${layerIndex}`;
+    }
+
+    /**
+     * Synchronize physical keyboard colors to frontend cosmetic colors
+     * Only syncs when colors are sufficiently different (threshold-based)
+     * Overrides custom cosmetics when threshold is met
+     */
+    syncPhysicalColorsToCosmetic(keyboard: KeyboardInfo): void {
+        if (!keyboard.layer_colors || !keyboard.sval_proto) {
+            return;
+        }
+        
+        // Initialize cosmetic if not present
+        if (!keyboard.cosmetic) keyboard.cosmetic = { layer: {}, layer_colors: {} };
+        if (!keyboard.cosmetic.layer_colors) keyboard.cosmetic.layer_colors = {};
+                
+        for (let layerIndex = 0; layerIndex < keyboard.layer_colors.length; layerIndex++) {
+            const physicalHsvRaw = keyboard.layer_colors[layerIndex];
+            const physicalHsv = {
+                h: physicalHsvRaw.hue,
+                s: physicalHsvRaw.sat,
+                v: physicalHsvRaw.val
+            };
+            const currentColor = keyboard.cosmetic.layer_colors[layerIndex.toString()] || "green";
+            
+            // Only sync if colors are sufficiently different
+            if (shouldSyncColor(physicalHsv, currentColor)) {
+                const closestColor = findClosestFrontendColor(physicalHsv);
+                keyboard.cosmetic.layer_colors[layerIndex.toString()] = closestColor;
+                
+                const closestHsv = colorsToHsv[closestColor as keyof typeof colorsToHsv];
+                const distance = calculateHsvDistance(physicalHsv, {
+                    h: closestHsv.hue,
+                    s: closestHsv.sat,
+                    v: closestHsv.val
+                });
+            } else {
+                const currentHsv = colorsToHsv[currentColor as keyof typeof colorsToHsv];
+                const distance = calculateHsvDistance(physicalHsv, {
+                    h: currentHsv.hue,
+                    s: currentHsv.sat,
+                    v: currentHsv.val
+                });
+            }
+        }
+        
     }
 }
 

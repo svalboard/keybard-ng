@@ -1,6 +1,6 @@
 // Key service - keycode parsing and stringifying
-import { CODEMAP, KEYMAP, KEYALIASES } from '../constants/keygen';
-import type { KeyString, KeyMapEntry } from '../types/keymap';
+import { CODEMAP, KEYALIASES, KEYMAP } from '../constants/keygen';
+import type { KeyMapEntry, KeyString } from '../types/keymap';
 import type { KeyboardInfo } from '../types/vial.types';
 
 interface KeyParseDesc {
@@ -98,7 +98,10 @@ export class KeyService {
    * Convert keystring to keynum. e.g: "KC_A" -> 0x0004, "LCTRL(KC_A)" -> 0x0104
    */
   parse(keystr: KeyString): number {
-    if (!keystr || keystr === -1 || keystr === 0xff) {
+    if (!keystr) {
+      return 0; // KC_NO
+    }
+    if (keystr === -1 || keystr === 0xff) {
       return 0xff;
     }
 

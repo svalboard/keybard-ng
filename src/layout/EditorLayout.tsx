@@ -1,10 +1,10 @@
 import * as React from "react";
 
 
-import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
-import { PanelsProvider, usePanels } from "@/contexts/PanelsContext";
-import { DragProvider } from "@/contexts/DragContext";
 import { DragOverlay } from "@/components/DragOverlay";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import { DragProvider } from "@/contexts/DragContext";
+import { PanelsProvider, usePanels } from "@/contexts/PanelsContext";
 
 import SecondarySidebar from "./SecondarySidebar/SecondarySidebar";
 
@@ -16,14 +16,15 @@ import AppSidebar from "./Sidebar";
 
 import { LayerProvider, useLayer } from "@/contexts/LayerContext";
 import { LayoutSettingsProvider, useLayoutSettings } from "@/contexts/LayoutSettingsContext";
+
+import { MatrixTester } from "@/components/MatrixTester";
 import { useKeyBinding } from "@/contexts/KeyBindingContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useChanges } from "@/hooks/useChanges";
-import { MatrixTester } from "@/components/MatrixTester";
 
-import { SidebarShield } from "./components/SidebarShield";
-import { BottomToolbar } from "./components/BottomToolbar";
 import { ConnectionSyncDialog } from "@/components/ConnectionSyncDialog";
+import { BottomToolbar } from "./components/BottomToolbar";
+import { SidebarShield } from "./components/SidebarShield";
 import {
     DETAIL_SIDEBAR_WIDTH,
     LAYOUT_TRANSITION_CURVE,

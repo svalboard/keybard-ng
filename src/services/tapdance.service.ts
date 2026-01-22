@@ -10,18 +10,18 @@ export class TapdanceService {
         const all_entries = (await this.usb.getDynamicEntries(
             VialUSB.DYNAMIC_VIAL_TAP_DANCE_GET,
             tapdance_count,
-            { unpack: "HHHHB" }
+            { unpack: "<BHHHHH" }
         )) as any[][];
 
         kbinfo.tapdances = [];
         all_entries.forEach((raw: any[], idx: number) => {
             kbinfo.tapdances!.push({
                 idx: idx,
-                tap: keyService.stringify(raw[0]),
-                hold: keyService.stringify(raw[1]),
-                doubletap: keyService.stringify(raw[2]),
-                taphold: keyService.stringify(raw[3]),
-                tapping_term: raw[4],
+                tap: keyService.stringify(raw[1]),
+                hold: keyService.stringify(raw[2]),
+                doubletap: keyService.stringify(raw[3]),
+                taphold: keyService.stringify(raw[4]),
+                tapms: raw[5],
             });
         });
     }
@@ -41,7 +41,7 @@ export class TapdanceService {
                 ...this.LE16(keyService.parse(td.hold)),
                 ...this.LE16(keyService.parse(td.doubletap)),
                 ...this.LE16(keyService.parse(td.taphold)),
-                td.tapping_term || 0,
+                ...this.LE16(td.tapms || 0),
             ]);
         }
     }
