@@ -212,7 +212,7 @@ const EditorLayoutInner = () => {
                 primaryOffset={primaryOffset}
             />
 
-            <AppSidebar />
+            <AppSidebar onConnect={handleConnect} />
             <SecondarySidebar />
 
             <div

@@ -69,7 +69,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const loadKeyboard = useCallback(async () => {
-        if (!isConnected) {
+        if (!usbInstance.isOpened) {
             console.log("loadKeyboard not connected");
             throw new Error("USB device not connected");
         }
@@ -104,7 +104,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error("Failed to load keyboard:", error);
             throw error;
         }
-    }, [isConnected]);
+    }, []);
 
     // Auto-load removed to allow UI to decide when to sync
     // useEffect(() => {
@@ -157,26 +157,26 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updateKey = useCallback(
         async (layer: number, row: number, col: number, keymask: number) => {
-            if (!isConnected) {
+            if (!usbInstance.isOpened) {
                 throw new Error("USB device not connected");
             }
             await vialService.updateKey(layer, row, col, keymask);
         },
-        [isConnected]
+        []
     );
 
     const updateTapDance = useCallback(
         async (tdid: number, overrideKeyboard?: KeyboardInfo) => {
             const kbToUse = overrideKeyboard || keyboard;
-            if (!isConnected || !kbToUse) {
-                 if (!isConnected) console.warn("Not connected, skipping hardware updateTapDance");
-                 if (!isConnected) return;
+            if (!usbInstance.isOpened || !kbToUse) {
+                 if (!usbInstance.isOpened) console.warn("Not connected, skipping hardware updateTapDance");
+                 if (!usbInstance.isOpened) return;
             }
             if (kbToUse) {
                 await vialService.updateTapdance(kbToUse, tdid);
             }
         },
-        [isConnected, keyboard]
+        [keyboard]
     );
 
     const pollMatrix = useCallback(async () => {

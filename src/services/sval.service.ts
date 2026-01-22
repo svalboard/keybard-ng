@@ -2,7 +2,7 @@ import { VialUSB, usbInstance } from "./usb.service";
 
 // Svalboard-specific protocol service
 
-import { calculateHsvDistance, colorsToHsv, findClosestFrontendColor, shouldSyncColor } from "@/utils/layers";
+import { findClosestFrontendColor, shouldSyncColor } from "@/utils/layers";
 import type { KeyboardInfo } from "../types/vial.types";
 
 export class SvalService {
@@ -153,20 +153,8 @@ export class SvalService {
             if (shouldSyncColor(physicalHsv, currentColor)) {
                 const closestColor = findClosestFrontendColor(physicalHsv);
                 keyboard.cosmetic.layer_colors[layerIndex.toString()] = closestColor;
-                
-                const closestHsv = colorsToHsv[closestColor as keyof typeof colorsToHsv];
-                const distance = calculateHsvDistance(physicalHsv, {
-                    h: closestHsv.hue,
-                    s: closestHsv.sat,
-                    v: closestHsv.val
-                });
             } else {
-                const currentHsv = colorsToHsv[currentColor as keyof typeof colorsToHsv];
-                const distance = calculateHsvDistance(physicalHsv, {
-                    h: currentHsv.hue,
-                    s: currentHsv.sat,
-                    v: currentHsv.val
-                });
+                // No sync needed
             }
         }
         

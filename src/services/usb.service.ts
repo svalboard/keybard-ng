@@ -100,6 +100,10 @@ export class VialUSB {
     return true;
   }
 
+  get isOpened(): boolean {
+    return !!this.device?.opened;
+  }
+
   getDeviceName(): string | null {
     return this.device?.productName || null;
   }

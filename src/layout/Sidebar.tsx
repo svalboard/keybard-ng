@@ -22,9 +22,9 @@ import {
 import { usePanels } from "@/contexts/PanelsContext";
 import { useVial } from "@/contexts/VialContext";
 import { cn } from "@/lib/utils";
-import { ConnectButton, ExpandSidebarButton } from "./Sidebar/SidebarAdditionalButtons";
+import { ConnectButton } from "./Sidebar/SidebarAdditionalButtons";
 import SidebarLogo from "./Sidebar/SidebarLogo";
-import { BASE_ICON_PADDING, FEATURE_SECTION_OFFSET, ICON_GUTTER_WIDTH, LOGO_ICON_PADDING, MENU_ITEM_GAP_PX } from "./utils";
+import { BASE_ICON_PADDING, FEATURE_SECTION_OFFSET, ICON_GUTTER_WIDTH, MENU_ITEM_GAP_PX } from "./utils";
 
 export type SidebarItem = {
     title: string;
@@ -104,7 +104,11 @@ const SidebarNavItem = ({
 
 // --- Main Component ---
 
-const AppSidebar = () => {
+interface AppSidebarProps {
+    onConnect?: () => void;
+}
+
+const AppSidebar = ({ onConnect }: AppSidebarProps) => {
     const { state, toggleSidebar } = useSidebar("primary-nav", { defaultOpen: false });
     const isCollapsed = state === "collapsed";
 
@@ -173,9 +177,8 @@ const AppSidebar = () => {
         <Sidebar rounded name="primary-nav" defaultOpen={false} collapsible="icon" hideGap className={sidebarClasses}>
             <SidebarHeader className="p-0 py-4">
                 <SidebarMenu>
-                    <SidebarLogo toggleSidebar={toggleSidebar} isCollapsed={isCollapsed} open={open} activePanel={activePanel} setActivePanel={setActivePanel} handleCloseDetails={handleCloseDetails} ICON_GUTTER_WIDTH={ICON_GUTTER_WIDTH} LOGO_ICON_PADDING={LOGO_ICON_PADDING} />
-                    <ConnectButton connect={connect} isConnected={isConnected} />
-                    <ExpandSidebarButton toggleSidebar={toggleSidebar} isCollapsed={isCollapsed} />
+                    <SidebarLogo toggleSidebar={toggleSidebar} isCollapsed={isCollapsed} open={open} activePanel={activePanel} setActivePanel={setActivePanel} handleCloseDetails={handleCloseDetails} />
+                    <ConnectButton connect={onConnect || connect} isConnected={isConnected} />
                 </SidebarMenu>
             </SidebarHeader>
 
