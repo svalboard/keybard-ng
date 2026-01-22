@@ -231,23 +231,23 @@ const LayerSelector: FC<LayerSelectorProps> = ({ selectedLayer, setSelectedLayer
     if (activePanel === "matrixtester") {
         return (
             <div className="w-full flex data-[state=collapsed] flex-col pt-4" onClick={(e) => e.stopPropagation()}>
-                <div className="flex flex-col justify-start items-start px-5 py-2 relative mt-3">
+                <div className="flex flex-col justify-start items-start px-5 py-2 relative mt-1.5">
                     <span className="font-bold text-lg text-black">Matrix Tester</span>
                     {!isConnected ? (
                         <button
                             onClick={() => connect()}
-                            className="mt-2 bg-black text-white px-4 py-1 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
+                            className="mt-[12px] bg-black text-white pr-[22px] pl-[18px] py-1 rounded-full text-sm font-medium hover:bg-gray-800 transition-colors flex items-center gap-2"
                         >
                             <Unplug className="h-4 w-4" />
-                            Connect Keyboard
+                            Connect Svalboard
                         </button>
                     ) : (
                         <button
                             onClick={() => connect()}
-                            className="mt-2 bg-white text-black px-4 py-1 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
+                            className="mt-[12px] bg-white text-black pr-[22px] pl-[18px] py-1 rounded-full text-sm font-medium hover:bg-gray-100 transition-colors flex items-center gap-2"
                         >
                             <Zap className="h-4 w-4 fill-black text-black" />
-                            Keyboard Connected
+                            Svalboard Connected
                         </button>
                     )}
                 </div>

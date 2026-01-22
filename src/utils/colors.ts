@@ -5,6 +5,7 @@ export const layerColors = [
     { name: "orange", hex: "#f89804" },
     { name: "yellow", hex: "#ffc222" },
     { name: "grey", hex: "#85929b" },
+    { name: "light-grey", hex: "#D8D8D8" },
     { name: "red", hex: "#d8304a" },
     { name: "brown", hex: "#b39369" },
     { name: "white", hex: "#ffffff" },
@@ -30,6 +31,7 @@ export const colorClasses: { [key: string]: string } = {
     orange: "bg-kb-orange text-white",
     purple: "bg-kb-purple text-white",
     grey: "bg-kb-grey text-gray-200",
+    "light-grey": "bg-kb-light-grey text-black",
     brown: "bg-kb-brown text-white",
     white: "bg-white text-black",
 };
@@ -45,6 +47,7 @@ export const hoverBorderClasses: { [key: string]: string } = {
     orange: "hover:border-kb-orange",
     purple: "hover:border-kb-purple",
     grey: "hover:border-kb-grey",
+    "light-grey": "hover:border-kb-light-grey",
     brown: "hover:border-kb-brown",
     white: "hover:border-gray-300",
 };
@@ -60,6 +63,7 @@ export const hoverBackgroundClasses: { [key: string]: string } = {
     orange: "hover:bg-kb-orange",
     purple: "hover:bg-kb-purple",
     grey: "hover:bg-kb-grey",
+    "light-grey": "hover:bg-kb-light-grey",
     brown: "hover:bg-kb-brown",
     white: "hover:bg-white",
 };
@@ -79,6 +83,7 @@ export const headerClasses: { [key: string]: string } = {
     orange: "bg-black/30",
     purple: "bg-black/30",
     grey: "bg-black/30",
+    "light-grey": "bg-black/30",
     brown: "bg-black/30",
     white: "bg-black",
 };
@@ -97,6 +102,7 @@ export const hoverHeaderClasses: { [key: string]: string } = {
     orange: "group-hover:bg-black/30",
     purple: "group-hover:bg-black/30",
     grey: "group-hover:bg-black/30",
+    "light-grey": "group-hover:bg-black/30",
     brown: "group-hover:bg-black/30",
     white: "group-hover:bg-black",
 };
@@ -115,7 +121,8 @@ export const hoverTextClasses: { [key: string]: string } = {
     yellow: "group-hover:text-orange-800",
     orange: "group-hover:text-white",
     purple: "group-hover:text-white",
-    grey: "group-hover:text-gray-200",
+    grey: "group-hover:text-white",
+    "light-grey": "group-hover:text-black",
     brown: "group-hover:text-white",
     white: "group-hover:text-black",
 };
@@ -134,7 +141,8 @@ export const hoverContainerTextClasses: { [key: string]: string } = {
     yellow: "hover:text-orange-800",
     orange: "hover:text-white",
     purple: "hover:text-white",
-    grey: "hover:text-gray-200",
+    grey: "hover:text-white",
+    "light-grey": "hover:text-black",
     brown: "hover:text-white",
     white: "hover:text-black",
 };

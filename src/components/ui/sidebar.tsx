@@ -371,9 +371,6 @@ function Sidebar({
                     className={cn(
                         "bg-white group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm",
                         "opacity-100 translate-x-0 transition-[opacity,transform] duration-300 ease-in-out",
-                        "group-data-[collapsible=offcanvas]:group-data-[state=collapsed]:opacity-0",
-                        "group-data-[side=left]:group-data-[collapsible=offcanvas]:group-data-[state=collapsed]:translate-x-4",
-                        "group-data-[side=right]:group-data-[collapsible=offcanvas]:group-data-[state=collapsed]:-translate-x-4",
                         ...(rounded ? ["rounded-3xl"] : [])
                     )}
                 >

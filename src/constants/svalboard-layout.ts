@@ -19,11 +19,11 @@ export const UNIT_SIZE = 60;
 // Positions are in key units (1u = 40px)
 export const SVALBOARD_LAYOUT: Record<number, KeyLayout> = {
     // Row 0
-    0: { row: 0, col: 0, x: 10.6, y: 6, w: 1.5, h: 1 }, // KC_LCTRL
-    1: { row: 0, col: 1, x: 10.6, y: 5, w: 1.5, h: 1 }, // KC_TAB
+    0: { row: 0, col: 0, x: 10.8, y: 6, w: 1, h: 1 }, // KC_LCTRL
+    1: { row: 0, col: 1, x: 10.8, y: 5, w: 1, h: 1 }, // KC_TAB
     2: { row: 0, col: 2, x: 9.5, y: 6, w: 1, h: 1 }, // KC_LSHIFT
-    3: { row: 0, col: 3, x: 7.9, y: 5, w: 1.5, h: 1 }, // KC_ENTER
-    4: { row: 0, col: 4, x: 7.4, y: 6, w: 2, h: 1 }, // MO(14)
+    3: { row: 0, col: 3, x: 8.2, y: 5, w: 1, h: 1 }, // KC_ENTER
+    4: { row: 0, col: 4, x: 8.2, y: 6, w: 1, h: 1 }, // MO(14)
     5: { row: 0, col: 5, x: 9.5, y: 5, w: 1, h: 1 }, // KC_CAPSLOCK
 
     // Row 1
@@ -54,41 +54,41 @@ export const SVALBOARD_LAYOUT: Record<number, KeyLayout> = {
     27: { row: 4, col: 3, x: 1, y: 1.5, w: 1, h: 1 }, // KC_Q
     28: { row: 4, col: 4, x: 0, y: 2.5, w: 1, h: 1 }, // KC_DELETE
 
-    // Row 5 (thumb cluster left)
-    30: { row: 5, col: 0, x: 12.9, y: 6, w: 1.5, h: 1 }, // KC_LALT
-    31: { row: 5, col: 1, x: 12.9, y: 5, w: 1.5, h: 1 }, // KC_BSPACE
-    32: { row: 5, col: 2, x: 14.5, y: 6, w: 1, h: 1 }, // MO(4)
-    33: { row: 5, col: 3, x: 15.6, y: 5, w: 1.5, h: 1 }, // KC_SPACE
-    34: { row: 5, col: 4, x: 15.6, y: 6, w: 2, h: 1 }, // MO(2)
-    35: { row: 5, col: 5, x: 14.5, y: 5, w: 1, h: 1 }, // MO(5)
+    // Row 5 (thumb cluster right)
+    30: { row: 5, col: 0, x: 12.5, y: 6, w: 1, h: 1 }, // KC_LALT
+    31: { row: 5, col: 1, x: 12.5, y: 5, w: 1, h: 1 }, // KC_BSPACE
+    32: { row: 5, col: 2, x: 13.8, y: 6, w: 1, h: 1 }, // MO(4)
+    33: { row: 5, col: 3, x: 15.1, y: 5, w: 1, h: 1 }, // KC_SPACE
+    34: { row: 5, col: 4, x: 15.1, y: 6, w: 1, h: 1 }, // MO(2)
+    35: { row: 5, col: 5, x: 13.8, y: 5, w: 1, h: 1 }, // MO(5)
 
     // Row 6
-    36: { row: 6, col: 0, x: 14.5, y: 3.5, w: 1, h: 1 }, // KC_M
-    37: { row: 6, col: 1, x: 15.5, y: 2.5, w: 1, h: 1 }, // KC_QUOTE
-    38: { row: 6, col: 2, x: 14.5, y: 2.5, w: 1, h: 1 }, // KC_J
-    39: { row: 6, col: 3, x: 14.5, y: 1.5, w: 1, h: 1 }, // KC_U
-    40: { row: 6, col: 4, x: 13.5, y: 2.5, w: 1, h: 1 }, // KC_H
+    36: { row: 6, col: 0, x: 13.8, y: 3.5, w: 1, h: 1 }, // KC_M
+    37: { row: 6, col: 1, x: 14.8, y: 2.5, w: 1, h: 1 }, // KC_QUOTE
+    38: { row: 6, col: 2, x: 13.8, y: 2.5, w: 1, h: 1 }, // KC_J
+    39: { row: 6, col: 3, x: 13.8, y: 1.5, w: 1, h: 1 }, // KC_U
+    40: { row: 6, col: 4, x: 12.8, y: 2.5, w: 1, h: 1 }, // KC_H
 
     // Row 7
-    42: { row: 7, col: 0, x: 17, y: 2, w: 1, h: 1 }, // KC_COMMA
-    43: { row: 7, col: 1, x: 18, y: 1, w: 1, h: 1 }, // LSFT(KC_SCOLON)
-    44: { row: 7, col: 2, x: 17, y: 1, w: 1, h: 1 }, // KC_K
-    45: { row: 7, col: 3, x: 17, y: 0, w: 1, h: 1 }, // KC_I
-    46: { row: 7, col: 4, x: 16, y: 1, w: 1, h: 1 }, // KC_Y
+    42: { row: 7, col: 0, x: 16.3, y: 2, w: 1, h: 1 }, // KC_COMMA
+    43: { row: 7, col: 1, x: 17.3, y: 1, w: 1, h: 1 }, // LSFT(KC_SCOLON)
+    44: { row: 7, col: 2, x: 16.3, y: 1, w: 1, h: 1 }, // KC_K
+    45: { row: 7, col: 3, x: 16.3, y: 0, w: 1, h: 1 }, // KC_I
+    46: { row: 7, col: 4, x: 15.3, y: 1, w: 1, h: 1 }, // KC_Y
 
     // Row 8
-    48: { row: 8, col: 0, x: 20.5, y: 2, w: 1, h: 1 }, // KC_DOT
-    49: { row: 8, col: 1, x: 21.5, y: 1, w: 1, h: 1 }, // KC_NO
-    50: { row: 8, col: 2, x: 20.5, y: 1, w: 1, h: 1 }, // KC_L
-    51: { row: 8, col: 3, x: 20.5, y: 0, w: 1, h: 1 }, // KC_O
-    52: { row: 8, col: 4, x: 19.5, y: 1, w: 1, h: 1 }, // KC_N
+    48: { row: 8, col: 0, x: 19.8, y: 2, w: 1, h: 1 }, // KC_DOT
+    49: { row: 8, col: 1, x: 20.8, y: 1, w: 1, h: 1 }, // KC_NO
+    50: { row: 8, col: 2, x: 19.8, y: 1, w: 1, h: 1 }, // KC_L
+    51: { row: 8, col: 3, x: 19.8, y: 0, w: 1, h: 1 }, // KC_O
+    52: { row: 8, col: 4, x: 18.8, y: 1, w: 1, h: 1 }, // KC_N
 
     // Row 9
-    54: { row: 9, col: 0, x: 23, y: 3.5, w: 1, h: 1 }, // KC_SLASH
-    55: { row: 9, col: 1, x: 24, y: 2.5, w: 1, h: 1 }, // KC_BSLASH
-    56: { row: 9, col: 2, x: 23, y: 2.5, w: 1, h: 1 }, // KC_SCOLON
-    57: { row: 9, col: 3, x: 23, y: 1.5, w: 1, h: 1 }, // KC_P
-    58: { row: 9, col: 4, x: 22, y: 2.5, w: 1, h: 1 }, // KC_RBRACKET
+    54: { row: 9, col: 0, x: 22.3, y: 3.5, w: 1, h: 1 }, // KC_SLASH
+    55: { row: 9, col: 1, x: 23.3, y: 2.5, w: 1, h: 1 }, // KC_BSLASH
+    56: { row: 9, col: 2, x: 22.3, y: 2.5, w: 1, h: 1 }, // KC_SCOLON
+    57: { row: 9, col: 3, x: 22.3, y: 1.5, w: 1, h: 1 }, // KC_P
+    58: { row: 9, col: 4, x: 21.3, y: 2.5, w: 1, h: 1 }, // KC_RBRACKET
 };
 
 // Total matrix size

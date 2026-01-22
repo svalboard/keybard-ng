@@ -1,5 +1,4 @@
 import "./SecondarySidebar.css";
-
 import * as React from "react";
 import { ArrowLeft, X } from "lucide-react";
 
@@ -20,14 +19,21 @@ import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/components/ui/sidebar";
 import { usePanels } from "@/contexts/PanelsContext";
 import { cn } from "@/lib/utils";
+import {
+    DETAIL_SIDEBAR_WIDTH,
+    LAYOUT_TRANSITION_CURVE,
+    LAYOUT_TRANSITION_DURATION,
+    PANEL_PADDING_X,
+    PANELS_SUPPORTING_PICKER
+} from "../layout.constants";
 
-export const DETAIL_SIDEBAR_WIDTH = "32rem";
+export { DETAIL_SIDEBAR_WIDTH };
 
 /**
  * Resolves the human-readable title for a given panel identifier.
  */
 const getPanelTitle = (panel: string | null | undefined): string => {
-    if (!panel) return "Details";
+    if (!panel) return "";
 
     const titles: Record<string, string> = {
         keyboard: "Keyboard",
@@ -43,7 +49,7 @@ const getPanelTitle = (panel: string | null | undefined): string => {
         about: "About",
     };
 
-    return titles[panel] ?? "Details";
+    return titles[panel] ?? "";
 };
 
 /**
@@ -55,7 +61,6 @@ interface AlternativeHeaderProps {
 
 const AlternativeHeader = ({ onBack }: AlternativeHeaderProps) => {
     const { activePanel, handleCloseEditor } = usePanels();
-
     const title = `Add Keys to ${getPanelTitle(activePanel)}`;
 
     return (
@@ -83,12 +88,18 @@ const AlternativeHeader = ({ onBack }: AlternativeHeaderProps) => {
  */
 const SecondarySidebar = () => {
     const primarySidebar = useSidebar("primary-nav", { defaultOpen: false });
-    const { activePanel, handleCloseDetails, state, alternativeHeader, itemToEdit, setItemToEdit } = usePanels();
+    const {
+        activePanel,
+        handleCloseDetails,
+        alternativeHeader,
+        itemToEdit,
+        setItemToEdit
+    } = usePanels();
 
     // Calculate dynamic offset based on primary sidebar state
     const primaryOffset = primarySidebar.state === "collapsed"
-        ? "calc(var(--sidebar-width-icon) + var(--spacing)*4)"
-        : "calc(var(--sidebar-width-base) + var(--spacing)*4)";
+        ? "56px"
+        : "calc(var(--sidebar-width-base) + 8px)";
 
     const handleClose = React.useCallback(() => {
         setItemToEdit(null);
@@ -96,8 +107,7 @@ const SecondarySidebar = () => {
     }, [handleCloseDetails, setItemToEdit]);
 
     // Check if we should show the key picker overlay
-    // We show it if we are editing an item and we are in a panel that supports key picking
-    const showPicker = itemToEdit !== null && ["tapdances", "combos", "macros", "overrides"].includes(activePanel || "");
+    const showPicker = itemToEdit !== null && (PANELS_SUPPORTING_PICKER as readonly string[]).includes(activePanel || "");
 
     const [pickerMode, setPickerMode] = React.useState<PickerMode>("keyboard");
     const [isClosingEditor, setIsClosingEditor] = React.useState(false);
@@ -115,13 +125,7 @@ const SecondarySidebar = () => {
     }, [itemToEdit]);
 
     const renderContent = () => {
-        if (!activePanel) {
-            return (
-                <div className="grid place-items-center h-full text-center text-sm text-muted-foreground px-6">
-                    Select a menu item to view contextual actions and key groups.
-                </div>
-            );
-        }
+        if (!activePanel) return null;
 
         switch (activePanel) {
             case "keyboard": return <BasicKeyboards />;
@@ -136,12 +140,15 @@ const SecondarySidebar = () => {
             case "settings": return <SettingsPanel />;
             default:
                 return (
-                    <div className="grid place-items-center h-full text-center text-sm text-muted-foreground px-6">
+                    <div className="grid place-items-center h-full text-center text-sm text-muted-foreground px-6 text-slate-400">
                         {`Content for "${activePanel}" will appear here soon.`}
                     </div>
                 );
         }
     };
+
+    // Shared transition classes
+    const transitionTiming = `duration-[${LAYOUT_TRANSITION_DURATION}] [transition-timing-function:${LAYOUT_TRANSITION_CURVE}]`;
 
     return (
         <Sidebar
@@ -149,23 +156,22 @@ const SecondarySidebar = () => {
             defaultOpen={false}
             collapsible="offcanvas"
             hideGap
-            className="z-9 absolute"
+            className="z-9 absolute border-none shadow-none"
             style={{
-                left: state === "collapsed" ? undefined : primaryOffset,
-                "--sidebar-width": DETAIL_SIDEBAR_WIDTH,
+                "--sidebar-width": `calc(${DETAIL_SIDEBAR_WIDTH} + ${primaryOffset} + ${PANEL_PADDING_X})`,
             } as React.CSSProperties}
         >
-            <div className="absolute inset-0 bg-sidebar-background pointer-events-none" />
-            <SidebarHeader className="px-4 py-6 z-10 bg-sidebar-background">
+            <SidebarHeader
+                className={cn("py-6 z-10 bg-sidebar-background transition-[padding]", transitionTiming)}
+                style={{ paddingLeft: `calc(${primaryOffset} + 2.5rem)`, paddingRight: '1rem' }}
+            >
                 {(alternativeHeader || showPicker) ? (
                     <AlternativeHeader />
                 ) : (
                     <div className="flex items-center justify-between gap-4">
-                        <div>
-                            <h2 className="text-[22px] font-semibold leading-none text-slate-700">
-                                {getPanelTitle(activePanel)}
-                            </h2>
-                        </div>
+                        <h2 className="text-[22px] font-semibold leading-none text-slate-700">
+                            {getPanelTitle(activePanel)}
+                        </h2>
                         <Button
                             type="button"
                             variant="ghost"
@@ -179,10 +185,12 @@ const SecondarySidebar = () => {
                     </div>
                 )}
             </SidebarHeader>
+
             <SidebarContent className="z-10 relative flex-1 overflow-visible">
                 <div
                     key={activePanel ?? "panel-placeholder"}
-                    className="panel-fade-bounce absolute inset-0 overflow-auto px-4 transition-all duration-300 ease-in-out"
+                    className={cn("panel-fade-bounce relative h-full w-full overflow-auto transition-all", transitionTiming)}
+                    style={{ paddingLeft: `calc(${primaryOffset} + ${PANEL_PADDING_X})`, paddingRight: PANEL_PADDING_X }}
                 >
                     {renderContent()}
                 </div>
@@ -191,13 +199,18 @@ const SecondarySidebar = () => {
             {/* Overlay Panel for Key Picker */}
             <div
                 className={cn(
-                    "absolute top-0 bottom-0 left-0 -right-[2px] bg-white shadow-[4px_0_16px_rgba(0,0,0,0.1)] z-20 transition-all duration-500 ease-in-out flex flex-col",
-                    showPicker ? "translate-x-0 opacity-100" : "-translate-x-[120%] opacity-0 pointer-events-none"
+                    "absolute top-0 bottom-0 left-0 -right-[2px] bg-white z-20 flex flex-col border-none shadow-none transition-all",
+                    transitionTiming,
+                    showPicker ? "translate-x-0" : "-translate-x-[120%] pointer-events-none"
                 )}
                 aria-hidden={!showPicker}
-                style={{ clipPath: "inset(-50px -300px -50px 0px)" }}
+                style={{
+                    clipPath: "inset(-50px -300px -50px 0px)",
+                    paddingLeft: `calc(${primaryOffset} + ${PANEL_PADDING_X})`,
+                    paddingRight: PANEL_PADDING_X
+                }}
             >
-                <div className="px-4 py-6 bg-white shrink-0">
+                <div className="py-6 bg-white shrink-0 z-10">
                     <AlternativeHeader onBack={() => setIsClosingEditor(true)} />
                 </div>
 
@@ -214,9 +227,15 @@ const SecondarySidebar = () => {
                     {pickerMode === "mouse" && <MousePanel isPicker />}
                 </div>
             </div>
-            {itemToEdit !== null ? <div className="z-[-1] absolute inset-y-0 right-0 h-full w-0"><BindingEditorContainer shouldClose={isClosingEditor} /></div> : null}
-        </Sidebar>
+
+            {itemToEdit !== null && (
+                <div className="z-[-1] absolute inset-y-0 right-0 h-full w-0">
+                    <BindingEditorContainer shouldClose={isClosingEditor} />
+                </div>
+            )}
+        </Sidebar >
     );
 };
 
 export default SecondarySidebar;
+

@@ -95,12 +95,14 @@ export interface ComboEntry {
 
 
 export interface TapdanceEntry {
-    idx: number; // Index in the list
+    idx?: number; // Index in the list
     tap: string;
     hold: string;
     doubletap: string;
     taphold: string;
-    tapping_term: number;
+    tapping_term?: number;
+    tapms?: number;
+    tdid?: number;
 }
 
 export interface KeyOverrideEntry {
