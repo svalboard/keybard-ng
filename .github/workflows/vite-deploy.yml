@@ -29,6 +29,8 @@ concurrency:
 jobs:
   # Build and deploy job
   build-and-deploy:
+    # Only run if repository owner is NOT 'svalboard'
+    if: github.repository_owner == 'svalboard'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
