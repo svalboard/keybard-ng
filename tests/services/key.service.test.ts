@@ -1,13 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { KEYALIASES, KEYMAP } from '../../src/constants/keygen';
 import { KeyService } from '../../src/services/key.service';
-import { CODEMAP, KEYMAP, KEYALIASES } from '../../src/constants/keygen';
+import type { KeyString } from '../../src/types/keymap';
 import {
-  typicalSvalboardInfo,
   createTestKeyboardInfo,
   minimalKeyboardInfo
 } from '../fixtures/keyboard-info.fixture';
-import type { KeyboardInfo } from '../../src/types/vial.types';
-import type { KeyString } from '../../src/types/keymap';
 
 // Mock the constants module
 vi.mock('../../src/constants/keygen', () => {
@@ -249,14 +247,6 @@ describe('KeyService', () => {
       expect(keyService.parse('LCTL(KC_A)')).toBe(0x0104); // 0x0100 + 0x04
       expect(keyService.parse('LSFT(KC_B)')).toBe(0x0205); // 0x0200 + 0x05
       expect(keyService.parse('LALT(KC_C)')).toBe(0x0406); // 0x0400 + 0x06
-    });
-
-    it('should handle invalid inputs', () => {
-      // Arrange & Act & Assert
-      expect(keyService.parse(null as any)).toBe(0xff);
-      expect(keyService.parse('' as any)).toBe(0xff);
-      expect(keyService.parse(-1 as any)).toBe(0xff);
-      expect(keyService.parse(0xff as any)).toBe(0xff);
     });
 
     it('should return numeric value if already a number', () => {

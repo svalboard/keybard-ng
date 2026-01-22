@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { VialProvider, useVial } from '../../src/contexts/VialContext';
 import type { KeyboardInfo } from '../../src/types/vial.types';
 
@@ -32,6 +32,14 @@ vi.mock('../../src/services/usb.service', () => ({
     open: vi.fn(),
     close: vi.fn(),
     getDeviceName: vi.fn(),
+    isOpened: false,
+  },
+}));
+
+vi.mock('../../src/utils/storage', () => ({
+  storage: {
+    setLastFilePath: vi.fn(),
+    saveFile: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -148,6 +156,7 @@ describe('VialContext - File Loading', () => {
     };
 
     vi.mocked(usbInstance.open).mockResolvedValue(true);
+    (usbInstance as any).isOpened = true;
     vi.mocked(usbInstance.getDeviceName).mockReturnValue('Svalboard');
     vi.mocked(vialService.init).mockResolvedValue(undefined);
     vi.mocked(vialService.load).mockResolvedValue(mockDeviceInfo);
@@ -172,6 +181,7 @@ describe('VialContext - File Loading', () => {
     };
 
     vi.mocked(usbInstance.open).mockResolvedValue(true);
+    (usbInstance as any).isOpened = true;
     vi.mocked(usbInstance.getDeviceName).mockReturnValue('Svalboard');
     vi.mocked(vialService.init).mockResolvedValue(undefined);
     vi.mocked(vialService.load).mockResolvedValue(mockDeviceInfo);
@@ -214,6 +224,7 @@ describe('VialContext - File Loading', () => {
     };
 
     vi.mocked(usbInstance.open).mockResolvedValue(true);
+    (usbInstance as any).isOpened = true;
     vi.mocked(usbInstance.getDeviceName).mockReturnValue('Svalboard');
     vi.mocked(vialService.init).mockResolvedValue(undefined);
     vi.mocked(vialService.load).mockResolvedValue(mockDeviceInfo);

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { VialService } from '../../src/services/vial.service';
 import { createTestKeyboardInfo } from '../fixtures/keyboard-info.fixture';
 
@@ -436,7 +436,8 @@ describe('VialService', () => {
 
       expect(mockUSB.send).toHaveBeenCalledWith(
         0x05, // CMD_VIA_SET_KEYCODE
-        [0, 1, 2, 0, 4] // layer, row, col, BE16(keymask)
+        [0, 1, 2, 0, 4], // layer, row, col, BE16(keymask)
+        {}
       );
     });
 
@@ -445,7 +446,8 @@ describe('VialService', () => {
 
       expect(mockUSB.send).toHaveBeenCalledWith(
         0x05,
-        [2, 3, 7, 0x12, 0x34] // 0x1234 in big endian
+        [2, 3, 7, 0x12, 0x34], // 0x1234 in big endian
+        {}
       );
     });
 

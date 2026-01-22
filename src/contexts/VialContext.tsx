@@ -51,6 +51,8 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 usbInstance.onDisconnect = () => {
                     console.log("Disconnect detected via listener");
                     setIsConnected(false);
+                    setKeyboard(null);
+                    setLoadedFrom(null);
                 };
             }
             setIsConnected(success);
@@ -66,6 +68,8 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             await usbInstance.close();
             setIsConnected(false);
+            setKeyboard(null);
+            setLoadedFrom(null);
         } catch (error) {
             console.error("Failed to disconnect:", error);
         }

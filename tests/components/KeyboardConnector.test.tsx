@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import KeyboardConnector from '../../src/components/KeyboardConnector';
 import { VialProvider } from '../../src/contexts/VialContext';
 import type { KeyboardInfo } from '../../src/types/vial.types';
@@ -40,6 +40,7 @@ vi.mock('../../src/utils/storage', () => ({
     getLastFilePath: vi.fn(),
     setLastFilePath: vi.fn(),
     clearLastFilePath: vi.fn(),
+    saveFile: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
