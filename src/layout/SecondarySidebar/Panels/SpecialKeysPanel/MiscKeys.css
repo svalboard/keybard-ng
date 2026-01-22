@@ -1,0 +1,8 @@
+@layer qmk {
+    .hg-button {
+        background-color: white !important;
+        color: white !important;
+        border-radius: 4px !important;
+        text-transform: uppercase !important;
+    }
+}

@@ -1,0 +1,35 @@
+@keyframes bindingEditorEnter {
+    0% {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bindingEditorExit {
+    0% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+}
+
+.binding-editor {
+    will-change: transform, opacity;
+}
+
+.binding-editor--enter {
+    animation: bindingEditorEnter 300ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both;
+}
+
+.binding-editor--exit {
+    animation: bindingEditorExit 200ms ease-in forwards;
+}

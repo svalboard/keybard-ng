@@ -27,7 +27,7 @@ vi.mock('../../src/services/qmk.service', () => ({
   },
 }));
 
-vi.mock('../../src/services/usb', () => ({
+vi.mock('../../src/services/usb.service', () => ({
   usbInstance: {
     open: vi.fn(),
     close: vi.fn(),
@@ -36,7 +36,7 @@ vi.mock('../../src/services/usb', () => ({
 }));
 
 import { fileService } from '../../src/services/file.service';
-import { usbInstance } from '../../src/services/usb';
+import { usbInstance } from '../../src/services/usb.service';
 import { vialService } from '../../src/services/vial.service';
 
 describe('VialContext - File Loading', () => {

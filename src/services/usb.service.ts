@@ -1,6 +1,6 @@
 // USB HID communication layer for Vial protocol
-import { MSG_LEN, LE16, BE16 } from "./utils";
 import type { USBSendOptions } from "../types/vial.types";
+import { BE16, MSG_LEN } from "./utils";
 
 export class VialUSB {
   // Via+Vial command constants
@@ -58,9 +58,34 @@ export class VialUSB {
   static readonly DYNAMIC_VIAL_KEY_OVERRIDE_GET = 0x05;
   static readonly DYNAMIC_VIAL_KEY_OVERRIDE_SET = 0x06;
 
+  static readonly SVAL_GET_LEFT_DPI = 0x00;
+  static readonly SVAL_GET_RIGHT_DPI = 0x00;
+  static readonly SVAL_GET_LEFT_SCROLL = 0x00;
+  static readonly SVAL_GET_RIGHT_SCROLL = 0x00;
+  static readonly SVAL_GET_AUTOMOUSE = 0x00;
+  static readonly SVAL_GET_AUTOMOUSE_MS = 0x00;
+
+  static readonly SVAL_SET_LEFT_DPI = 0x00;
+  static readonly SVAL_SET_RIGHT_DPI = 0x00;
+  static readonly SVAL_SET_LEFT_SCROLL = 0x00;
+  static readonly SVAL_SET_RIGHT_SCROLL = 0x00;
+  static readonly SVAL_SET_AUTOMOUSE = 0x00;
+  static readonly SVAL_SET_AUTOMOUSE_MS = 0x00;
+
   private device?: HIDDevice;
+  private queue: Promise<void> = Promise.resolve();
   private listener: (data: ArrayBuffer, ev: HIDInputReportEvent) => void =
-    () => {};
+    () => { };
+
+  public onDisconnect?: () => void;
+
+  private handleDisconnect = (event: HIDConnectionEvent) => {
+    if (this.device && event.device === this.device) {
+      console.log("Device disconnected:", event.device.productName);
+      if (this.onDisconnect) this.onDisconnect();
+      this.close();
+    }
+  };
 
   async open(filters: HIDDeviceFilter[]): Promise<boolean> {
     const devices = await navigator.hid.requestDevice({ filters });
@@ -71,6 +96,7 @@ export class VialUSB {
       await this.device.open();
     }
     await this.initListener();
+    navigator.hid.addEventListener("disconnect", this.handleDisconnect);
     return true;
   }
 
@@ -87,6 +113,7 @@ export class VialUSB {
       await this.device.close();
       this.device = undefined;
     }
+    navigator.hid.removeEventListener("disconnect", this.handleDisconnect);
   }
 
   private handleEvent?: (ev: HIDInputReportEvent) => void;
@@ -115,6 +142,8 @@ export class VialUSB {
   async send(cmd: number, args: number[], options?: USBSendOptions): Promise<Uint8Array>;
 
   // Implementation
+
+
   async send(
     cmd: number,
     args: number[],
@@ -128,13 +157,43 @@ export class VialUSB {
       message[i + 1] = args[i];
     }
 
-    return new Promise((resolve) => {
-      this.listener = (data: ArrayBuffer) => {
-        const result = this.parseResponse(data, options);
-        resolve(result);
-      };
-      this.device!.sendReport(0, message);
+    // Queue the operations to prevent listener collision using a simple mutex pattern
+    const operation = this.queue.then(async () => {
+      return new Promise<Uint8Array | Uint16Array | Uint32Array | number | bigint | (number | bigint)[]>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          console.warn("USB Command Timed out waiting for valid response:", cmd);
+          reject(new Error("USB Command Timeout"));
+        }, 1000);
+
+        this.listener = (data: ArrayBuffer) => {
+          const u8 = new Uint8Array(data);
+          // Validation: Only filter out explicit mismatches if validation is provided
+          if (options.validateInput) {
+            if (!options.validateInput(u8)) {
+              return;
+            }
+          }
+
+          clearTimeout(timeoutId);
+          try {
+            const result = this.parseResponse(data, options);
+            resolve(result);
+          } catch (e) {
+            reject(e);
+          }
+        };
+
+        this.device!.sendReport(0, message).catch(err => {
+          clearTimeout(timeoutId);
+          reject(err);
+        });
+      });
     });
+
+    // Advance queue, handling errors so queue doesn't get stuck
+    this.queue = operation.then(() => undefined).catch(() => undefined);
+
+    return operation;
   }
 
   // Overload signatures for sendVial()
@@ -168,7 +227,6 @@ export class VialUSB {
   private parseResponse(data: ArrayBuffer, options: USBSendOptions & { uint32: true; index?: undefined }): Uint32Array;
   private parseResponse(data: ArrayBuffer, options: USBSendOptions): Uint8Array;
 
-  // Implementation signature
   private parseResponse(data: ArrayBuffer, options: USBSendOptions): Uint8Array | Uint16Array | Uint32Array | number | bigint | (number | bigint)[] {
     const dv = new DataView(data);
     const u8 = new Uint8Array(data);
@@ -186,6 +244,9 @@ export class VialUSB {
       // If index is specified, return single byte; otherwise return full array
       if (options.index !== undefined) {
         return u8[options.index];
+      }
+      if (options.slice !== undefined) {
+        return u8.slice(options.slice);
       }
       return u8;
     }
@@ -222,6 +283,9 @@ export class VialUSB {
       return u32Array;
     }
 
+    if (options.slice !== undefined) {
+      return u8.slice(options.slice);
+    }
     return u8;
   }
 
@@ -278,17 +342,16 @@ export class VialUSB {
 
       // Send command with big-endian offset
       const args = [...BE16(offset), sz];
-      const data = await this.send(cmd, args, options);
+      // Cast the result of this.send to Uint8Array because we expect byte data here.
+      // The `options` passed to `send` here don't specify `unpack`, `uint16`, or `uint32`,
+      // so the default return type from the `send` implementation is `Uint8Array`.
+      const data = await this.send(cmd, args, options) as Uint8Array;
 
       // If we got less than requested, slice the data
       if (sz < chunksize) {
         const sliceSize = Math.floor(sz / bytes);
-        if (Array.isArray(data)) {
-          alldata.push(...data.slice(0, sliceSize));
-        } else {
-          // Convert typed array to regular array and slice
-          alldata.push(...Array.from(data).slice(0, sliceSize));
-        }
+        // `data` is now guaranteed to be Uint8Array due to the cast
+        alldata.push(...Array.from(data).slice(0, sliceSize));
       } else {
         if (Array.isArray(data)) {
           alldata.push(...data);
@@ -321,16 +384,22 @@ export class VialUSB {
   ): Promise<void> {
     const buffer = new Uint8Array(data);
     let offset = 0;
-    let chunkOffset = 0;
+    const chunksize = 28;
 
     while (offset < size) {
-      const chunk = new Uint8Array(MSG_LEN - 4);
-      for (let i = 0; i < chunk.length && offset < size; i++) {
-        chunk[i] = buffer[offset++];
+      let sz = chunksize;
+      if (sz > size - offset) {
+        sz = size - offset;
       }
 
-      await this.send(cmd, [...LE16(chunkOffset), ...chunk]);
-      chunkOffset += chunk.length;
+      // Slice the actual data for this chunk
+      const chunk = buffer.slice(offset, offset + sz);
+
+      // Matches Legacy: BE16(offset), sz, ...chunk
+      // The send method will pad the rest of the 32-byte message with zeros
+      await this.send(cmd, [...BE16(offset), sz, ...chunk], {});
+
+      offset += chunksize;
     }
   }
 

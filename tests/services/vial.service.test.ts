@@ -25,19 +25,42 @@ vi.mock('xz-decompress', () => ({
   }))
 }));
 
+// Mock sval service
+vi.mock('../../src/services/sval.service', () => ({
+  svalService: {
+    check: vi.fn(),
+    pull: vi.fn(),
+    setupCosmeticLayerNames: vi.fn()
+  }
+}));
+
+// Mock kle service
+vi.mock('../../src/services/kle.service', () => ({
+  KleService: vi.fn().mockImplementation(() => ({
+    deserializeToKeylayout: vi.fn()
+  }))
+}));
+
+import { svalService } from '../../src/services/sval.service';
+
 describe('VialService', () => {
   let vialService: VialService;
   let mockUSB: any;
 
   beforeEach(() => {
+    // Reset mocks
+    vi.clearAllMocks();
+
     // Create a comprehensive USB mock
     mockUSB = {
       send: vi.fn(),
       sendVial: vi.fn(),
       getViaBuffer: vi.fn(),
+      getDynamicEntries: vi.fn(),
       open: vi.fn().mockResolvedValue(true),
       close: vi.fn().mockResolvedValue(undefined)
     };
+
 
     // Setup default mock responses
     mockUSB.send.mockImplementation((cmd: number, args: number[], options?: any) => {
@@ -138,6 +161,8 @@ describe('VialService', () => {
         return Promise.resolve(buffer);
       }
     });
+
+    mockUSB.getDynamicEntries.mockResolvedValue([]);
 
     vialService = new VialService(mockUSB);
   });
@@ -256,6 +281,14 @@ describe('VialService', () => {
       expect(kbinfo.keymap).toHaveLength(1);
       expect(kbinfo.keymap?.[0]).toHaveLength(0);
     });
+
+    it('should throw error if getViaBuffer returns non-array', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      // Mock getViaBuffer to return something that is not an array (though typing says it should be)
+      mockUSB.getViaBuffer.mockResolvedValue(new Uint8Array(0) as any);
+
+      await expect(vialService.getKeyMap(kbinfo)).rejects.toThrow('Expected array of keycodes from getViaBuffer');
+    });
   });
 
   describe('load', () => {
@@ -274,11 +307,83 @@ describe('VialService', () => {
       expect(kbinfo.keymap).toHaveLength(4);
     });
 
+    it('should process kle payload if present', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      kbinfo.payload = {
+        layouts: {
+          keymap: []
+        },
+        matrix: { rows: 2, cols: 2 },
+        customKeycodes: []
+      } as any;
+
+      const mockDeserialize = vi.fn().mockReturnValue({});
+      // Access the private kle service (since it's instantiated in constructor)
+      // Note: Since we mocked the module, the instance method should be mockable via the prototype or if checking call
+      // Better: we can mock implementation of the kle instance attached to vialService
+      (vialService as any).kle.deserializeToKeylayout = mockDeserialize;
+
+      // Mock getKeyboardInfo to prevent it from overwriting our payload
+      vi.spyOn(vialService, 'getKeyboardInfo').mockResolvedValue(kbinfo);
+
+      await vialService.load(kbinfo);
+      expect(mockDeserialize).toHaveBeenCalled();
+      expect((kbinfo as any).keylayout).toBeDefined();
+    });
+
+    it('should catch error during kle deserialization', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      kbinfo.payload = {
+        layouts: {
+          keymap: []
+        },
+        matrix: { rows: 2, cols: 2 },
+        customKeycodes: []
+      } as any;
+
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+      const mockDeserialize = vi.fn().mockImplementation(() => { throw new Error('KLE fail'); });
+      (vialService as any).kle.deserializeToKeylayout = mockDeserialize;
+
+      // Mock getKeyboardInfo to prevent it from overwriting our payload
+      vi.spyOn(vialService, 'getKeyboardInfo').mockResolvedValue(kbinfo);
+
+      await vialService.load(kbinfo);
+
+      expect(mockDeserialize).toHaveBeenCalled();
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to deserialize keylayout:', expect.any(Error));
+    });
+
+    it('should detect WebHID support', () => {
+      // Should be true by default due to setup.ts
+      expect(VialService.isWebHIDSupported()).toBe(true);
+
+      // Test false case by temporarily removing hid
+      const originalHid = (global as any).navigator.hid;
+      delete (global as any).navigator.hid;
+
+      try {
+        expect(VialService.isWebHIDSupported()).toBe(false);
+      } finally {
+        (global as any).navigator.hid = originalHid;
+      }
+    });
+
     it('should handle errors during load gracefully', async () => {
       const kbinfo = createTestKeyboardInfo();
       mockUSB.sendVial.mockRejectedValue(new Error('Load failed'));
 
       await expect(vialService.load(kbinfo)).rejects.toThrow('Load failed');
+    });
+
+    it('should detect and pull Svalboard features', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      vi.mocked(svalService.check).mockResolvedValue(true);
+
+      await vialService.load(kbinfo);
+
+      expect(svalService.check).toHaveBeenCalledWith(kbinfo);
+      expect(svalService.pull).toHaveBeenCalledWith(kbinfo);
     });
   });
 
@@ -409,6 +514,67 @@ describe('VialService', () => {
 
       // The getKeyboardInfo method internally calls methods that use XZ decompression
       await expect(vialService.getKeyboardInfo(kbinfo)).rejects.toThrow('XZ decompression failed');
+    });
+  });
+
+  describe('update methods', () => {
+    it('should delegate updateMacros to macro service', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      // Spy on the private macro service
+      const spy = vi.spyOn((vialService as any).macro, 'push').mockResolvedValue(undefined);
+
+      await vialService.updateMacros(kbinfo);
+      expect(spy).toHaveBeenCalledWith(kbinfo);
+    });
+
+    it('should delegate updateTapdance to tapdance service', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      const spy = vi.spyOn((vialService as any).tapdance, 'push').mockResolvedValue(undefined);
+
+      await vialService.updateTapdance(kbinfo, 1);
+      expect(spy).toHaveBeenCalledWith(kbinfo, 1);
+    });
+
+    it('should delegate updateCombo to combo service', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      const spy = vi.spyOn((vialService as any).combo, 'push').mockResolvedValue(undefined);
+
+      await vialService.updateCombo(kbinfo, 2);
+      expect(spy).toHaveBeenCalledWith(kbinfo, 2);
+    });
+
+    it('should delegate updateKeyoverride to override service', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      const spy = vi.spyOn((vialService as any).override, 'push').mockResolvedValue(undefined);
+
+      await vialService.updateKeyoverride(kbinfo, 3);
+      expect(spy).toHaveBeenCalledWith(kbinfo, 3);
+    });
+
+    it('should delegate updateQMKSetting to qmk service', async () => {
+      const kbinfo = createTestKeyboardInfo();
+      const spy = vi.spyOn((vialService as any).qmk, 'push').mockResolvedValue(undefined);
+
+      await vialService.updateQMKSetting(kbinfo, 4);
+      expect(spy).toHaveBeenCalledWith(kbinfo, 4);
+    });
+  });
+
+  describe('isLayerEmpty', () => {
+    it('should return true for empty layers (0, -1, 255)', () => {
+      expect(vialService.isLayerEmpty([0, 0, 0])).toBe(true);
+      expect(vialService.isLayerEmpty([-1, -1])).toBe(true);
+      expect(vialService.isLayerEmpty([255, 255])).toBe(true);
+      expect(vialService.isLayerEmpty([0, -1, 255])).toBe(true);
+    });
+
+    it('should return false if any key is defined', () => {
+      expect(vialService.isLayerEmpty([0, 4, 0])).toBe(false);
+      expect(vialService.isLayerEmpty([65, -1])).toBe(false);
+    });
+
+    it('should return true for empty array', () => {
+      expect(vialService.isLayerEmpty([])).toBe(true);
     });
   });
 });

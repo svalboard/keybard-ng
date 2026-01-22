@@ -1,0 +1,92 @@
+@layer numpad {
+    .hg-button {
+        background-color: black !important;
+        color: white !important;
+        border-radius: 4px !important;
+        text-transform: uppercase !important;
+        font-size: 12px !important;
+    }
+
+    .simple-keyboard-control .hg-button {
+        width: 50px;
+        height: 40px !important;
+        flex-grow: 0;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+        text-transform: uppercase;
+        font-size: 10px;
+        font-weight: 500;
+    }
+
+    .simple-keyboard-arrows.simple-keyboard .hg-button {
+        width: 50px;
+        height: 30px !important;
+        flex-grow: 1;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+        text-transform: uppercase;
+        font-size: 10px;
+        font-weight: 500;
+    }
+
+    .simple-keyboard-arrows.simple-keyboard {
+        align-items: center;
+        display: flex;
+    }
+
+    .simple-keyboard-arrows.simple-keyboard .hg-row {
+        align-items: center;
+        justify-content: center;
+        display: flex;
+    }
+
+    [data-skbtn="{arrowup}"] {
+        width: 50px !important;
+        flex-grow: 0 !important;
+        margin-right: auto;
+    }
+
+    .numPad {
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .simple-keyboard-numpad.simple-keyboard {
+        background: none;
+    }
+
+    .simple-keyboard-numpad.simple-keyboard .hg-button {
+        width: 35px !important;
+        height: 35px !important;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+    }
+
+    .simple-keyboard-numpadEnd.simple-keyboard {
+        width: 80px !important;
+        background: none;
+        margin: 0;
+        padding: 5px 5px 5px 0;
+        display: flex;
+        align-items: stretch;
+    }
+
+    .simple-keyboard-numpadEnd.simple-keyboard .hg-button {
+        align-items: center;
+        justify-content: center;
+        display: flex;
+        width: 40px !important;
+    }
+
+    [data-skbtn="{numpadadd}"],
+    [data-skbtn="{numpadenter}"] {
+        height: 72px !important;
+    }
+
+    [data-skbtn="{numpadsubtract}"] {
+        height: 35px !important;
+    }
+}

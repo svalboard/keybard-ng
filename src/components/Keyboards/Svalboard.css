@@ -1,0 +1,14 @@
+@layer sval {
+    .sval .hg-button {
+        background-color: black !important;
+        color: white !important;
+        border-radius: 4px !important;
+        text-transform: uppercase !important;
+        width: 55px !important;
+        height: 55px !important;
+        flex-grow: 0 !important;
+        text-align: center !important;
+        font-size: 10px !important;
+        padding: 5px !important;
+    }
+}

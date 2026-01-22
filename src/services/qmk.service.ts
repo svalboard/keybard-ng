@@ -1,8 +1,8 @@
 // QMK Settings service - fetching, parsing, and pushing QMK settings
-import { VialUSB, usbInstance } from './usb';
-import { LE16, LE32 } from './utils';
 import { QMK_SETTINGS } from '../constants/qmk-settings';
 import type { KeyboardInfo } from '../types/vial.types';
+import { VialUSB, usbInstance } from './usb.service';
+import { LE16, LE32 } from './utils';
 
 /**
  * QMK Settings are structured as:

@@ -396,7 +396,7 @@ describe('KeyService', () => {
 
     it('should return undefined for unknown keys', () => {
       // Arrange
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
       // Act
       const result = keyService.define('UNKNOWN_KEY');
@@ -430,6 +430,18 @@ describe('KeyService', () => {
       // Arrange & Act & Assert
       expect(keyService.canonical('KC_A')).toBe('KC_A');
       expect(keyService.canonical('UNKNOWN')).toBe('UNKNOWN');
+    });
+
+    it('should handle falsy values', () => {
+      // Arrange & Act & Assert
+      expect(keyService.canonical('')).toBe('');
+      expect(keyService.canonical(null as any)).toBe(null);
+      expect(keyService.canonical(undefined as any)).toBe(undefined);
+    });
+
+    it('should handle 0 correctly', () => {
+      // Arrange & Act & Assert
+      expect(keyService.canonical(0)).toBe(0);
     });
   });
 

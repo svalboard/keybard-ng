@@ -1,45 +1,67 @@
 {
-  "name": "keybard",
-  "version": "1.0.0",
-  "description": "KeyBard is a companion software to the Svalboard (https://svalboard.com)",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/chad3814/keybard.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/chad3814/keybard/issues"
-  },
-  "homepage": "https://github.com/chad3814/keybard#readme",
-  "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.0",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.1.15",
-    "@types/react-dom": "^19.1.9",
-    "@types/w3c-web-hid": "^1.0.6",
-    "@vitejs/plugin-react": "^5.0.4",
-    "@vitest/coverage-v8": "^3.2.4",
-    "jsdom": "^27.0.0",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.7",
-    "vitest": "^3.2.4"
-  },
-  "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "xz-decompress": "^0.2.3"
-  }
+    "name": "keybard",
+    "version": "1.0.0",
+    "description": "KeyBard is a companion software to the Svalboard (https://svalboard.com)",
+    "type": "module",
+    "scripts": {
+        "dev": "vite --host",
+        "build": "tsc && vite build",
+        "preview": "vite preview",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage",
+        "test:ui": "vitest --ui"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/chad3814/keybard.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/chad3814/keybard/issues"
+    },
+    "homepage": "https://github.com/chad3814/keybard#readme",
+    "devDependencies": {
+        "@testing-library/jest-dom": "^6.9.0",
+        "@testing-library/react": "^16.3.0",
+        "@testing-library/user-event": "^14.6.1",
+        "@types/color": "^4.2.0",
+        "@types/node": "^24.6.2",
+        "@types/react": "^19.1.15",
+        "@types/react-dom": "^19.1.9",
+        "@types/w3c-web-hid": "^1.0.6",
+        "@vitejs/plugin-react": "^5.0.4",
+        "@vitest/coverage-v8": "^3.2.4",
+        "jsdom": "^27.0.0",
+        "tw-animate-css": "^1.4.0",
+        "typescript": "^5.9.2",
+        "vite": "^7.1.7",
+        "vitest": "^3.2.4"
+    },
+    "dependencies": {
+        "@radix-ui/react-dialog": "^1.1.15",
+        "@radix-ui/react-dropdown-menu": "^2.1.16",
+        "@radix-ui/react-label": "^2.1.7",
+        "@radix-ui/react-select": "^2.2.6",
+        "@radix-ui/react-separator": "^1.1.7",
+        "@radix-ui/react-slider": "^1.3.6",
+        "@radix-ui/react-slot": "^1.2.3",
+        "@radix-ui/react-switch": "^1.2.6",
+        "@radix-ui/react-tooltip": "^1.2.8",
+        "@tailwindcss/vite": "^4.1.14",
+        "@uidotdev/usehooks": "^2.4.1",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "color": "^5.0.2",
+        "lucide-react": "^0.544.0",
+        "radix-ui": "^1.4.3",
+        "react": "^19.1.1",
+        "react-dom": "^19.1.1",
+        "react-simple-keyboard": "^3.8.126",
+        "tailwind-merge": "^3.3.1",
+        "tailwindcss": "^4.1.14",
+        "xz-decompress": "^0.2.3"
+    }
 }

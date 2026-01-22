@@ -1,4 +1,4 @@
-# Build and deploy Vite app to GitHub Pages
+# Build and deploy Vite app to GitHub Pages - Triggering deployment
 name: Deploy Vite App to Pages
 
 on:
