@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { svalService } from "../services/sval.service";
 import { VialService, vialService } from "../services/vial.service";
 
+import { SyncingOverlay } from "../components/SyncingOverlay";
 import { fileService } from "../services/file.service";
 import { keyService } from "../services/key.service";
 import { qmkService } from "../services/qmk.service";
@@ -23,6 +24,7 @@ interface VialContextType {
     updateTapDance: (tdid: number, overrideKeyboard?: KeyboardInfo) => Promise<void>;
     pollMatrix: () => Promise<boolean[][]>;
     lastHeartbeat: number;
+    isSyncing: boolean;
 }
 
 const VialContext = createContext<VialContextType | undefined>(undefined);
@@ -30,6 +32,7 @@ const VialContext = createContext<VialContextType | undefined>(undefined);
 export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [keyboard, setKeyboard] = useState<KeyboardInfo | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
     const [loadedFrom, setLoadedFrom] = useState<string | null>(null);
     const [lastHeartbeat, setLastHeartbeat] = useState<number>(0);
     const isWebHIDSupported = VialService.isWebHIDSupported();
@@ -75,6 +78,7 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         try {
+            setIsSyncing(true);
             const kbinfo: KeyboardInfo = {
                 rows: 0,
                 cols: 0,
@@ -103,18 +107,10 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error) {
             console.error("Failed to load keyboard:", error);
             throw error;
+        } finally {
+            setIsSyncing(false);
         }
     }, []);
-
-    // Auto-load removed to allow UI to decide when to sync
-    // useEffect(() => {
-    //     if (isConnected) {
-    //         loadKeyboard().catch((error) => {
-    //             console.error("Failed to auto-load keyboard:", error);
-    //             setIsConnected(false);
-    //         });
-    //     }
-    // }, [isConnected, loadKeyboard]);
 
     const loadFromFile = useCallback(async (file: File) => {
         try {
@@ -200,9 +196,15 @@ export const VialProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateTapDance,
         pollMatrix,
         lastHeartbeat,
+        isSyncing,
     };
 
-    return <VialContext.Provider value={value}>{children}</VialContext.Provider>;
+    return (
+        <VialContext.Provider value={value}>
+            {children}
+            <SyncingOverlay isOpen={isSyncing} />
+        </VialContext.Provider>
+    );
 };
 
 export const useVial = (): VialContextType => {
